@@ -1,0 +1,11 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/bin/Debug/net8.0/MyIndustry.Identity.ApplicationService.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/bin/Debug/net8.0/MyIndustry.Identity.ApplicationService.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/bin/Debug/net8.0/MyIndustry.Identity.ApplicationService.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/refint/MyIndustry.Identity.ApplicationService.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/ref/MyIndustry.Identity.ApplicationService.dll

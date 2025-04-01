@@ -1,0 +1,371 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.ApplicationService/MyIndustry.ApplicationService.csproj": {}
+  },
+  "projects": {
+    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.ApplicationService/MyIndustry.ApplicationService.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.ApplicationService/MyIndustry.ApplicationService.csproj",
+        "projectName": "MyIndustry.ApplicationService",
+        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.ApplicationService/MyIndustry.ApplicationService.csproj",
+        "packagesPath": "/Users/enesc/.nuget/packages/",
+        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.ApplicationService/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
+          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/MyIndustry.Repository.csproj": {
+                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/MyIndustry.Repository.csproj"
+              },
+              "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj": {
+                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MediatR": {
+              "target": "Package",
+              "version": "[12.4.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj",
+        "projectName": "MyIndustry.Domain",
+        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj",
+        "packagesPath": "/Users/enesc/.nuget/packages/",
+        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
+          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj",
+        "projectName": "MyIndustry.Queue.Message",
+        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj",
+        "packagesPath": "/Users/enesc/.nuget/packages/",
+        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
+          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj": {
+                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/MyIndustry.Repository.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/MyIndustry.Repository.csproj",
+        "projectName": "MyIndustry.Repository",
+        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/MyIndustry.Repository.csproj",
+        "packagesPath": "/Users/enesc/.nuget/packages/",
+        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
+          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj": {
+                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.10, )"
+            },
+            "Npgsql.EntityFrameworkCore.PostgreSQL": {
+              "target": "Package",
+              "version": "[8.0.8, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj",
+        "projectName": "RabbitMqCommunicator",
+        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj",
+        "packagesPath": "/Users/enesc/.nuget/packages/",
+        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
+          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
+                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "MassTransit.RabbitMQ": {
+              "target": "Package",
+              "version": "[8.3.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

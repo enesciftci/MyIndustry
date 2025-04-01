@@ -1,0 +1,12 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/bin/Debug/net8.0/RedisCommunicator.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/bin/Debug/net8.0/RedisCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/bin/Debug/net8.0/RedisCommunicator.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.csproj.AssemblyReference.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/refint/RedisCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/RedisCommunicator.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/Debug/net8.0/ref/RedisCommunicator.dll

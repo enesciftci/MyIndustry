@@ -1,0 +1,17 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/bin/Debug/net8.0/MyIndustry.Repository.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/bin/Debug/net8.0/MyIndustry.Repository.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/bin/Debug/net8.0/MyIndustry.Repository.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/bin/Debug/net8.0/MyIndustry.Domain.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/bin/Debug/net8.0/MyIndustry.Domain.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.csproj.AssemblyReference.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndust.D65A180A.Up2Date
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/refint/MyIndustry.Repository.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/ref/MyIndustry.Repository.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/bin/Debug/net8.0/MyIndustry.Repository.runtimeconfig.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Repository/obj/Debug/net8.0/MyIndustry.Repository.genruntimeconfig.cache

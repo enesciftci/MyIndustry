@@ -1,0 +1,17 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/RabbitMqCommunicator.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/RabbitMqCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/RabbitMqCommunicator.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/MyIndustry.Queue.Message.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/MyIndustry.Queue.Message.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.csproj.AssemblyReference.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMq.57F43352.Up2Date
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/refint/RabbitMqCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/RabbitMqCommunicator.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/Debug/net8.0/ref/RabbitMqCommunicator.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/MyIndustry.Domain.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/bin/Debug/net8.0/MyIndustry.Domain.pdb

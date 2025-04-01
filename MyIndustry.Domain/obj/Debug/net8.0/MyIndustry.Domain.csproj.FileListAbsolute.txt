@@ -1,0 +1,11 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/bin/Debug/net8.0/MyIndustry.Domain.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/bin/Debug/net8.0/MyIndustry.Domain.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/bin/Debug/net8.0/MyIndustry.Domain.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/MyIndustry.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/MyIndustry.Domain.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/MyIndustry.Domain.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/MyIndustry.Domain.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/MyIndustry.Domain.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/refint/MyIndustry.Domain.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/MyIndustry.Domain.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/Debug/net8.0/ref/MyIndustry.Domain.dll

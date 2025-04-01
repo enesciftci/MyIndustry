@@ -1,0 +1,43 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/wallet/check-external-pointtopup",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "wallet-api.hepsipay.com",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/check-external-pointtopup",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "Priority": 1,
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/InspectorWebService/Scanservice.asmx",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "hepsipayprod.fineksus.info",
+          "Port": 443
+        }
+      ],
+      "UpstreamPathTemplate": "/fineksus/blacklist",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "Priority": 1,
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://myindustry-gateway.hepsipay.com"
+  }
+}

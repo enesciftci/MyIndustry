@@ -1,0 +1,15 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/bin/Debug/net8.0/MyIndustry.Queue.Message.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/bin/Debug/net8.0/MyIndustry.Queue.Message.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/bin/Debug/net8.0/MyIndustry.Queue.Message.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/refint/MyIndustry.Queue.Message.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/ref/MyIndustry.Queue.Message.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/bin/Debug/net8.0/MyIndustry.Domain.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/bin/Debug/net8.0/MyIndustry.Domain.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndustry.Queue.Message.csproj.AssemblyReference.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/Debug/net8.0/MyIndust.A7DDB4FF.Up2Date

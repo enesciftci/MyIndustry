@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "dgSpecHash": "/qcKXn8U4cI=",
+  "success": true,
+  "projectFilePath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/RedisCommunicator.csproj",
+  "expectedPackageFiles": [
+    "/Users/enesc/.nuget/packages/microsoft.extensions.logging.abstractions/6.0.0/microsoft.extensions.logging.abstractions.6.0.0.nupkg.sha512",
+    "/Users/enesc/.nuget/packages/pipelines.sockets.unofficial/2.2.8/pipelines.sockets.unofficial.2.2.8.nupkg.sha512",
+    "/Users/enesc/.nuget/packages/stackexchange.redis/2.8.16/stackexchange.redis.2.8.16.nupkg.sha512",
+    "/Users/enesc/.nuget/packages/system.io.pipelines/5.0.1/system.io.pipelines.5.0.1.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1803",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
+    }
+  ]
+}

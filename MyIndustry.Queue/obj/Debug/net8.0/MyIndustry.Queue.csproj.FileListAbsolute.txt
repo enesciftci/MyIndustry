@@ -1,0 +1,14 @@
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/bin/Debug/net8.0/MyIndustry.Queue
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/bin/Debug/net8.0/MyIndustry.Queue.deps.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/bin/Debug/net8.0/MyIndustry.Queue.runtimeconfig.json
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/bin/Debug/net8.0/MyIndustry.Queue.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/bin/Debug/net8.0/MyIndustry.Queue.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.AssemblyInfoInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.AssemblyInfo.cs
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.csproj.CoreCompileInputs.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/refint/MyIndustry.Queue.dll
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.pdb
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/MyIndustry.Queue.genruntimeconfig.cache
+/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/Debug/net8.0/ref/MyIndustry.Queue.dll
