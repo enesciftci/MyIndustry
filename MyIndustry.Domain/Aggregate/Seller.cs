@@ -16,4 +16,6 @@ public class Seller : Entity
     public SellerSector Sector { get; set; }
     public string AgreementUrl { get; set; }
     public bool IsActive { get; set; }
+    public SellerInfo SellerInfo { get; set; }
+    public ICollection<Contract> Contracts { get; set; }
 }

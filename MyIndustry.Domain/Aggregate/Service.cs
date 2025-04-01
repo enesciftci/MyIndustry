@@ -9,4 +9,5 @@ public class Service : Entity
     public string ImageUrls { get; set; }
     public Guid SellerId { get; set; }
     public bool IsActive { get; set; }
+    public Guid CategoryId { get; set; }
 }

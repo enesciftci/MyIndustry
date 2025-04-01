@@ -11,6 +11,6 @@ public class Contract : Entity
     public bool IsCompleted { get; set; }
     public bool IsActive { get; set; }
     public bool IsOpenContract { get; set; }
-    public Guid CommissionId { get; set; }
+    public ICollection<Commission> Commissions { get; set; }
     public string DeliveryAddress { get; set; }
 }

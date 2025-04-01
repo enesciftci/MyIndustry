@@ -4,4 +4,6 @@ namespace MyIndustry.Domain.Aggregate;
 public class Purchaser : Entity
 {
     public bool IsActive { get; set; }
+    public PurchaserInfo PurchaserInfo { get; set; }
+    public ICollection<Contract> Contracts { get; set; }
 }

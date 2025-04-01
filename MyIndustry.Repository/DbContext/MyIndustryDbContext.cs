@@ -24,4 +24,6 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Seller> Sellers { get; set; }
     public DbSet<SellerInfo> SellerInfos { get; set; }
     public DbSet<Service> Services { get; set; }
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<SubCategory> SubCategories { get; set; }
 }
