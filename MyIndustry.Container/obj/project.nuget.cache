@@ -1,15 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Y1w5n0hCbKw=",
+  "dgSpecHash": "+jmMvDVj2EM=",
   "success": true,
-  "projectFilePath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Container/MyIndustry.Container.csproj",
+  "projectFilePath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/MyIndustry.Container.csproj",
   "expectedPackageFiles": [],
-  "logs": [
-    {
-      "code": "NU1803",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
-    }
-  ]
+  "logs": []
 }

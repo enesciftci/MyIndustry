@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "Vt9VHs1ALct2dgofkZjw0PPJic6bRdhGZmJgjIF75jE=",
+  "Hash": "shE8ethQKpaqam52r7zjKYr81kiDF4xJtUly5eUNjBo=",
   "Source": "MyIndustry.Api",
   "BasePath": "_content/MyIndustry.Api",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

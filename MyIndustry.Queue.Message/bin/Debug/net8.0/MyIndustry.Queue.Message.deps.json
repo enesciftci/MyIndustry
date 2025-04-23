@@ -16,7 +16,10 @@
       },
       "MyIndustry.Domain/1.0.0": {
         "runtime": {
-          "MyIndustry.Domain.dll": {}
+          "MyIndustry.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }

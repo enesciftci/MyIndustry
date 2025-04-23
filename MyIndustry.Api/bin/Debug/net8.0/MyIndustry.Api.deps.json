@@ -817,12 +817,18 @@
           "RabbitMqCommunicator": "1.0.0"
         },
         "runtime": {
-          "MyIndustry.ApplicationService.dll": {}
+          "MyIndustry.ApplicationService.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "MyIndustry.Domain/1.0.0": {
         "runtime": {
-          "MyIndustry.Domain.dll": {}
+          "MyIndustry.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "MyIndustry.Queue.Message/1.0.0": {
@@ -830,7 +836,10 @@
           "MyIndustry.Domain": "1.0.0"
         },
         "runtime": {
-          "MyIndustry.Queue.Message.dll": {}
+          "MyIndustry.Queue.Message.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "MyIndustry.Repository/1.0.0": {
@@ -839,7 +848,10 @@
           "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.8"
         },
         "runtime": {
-          "MyIndustry.Repository.dll": {}
+          "MyIndustry.Repository.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "RabbitMqCommunicator/1.0.0": {
@@ -848,7 +860,10 @@
           "MyIndustry.Queue.Message": "1.0.0"
         },
         "runtime": {
-          "RabbitMqCommunicator.dll": {}
+          "RabbitMqCommunicator.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }

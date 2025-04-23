@@ -9,3 +9,15 @@
 /Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Container/obj/Debug/net8.0/refint/MyIndustry.Container.dll
 /Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.pdb
 /Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Container/obj/Debug/net8.0/ref/MyIndustry.Container.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/bin/Debug/net8.0/MyIndustry.Container.deps.json
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/bin/Debug/net8.0/MyIndustry.Container.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/bin/Debug/net8.0/MyIndustry.Container.pdb
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.AssemblyInfoInputs.cache
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.AssemblyInfo.cs
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.csproj.CoreCompileInputs.cache
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.sourcelink.json
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/refint/MyIndustry.Container.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/MyIndustry.Container.pdb
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Container/obj/Debug/net8.0/ref/MyIndustry.Container.dll

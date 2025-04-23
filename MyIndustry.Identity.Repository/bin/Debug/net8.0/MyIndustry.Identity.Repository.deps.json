@@ -431,19 +431,26 @@
       "System.Threading.Channels/7.0.0": {},
       "MyIndustry.Domain/1.0.0": {
         "runtime": {
-          "MyIndustry.Domain.dll": {}
+          "MyIndustry.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "MyIndustry.Identity.Domain/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Identity.Core": "8.0.10",
+          "Microsoft.Extensions.Identity.Stores": "8.0.10",
           "Microsoft.IdentityModel.JsonWebTokens": "7.1.2",
           "RabbitMqCommunicator": "1.0.0",
           "RedisCommunicator": "1.0.0",
           "System.IdentityModel.Tokens.Jwt": "7.1.2"
         },
         "runtime": {
-          "MyIndustry.Identity.Domain.dll": {}
+          "MyIndustry.Identity.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "MyIndustry.Queue.Message/1.0.0": {
@@ -451,7 +458,10 @@
           "MyIndustry.Domain": "1.0.0"
         },
         "runtime": {
-          "MyIndustry.Queue.Message.dll": {}
+          "MyIndustry.Queue.Message.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "RabbitMqCommunicator/1.0.0": {
@@ -460,7 +470,10 @@
           "MyIndustry.Queue.Message": "1.0.0"
         },
         "runtime": {
-          "RabbitMqCommunicator.dll": {}
+          "RabbitMqCommunicator.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "RedisCommunicator/1.0.0": {
@@ -468,7 +481,10 @@
           "StackExchange.Redis": "2.8.16"
         },
         "runtime": {
-          "RedisCommunicator.dll": {}
+          "RedisCommunicator.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }

@@ -840,39 +840,32 @@
     ]
   },
   "packageFolders": {
-    "/Users/enesc/.nuget/packages/": {},
-    "/usr/local/share/dotnet/sdk/NuGetFallbackFolder": {}
+    "/Users/enes.ciftci/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj",
+      "projectUniqueName": "/Users/enes.ciftci/Desktop/personalApps/RabbitMqCommunicator/RabbitMqCommunicator.csproj",
       "projectName": "RabbitMqCommunicator",
-      "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/RabbitMqCommunicator.csproj",
-      "packagesPath": "/Users/enesc/.nuget/packages/",
-      "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RabbitMqCommunicator/obj/",
+      "projectPath": "/Users/enes.ciftci/Desktop/personalApps/RabbitMqCommunicator/RabbitMqCommunicator.csproj",
+      "packagesPath": "/Users/enes.ciftci/.nuget/packages/",
+      "outputPath": "/Users/enes.ciftci/Desktop/personalApps/RabbitMqCommunicator/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-      ],
       "configFilePaths": [
-        "/Users/enesc/.nuget/NuGet/NuGet.Config"
+        "/Users/enes.ciftci/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
-        "https://api.nuget.org/v3/index.json": {},
-        "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
-        "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+        "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
-              "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj"
+            "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
+              "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj"
             }
           }
         }
@@ -886,7 +879,8 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "9.0.200"
     },
     "frameworks": {
       "net8.0": {
@@ -913,16 +907,8 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
       }
     }
-  },
-  "logs": [
-    {
-      "code": "NU1803",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "You are running the 'restore' operation with an 'HTTP' source, 'http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/'. Non-HTTPS access will be removed in a future version. Consider migrating to an 'HTTPS' source."
-    }
-  ]
+  }
 }

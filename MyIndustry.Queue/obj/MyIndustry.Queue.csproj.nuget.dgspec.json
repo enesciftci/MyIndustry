@@ -1,39 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/MyIndustry.Queue.csproj": {}
+    "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue/MyIndustry.Queue.csproj": {}
   },
   "projects": {
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/CoreApiCommunicator/CoreApiCommunicator.csproj": {
+    "/Users/enes.ciftci/Desktop/personalApps/CoreApiCommunicator/CoreApiCommunicator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/CoreApiCommunicator/CoreApiCommunicator.csproj",
+        "projectUniqueName": "/Users/enes.ciftci/Desktop/personalApps/CoreApiCommunicator/CoreApiCommunicator.csproj",
         "projectName": "CoreApiCommunicator",
-        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/CoreApiCommunicator/CoreApiCommunicator.csproj",
-        "packagesPath": "/Users/enesc/.nuget/packages/",
-        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/CoreApiCommunicator/obj/",
+        "projectPath": "/Users/enes.ciftci/Desktop/personalApps/CoreApiCommunicator/CoreApiCommunicator.csproj",
+        "packagesPath": "/Users/enes.ciftci/.nuget/packages/",
+        "outputPath": "/Users/enes.ciftci/Desktop/personalApps/CoreApiCommunicator/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+          "/Users/enes.ciftci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
-          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj": {
-                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj"
+              "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj": {
+                "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj"
               }
             }
           }
@@ -47,7 +41,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -74,33 +69,27 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj": {
+    "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj",
+        "projectUniqueName": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj",
         "projectName": "MyIndustry.Domain",
-        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj",
-        "packagesPath": "/Users/enesc/.nuget/packages/",
-        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/obj/",
+        "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj",
+        "packagesPath": "/Users/enes.ciftci/.nuget/packages/",
+        "outputPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+          "/Users/enes.ciftci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
-          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
@@ -117,7 +106,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -138,40 +128,34 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
+    "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj",
+        "projectUniqueName": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj",
         "projectName": "MyIndustry.Queue.Message",
-        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj",
-        "packagesPath": "/Users/enesc/.nuget/packages/",
-        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/obj/",
+        "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj",
+        "packagesPath": "/Users/enes.ciftci/.nuget/packages/",
+        "outputPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+          "/Users/enes.ciftci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
-          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj": {
-                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Domain/MyIndustry.Domain.csproj"
+              "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj": {
+                "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Domain/MyIndustry.Domain.csproj"
               }
             }
           }
@@ -185,7 +169,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -206,43 +191,37 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/MyIndustry.Queue.csproj": {
+    "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue/MyIndustry.Queue.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/MyIndustry.Queue.csproj",
+        "projectUniqueName": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue/MyIndustry.Queue.csproj",
         "projectName": "MyIndustry.Queue",
-        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/MyIndustry.Queue.csproj",
-        "packagesPath": "/Users/enesc/.nuget/packages/",
-        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue/obj/",
+        "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue/MyIndustry.Queue.csproj",
+        "packagesPath": "/Users/enes.ciftci/.nuget/packages/",
+        "outputPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+          "/Users/enes.ciftci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
-          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/enesc/Desktop/PersonalApps/MyIndustry/CoreApiCommunicator/CoreApiCommunicator.csproj": {
-                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/CoreApiCommunicator/CoreApiCommunicator.csproj"
+              "/Users/enes.ciftci/Desktop/personalApps/CoreApiCommunicator/CoreApiCommunicator.csproj": {
+                "projectPath": "/Users/enes.ciftci/Desktop/personalApps/CoreApiCommunicator/CoreApiCommunicator.csproj"
               },
-              "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
-                "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj"
+              "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj": {
+                "projectPath": "/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Queue.Message/MyIndustry.Queue.Message.csproj"
               }
             }
           }
@@ -256,7 +235,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -283,7 +263,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

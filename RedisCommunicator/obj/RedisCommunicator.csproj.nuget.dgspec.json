@@ -1,32 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/RedisCommunicator.csproj": {}
+    "/Users/enes.ciftci/Desktop/personalApps/RedisCommunicator/RedisCommunicator.csproj": {}
   },
   "projects": {
-    "/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/RedisCommunicator.csproj": {
+    "/Users/enes.ciftci/Desktop/personalApps/RedisCommunicator/RedisCommunicator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/RedisCommunicator.csproj",
+        "projectUniqueName": "/Users/enes.ciftci/Desktop/personalApps/RedisCommunicator/RedisCommunicator.csproj",
         "projectName": "RedisCommunicator",
-        "projectPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/RedisCommunicator.csproj",
-        "packagesPath": "/Users/enesc/.nuget/packages/",
-        "outputPath": "/Users/enesc/Desktop/PersonalApps/MyIndustry/RedisCommunicator/obj/",
+        "projectPath": "/Users/enes.ciftci/Desktop/personalApps/RedisCommunicator/RedisCommunicator.csproj",
+        "packagesPath": "/Users/enes.ciftci/.nuget/packages/",
+        "outputPath": "/Users/enes.ciftci/Desktop/personalApps/RedisCommunicator/obj/",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "/usr/local/share/dotnet/sdk/NuGetFallbackFolder"
-        ],
         "configFilePaths": [
-          "/Users/enesc/.nuget/NuGet/NuGet.Config"
+          "/Users/enes.ciftci/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "http://nexus.hepsiburada.com/nexus/service/local/nuget/sardes/": {},
-          "https://api.nuget.org/v3/index.json": {},
-          "https://gitlab.hepsiburada.com/api/v4/projects/1173/packages/nuget/index.json": {},
-          "https://gitlab2.hepsipay.com/api/v4/projects/20/packages/nuget/index.json": {}
+          "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0": {
@@ -43,7 +37,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.200"
       },
       "frameworks": {
         "net8.0": {
@@ -70,7 +65,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.201/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.203/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

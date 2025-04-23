@@ -9,3 +9,15 @@
 /Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/refint/MyIndustry.Identity.ApplicationService.dll
 /Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.pdb
 /Users/enesc/Desktop/PersonalApps/MyIndustry/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/ref/MyIndustry.Identity.ApplicationService.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/bin/Debug/net8.0/MyIndustry.Identity.ApplicationService.deps.json
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/bin/Debug/net8.0/MyIndustry.Identity.ApplicationService.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/bin/Debug/net8.0/MyIndustry.Identity.ApplicationService.pdb
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.GeneratedMSBuildEditorConfig.editorconfig
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.AssemblyInfoInputs.cache
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.AssemblyInfo.cs
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.csproj.CoreCompileInputs.cache
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.sourcelink.json
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/refint/MyIndustry.Identity.ApplicationService.dll
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/MyIndustry.Identity.ApplicationService.pdb
+/Users/enes.ciftci/Desktop/personalApps/MyIndustry.Identity.ApplicationService/obj/Debug/net8.0/ref/MyIndustry.Identity.ApplicationService.dll

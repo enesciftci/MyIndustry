@@ -179,7 +179,10 @@
       "System.Threading.Channels/7.0.0": {},
       "MyIndustry.Domain/1.0.0": {
         "runtime": {
-          "MyIndustry.Domain.dll": {}
+          "MyIndustry.Domain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       },
       "MyIndustry.Queue.Message/1.0.0": {
@@ -187,7 +190,10 @@
           "MyIndustry.Domain": "1.0.0"
         },
         "runtime": {
-          "MyIndustry.Queue.Message.dll": {}
+          "MyIndustry.Queue.Message.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
         }
       }
     }
