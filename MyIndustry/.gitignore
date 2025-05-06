@@ -418,3 +418,5 @@ TestResults/
 
 # EF Core tools
 Migrations/
+
+../../ui
