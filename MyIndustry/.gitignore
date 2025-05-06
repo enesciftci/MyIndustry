@@ -420,3 +420,5 @@ TestResults/
 Migrations/
 
 ../../ui
+../MyIndustry.UI
+../../ui/MyIndustry.UI
