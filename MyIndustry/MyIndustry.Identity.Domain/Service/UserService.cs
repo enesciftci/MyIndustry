@@ -1,0 +1,131 @@
+using System.Net;
+using System.Text;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Identity;
+using MyIndustry.Identity.Domain.Aggregate;
+using MyIndustry.Queue.Message;
+using RabbitMqCommunicator;
+
+namespace MyIndustry.Identity.Domain.Service;
+
+public class UserService : IUserService
+{
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly ICustomMessagePublisher _customMessagePublisher;
+
+    public UserService(UserManager<ApplicationUser> userManager, ICustomMessagePublisher customMessagePublisher)
+    {
+        _userManager = userManager;
+        _customMessagePublisher = customMessagePublisher;
+    }
+
+    public async Task CreateUser(RegisterModel register, CancellationToken cancellationToken)
+    {
+        var user = new ApplicationUser()
+        {
+            Email = register.Email,
+            UserName = register.Email,
+            Type = register.UserType
+        };
+        var result = await _userManager.CreateAsync(user, register.Password); // Bu işlem şifreyi hash'ler.
+
+        if (result.Succeeded)
+        {
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+
+            var confirmationLink = $"http://localhost:3000/email-verification?userId={user.Id}&token={encodedToken}";
+            
+            await _customMessagePublisher.Publish(new SendConfirmationEmailMessage() { 
+                Subject = "Confirm your email",
+                Body = confirmationLink }, cancellationToken);
+        }
+
+        // burda kullanıcıya email gönder kodu tabloya yaz 
+        //
+        // await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+        //     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+        //
+    }
+
+    public async Task VerifyTwoFactorCode(TwoFactorVerificationModel model)
+    {
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        if (user == null)
+        {
+            throw new Exception("User not found");
+        }
+
+        // Kodun geçerliliğini doğrula
+        var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider, model.VerificationCode);
+
+        if (result == false)
+            throw new Exception("Code not wrong");
+    }
+    
+    public async Task<bool> ConfirmEmail(string userId, string token, CancellationToken cancellationToken)
+    {
+        if (userId == null || token == null)
+        {
+            throw new Exception("User id or token is invalid");
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            throw new Exception($"Unable to load user with ID '{userId}'.");
+        }
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+
+        if (result.Succeeded)
+        {
+            await _customMessagePublisher.Publish(new CreateSellerMessage()
+            {
+                UserId = Guid.Parse(user.Id),
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email
+            }, cancellationToken);
+            
+            await _customMessagePublisher.Publish(new CreatePurchaserMessage()
+            {
+                UserId = Guid.Parse(user.Id),
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email
+            }, cancellationToken);
+            return true;
+        }
+        else
+        {
+            throw new Exception("Error confirming your email.");
+        }
+    }
+
+    public async Task SendConfirmationEmailMessage(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        var encodedToken = WebUtility.UrlEncode(token);
+
+        var confirmationLink = $"http://localhost:3000/email-verification?userId={user.Id}&token={encodedToken}";
+
+        await _customMessagePublisher.Publish(new SendConfirmationEmailMessage()
+        {
+            Subject = "Confirm your email",
+            Body = confirmationLink
+        }, cancellationToken);
+    }
+
+    public async Task<ApplicationUser> GetUserByEmail(string email)
+    {
+        return await _userManager.FindByEmailAsync(email);
+    }
+}
+
+public interface IUserService
+{
+    Task CreateUser(RegisterModel register, CancellationToken cancellationToken);
+    Task VerifyTwoFactorCode(TwoFactorVerificationModel model);
+    Task<bool> ConfirmEmail(string userId, string token, CancellationToken cancellationToken);
+    Task SendConfirmationEmailMessage(ApplicationUser user, CancellationToken cancellationToken);
+    Task<ApplicationUser> GetUserByEmail(string email);
+}

@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../buildMultiTargeting/MyIndustry.Identity.Api.props" />
-</Project>
