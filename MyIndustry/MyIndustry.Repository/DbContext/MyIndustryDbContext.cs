@@ -43,6 +43,7 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<SubCategory> SubCategories { get; set; }
     public DbSet<Address> Adresses { get; set; }
+    public DbSet<Favorite> Favorites { get; set; }
 
     private void AddSellerAddressConfig(ModelBuilder modelBuilder)
     {

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using MyIndustry.ApplicationService.Handler.Purchaser.GetPurchaserQuery;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -16,18 +17,20 @@ public class PurchaseController : BaseController
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> Create([FromBody] CreatePurchaserCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] CreatePurchaserCommand command,
+        CancellationToken cancellationToken)
     {
         var response = await _mediator.Send(command, cancellationToken);
-        return Ok(response);
+        return CreateResponse(response);
     }
 
     [HttpGet]
     public async Task<IActionResult> Get(CancellationToken cancellationToken)
     {
-        return CreateResponse(null);
+        return CreateResponse(await _mediator.Send(
+            new GetPurchaserQuery() { PurchaserId = GetUserId() }, cancellationToken));
     }
-    
+
     [HttpPut]
     public async Task<IActionResult> Update(CancellationToken cancellationToken)
     {

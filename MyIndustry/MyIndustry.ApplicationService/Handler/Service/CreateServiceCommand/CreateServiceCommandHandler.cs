@@ -1,4 +1,5 @@
 using MyIndustry.Domain.Aggregate;
+using MyIndustry.Domain.ValueObjects;
 
 namespace MyIndustry.ApplicationService.Handler.Service.CreateServiceCommand;
 
@@ -37,7 +38,7 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
         {
             Title = request.Title,
             Description = request.Description,
-            Price = new decimal(request.Price * 100),
+            Price = new Amount(request.Price).ToDecimal(),
             SellerId = request.SellerId,
             ImageUrls = request.ImageUrls,
             EstimatedEndDay = request.EstimatedEndDay,

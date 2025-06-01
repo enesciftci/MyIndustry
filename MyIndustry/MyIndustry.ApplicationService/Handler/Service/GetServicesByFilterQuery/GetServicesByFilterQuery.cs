@@ -4,4 +4,9 @@ public sealed record GetServicesByFilterQuery : IRequest<GetServicesByFilterQuer
 {
     public Guid CategoryId { get; set; }
     public Guid? SubCategoryId { get; set; }
+
+    public int? CityId { get; set; }
+
+    public int? DistrictId { get; set; }
+    // todo buraya bir enum gelmeli filter by olarak ürüne göre sırala satıcıya göre sırala olarak
 }

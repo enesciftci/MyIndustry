@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
+using MyIndustry.Domain.ValueObjects;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesByRandomlyQuery;
 
@@ -22,10 +23,10 @@ public class GetServicesByRandomlyQueryHandler : IRequestHandler<GetServicesByRa
             .Select(p => new ServiceDto
             {
                 Id = p.Id,
-                Price = p.Price,
+                Price = new Amount(p.Price).ToInt(),
                 Title = p.Title,
                 Description = p.Description,
-                ImageUrls = p.ImageUrls,
+                ImageUrls = new List<string>(){p.ImageUrls}.ToArray(),
                 SellerId = p.SellerId,
                 EstimatedEndDay = p.EstimatedEndDay
             })

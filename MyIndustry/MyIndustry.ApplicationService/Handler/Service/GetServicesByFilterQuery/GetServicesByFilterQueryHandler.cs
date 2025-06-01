@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
+using MyIndustry.Domain.ValueObjects;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesByFilterQuery;
 
@@ -14,19 +15,35 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
 
     public async Task<GetServicesByFilterQueryResult> Handle(GetServicesByFilterQuery request, CancellationToken cancellationToken)
     {
-        var services = await _serviceRepository
-            .GetAllQuery()
+        var query = _serviceRepository.GetAllQuery();
+
+        if (request.SubCategoryId.HasValue)
+        {
+            query = query.Where(p => p.SubCategoryId == request.SubCategoryId.Value);
+        }
+
+        if (request.CityId.HasValue)
+        {
+            query = query.Where(p => p.Seller.Addresses.Any(x => x.City == request.CityId.Value));
+
+            if (request.DistrictId.HasValue)
+            {
+                query = query.Where(p => p.Seller.Addresses.Any(x => x.District == request.DistrictId.Value));
+            }
+        }
+
+        var services = await query
             .Where(p =>
                 p.CategoryId == request.CategoryId &&
-                (request.SubCategoryId.HasValue && request.SubCategoryId.Value == p.SubCategoryId) &&
+                p.IsApproved &&
                 p.IsActive)
-            .Select(p=>new ServiceDto()
+            .Select(p => new ServiceDto
             {
                 Id = p.Id,
                 Title = p.Title,
                 Description = p.Description,
-                ImageUrls = p.ImageUrls,
-                Price = p.Price,
+                ImageUrls = new List<string>(){p.ImageUrls}.ToArray(),
+                Price = new Amount(p.Price).ToInt(),
                 SellerId = p.SellerId
             })
             .AsNoTracking()

@@ -1,4 +1,5 @@
 using MyIndustry.ApplicationService.Dto;
+using MyIndustry.Domain.ValueObjects;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesByIdQuery;
 
@@ -23,10 +24,10 @@ public class GetServicesByIdQueryHandler : IRequestHandler<GetServicesByIdQuery,
             Service = new ServiceDto()
             {
                 Id = service.Id,
-                Price = service.Price,
+                Price = new Amount(service.Price).ToInt(),
                 Description = service.Description,
                 Title = service.Title,
-                ImageUrls = service.ImageUrls,
+                ImageUrls = new List<string>(){service.ImageUrls}.ToArray(),
                 SellerId = service.SellerId,
                 EstimatedEndDay = service.EstimatedEndDay
             }

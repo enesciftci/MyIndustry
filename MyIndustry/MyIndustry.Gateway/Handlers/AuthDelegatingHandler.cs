@@ -16,7 +16,6 @@ public class AuthDelegatingHandler : DelegatingHandler
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        Console.WriteLine("verify");
         _httpContextAccessor.HttpContext.Request.Headers.TryGetValue("Authorization", out var jwtValue);
 
         if (string.IsNullOrEmpty(jwtValue))

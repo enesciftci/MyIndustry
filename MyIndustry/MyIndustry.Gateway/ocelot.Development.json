@@ -33,6 +33,41 @@
       "UpstreamPathTemplate": "/api/v1/services/list",
       "UpstreamHttpMethod": [
         "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/{id}",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/{id}",
+      "UpstreamHttpMethod": [
+        "Delete"
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer",
@@ -145,13 +180,6 @@
       "UpstreamPathTemplate": "/api/v1/services/list/randomly",
       "UpstreamHttpMethod": [
         "Get"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
       ]
     },
     {
@@ -306,6 +334,76 @@
       "UpstreamPathTemplate": "/api/v1/auth/confirm-email",
       "UpstreamHttpMethod": [
         "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/reset-password",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5264
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/reset-password",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/forgot-password",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5264
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/forgot-password",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites/{id}",
+      "UpstreamHttpMethod": [
+        "Delete"
       ]
     }
   ],

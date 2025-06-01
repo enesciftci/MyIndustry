@@ -1,6 +1,6 @@
 namespace MyIndustry.Queue.Message;
 
-public sealed record SendConfirmationEmailMessage : BaseMessage
+public record SendForgotPasswordEmailMessage()
 {
     public string Email { get; set; }
     public string Subject { get; set; }

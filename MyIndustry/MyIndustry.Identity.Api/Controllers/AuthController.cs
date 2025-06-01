@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using MyIndustry.Identity.Api.Requests;
 using MyIndustry.Identity.Domain.Service;
 using RedisCommunicator;
 
@@ -58,16 +60,13 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
-    public async Task<IActionResult> LogOut([FromBody] LogOutModel logOutModel)
+    public async Task<IActionResult> LogOut()
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
 
-        var isTokenDeleted = await _authService.RemoveTokenAsync(userId);
+        await _authService.RemoveTokenAsync(userId);
 
-        if (isTokenDeleted || string.IsNullOrEmpty(userId))
-            return Ok();
-
-        return new BadRequestResult();
+        return Ok();
     }
     
     [HttpPost("register")]
@@ -89,6 +88,22 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ConfirmEmail([FromBody] EmailConfirmationDto emailConfirmationDto, CancellationToken cancellationToken)
     {
         var result = await _userService.ConfirmEmail(emailConfirmationDto.UserId, emailConfirmationDto.Token, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] PasswordForgotRequest forgotPasswordRequest, CancellationToken cancellationToken)
+    {
+        var result = await _userService.ForgotPassword(forgotPasswordRequest.Email,forgotPasswordRequest.ClientUrl, cancellationToken);
+    
+        return Ok(result);
+    }
+    
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequest request)
+    {
+        var result = await _userService.ResetPassword(request.UserId, request.Token, request.NewPassword);
+    
         return Ok(result);
     }
 }

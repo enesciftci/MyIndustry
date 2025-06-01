@@ -1,10 +1,13 @@
 using MediatR;
+using MyIndustry.ApplicationService.Dto;
 using MyIndustry.ApplicationService.Handler.Service.CreateServiceCommand;
+using MyIndustry.ApplicationService.Handler.Service.DeleteServiceByIdCommand;
 using MyIndustry.ApplicationService.Handler.Service.DisableServiceByIdCommand;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByFilterQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByIdQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByRandomlyQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesBySellerIdQuery;
+using MyIndustry.ApplicationService.Handler.Service.IncreaseServiceViewCountCommand;
 using MyIndustry.ApplicationService.Handler.Service.UpdateServiceByIdCommand;
 
 namespace MyIndustry.Api.Controllers.v1;
@@ -21,10 +24,28 @@ public class ServiceController : BaseController
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateServiceCommand command,
+    public async Task<IActionResult> Create(
+        [FromForm] string title,
+        [FromForm] string description,
+        [FromForm] int price,
+        [FromForm] int estimatedDay,
+        [FromForm] Guid categoryId,
+        [FromForm] Guid subCategoryId,
+        [FromForm] List<IFormFile> images,
         CancellationToken cancellationToken)
     {
-        command.SellerId = GetUserId();
+        var command = new CreateServiceCommand
+        {
+            Title = title,
+            Description = description,
+            Price = price,
+            EstimatedEndDay = estimatedDay,
+            CategoryId = categoryId,
+            SubCategoryId = subCategoryId,
+            SellerId = GetUserId()
+            // ImageUrls = images
+        };
+
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
 
@@ -43,11 +64,39 @@ public class ServiceController : BaseController
         return CreateResponse(await _mediator.Send(query, cancellationToken));
     }
 
-    [HttpPut("{serviceId:guid}")]
-    public async Task<IActionResult> Update(Guid serviceId, UpdateServiceByIdCommand command, CancellationToken cancellationToken)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(
+        [FromRoute] Guid id, 
+        [FromForm] string title,
+        [FromForm] string description,
+        [FromForm] int price,
+        [FromForm] int estimatedDay,
+        [FromForm] List<IFormFile> images,
+        CancellationToken cancellationToken)
     {
-        command.ServiceDto.Id = serviceId;
-        command.ServiceDto.SellerId = GetUserId();
+        foreach (var image in images)
+        {
+            using var ms = new MemoryStream();
+            await image.CopyToAsync(ms, cancellationToken);
+            var imageBytes = ms.ToArray();
+
+            // Burada her bir imageBytes ile işlem yapabilirsin
+        }
+        
+        var command = new UpdateServiceByIdCommand
+        {
+            ServiceDto = new ServiceDto
+            {
+                Id = id,
+                Title = title,
+                Description = description,
+                Price = price,
+                EstimatedEndDay = estimatedDay,
+                // ImageUrls = image,
+                SellerId = GetUserId()
+            }
+        };
+        
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
 
@@ -69,6 +118,25 @@ public class ServiceController : BaseController
         return CreateResponse(await _mediator.Send(new DisableServiceByIdCommand()
         {
             SellerId = GetUserId(),
+            ServiceId = id
+        }, cancellationToken));
+    }
+    
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        return CreateResponse(await _mediator.Send(new DeleteServiceByIdCommand()
+        {
+            SellerId = GetUserId(),
+            Id = id
+        }, cancellationToken));
+    }
+    
+    [HttpPost("increase-viewcount/{id:guid}")]
+    public async Task<IActionResult> IncreaseViewCount(Guid id, CancellationToken cancellationToken)
+    {
+        return CreateResponse(await _mediator.Send(new IncreaseServiceViewCountCommand()
+        {
             ServiceId = id
         }, cancellationToken));
     }

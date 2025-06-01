@@ -13,6 +13,8 @@ public class Service : Entity
     public Guid SubCategoryId { get; set; }
     public int ViewCount { get; set; }
     public Guid CategoryId { get; set; }
+    public bool IsApproved { get; set; }
+    public Guid ApprovedBy { get; set; }
     public Category Category { get; set; }
     public SubCategory SubCategory { get; set; }
     public ICollection<ServiceViewLog> ServiceViewLogs { get; set; }

@@ -1,7 +1,6 @@
-using System.Net;
-using System.Text;
-using System.Text.Encodings.Web;
+using System.Web;
 using Microsoft.AspNetCore.Identity;
+using MyIndustry.Domain.ExceptionHandling;
 using MyIndustry.Identity.Domain.Aggregate;
 using MyIndustry.Queue.Message;
 using RabbitMqCommunicator;
@@ -32,11 +31,12 @@ public class UserService : IUserService
         if (result.Succeeded)
         {
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var encodedToken = WebUtility.UrlEncode(token);
+            var encodedToken = HttpUtility.UrlEncode(token);
 
             var confirmationLink = $"http://localhost:3000/email-verification?userId={user.Id}&token={encodedToken}";
             
             await _customMessagePublisher.Publish(new SendConfirmationEmailMessage() { 
+                Email = user.Email,
                 Subject = "Confirm your email",
                 Body = confirmationLink }, cancellationToken);
         }
@@ -104,12 +104,13 @@ public class UserService : IUserService
     public async Task SendConfirmationEmailMessage(ApplicationUser user, CancellationToken cancellationToken)
     {
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        var encodedToken = WebUtility.UrlEncode(token);
+        var encodedToken = HttpUtility.UrlEncode(token);
 
         var confirmationLink = $"http://localhost:3000/email-verification?userId={user.Id}&token={encodedToken}";
 
         await _customMessagePublisher.Publish(new SendConfirmationEmailMessage()
         {
+            Email = user.Email,
             Subject = "Confirm your email",
             Body = confirmationLink
         }, cancellationToken);
@@ -118,6 +119,37 @@ public class UserService : IUserService
     public async Task<ApplicationUser> GetUserByEmail(string email)
     {
         return await _userManager.FindByEmailAsync(email);
+    }
+
+    public async Task<bool> ForgotPassword(string email, string clientUrl, CancellationToken cancellationToken)
+    {
+        var user = await GetUserByEmail(email);
+        if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+            return true; // Güvenlik için her zaman OK döneriz
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        var encodedToken = HttpUtility.UrlEncode(token);
+        var callbackUrl = $"{clientUrl}/reset-password?userId={user.Id}&token={encodedToken}";
+
+        await _customMessagePublisher.Publish(new SendForgotPasswordEmailMessage() { 
+            Email = user.Email,
+            Subject = "Reset your password",
+            Body = callbackUrl }, cancellationToken);
+        return true;
+    }
+    
+    public async Task<bool> ResetPassword(string userId, string token, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+            throw new BusinessRuleException(result.Errors.First().Description);
+
+        return true;
     }
 }
 
@@ -128,4 +160,6 @@ public interface IUserService
     Task<bool> ConfirmEmail(string userId, string token, CancellationToken cancellationToken);
     Task SendConfirmationEmailMessage(ApplicationUser user, CancellationToken cancellationToken);
     Task<ApplicationUser> GetUserByEmail(string email);
+    Task<bool> ForgotPassword (string email, string clientUrl, CancellationToken cancellationToken);
+    Task<bool> ResetPassword (string userId, string token, string newPassword);
 }
