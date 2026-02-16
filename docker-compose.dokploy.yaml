@@ -41,7 +41,7 @@ services:
       ConnectionStrings__MyIndustryIdentityDb: Host=myindustry-database-ss66da;Port=5432;Database=myindustry_identity;Username=postgres;Password=pNpvoM2jerE7OoCQ4oIw
       ConnectionStrings__Redis: myindustry-redis-kmrpdg:6379,password=W5OZNt0HnUvqZUroZtDM
       IdentityUrl: http://myindustry-identity:8080
-      RabbitMq__Host: myindustry-rabbitmq-rabbitmq
+      RabbitMq__Host: myindustry-rabbitmq-y93drl-rabbitmq
       RabbitMq__Port: "5672"
       RabbitMq__UserName: myindustry
       RabbitMq__Password: "mo[C!332r+6l"
@@ -82,7 +82,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__MyIndustry: Host=myindustry-database-ss66da;Port=5432;Database=myindustry;Username=postgres;Password=pNpvoM2jerE7OoCQ4oIw
-      RabbitMq__Host: myindustry-rabbitmq-rabbitmq
+      RabbitMq__Host: myindustry-rabbitmq-y93drl-rabbitmq
       RabbitMq__Port: "5672"
       RabbitMq__UserName: myindustry
       RabbitMq__Password: "mo[C!332r+6l"
