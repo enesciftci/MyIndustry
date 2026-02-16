@@ -1,0 +1,100 @@
+version: '3.8'
+
+# ===================
+# MyIndustry Application Services for Dokploy
+# ===================
+# Infrastructure (PostgreSQL, Redis) uses Dokploy built-in services
+# RabbitMQ runs as separate Dokploy compose
+
+services:
+  myindustry-api:
+    build:
+      context: .
+      dockerfile: MyIndustry.Api/Dockerfile
+    container_name: myindustry-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__MyIndustry: Host=myindustry-database-ss66da;Port=5432;Database=myindustry;Username=postgres;Password=pNpvoM2jerE7OoCQ4oIw
+      IdentityUrl: http://myindustry-identity:8080
+    ports:
+      - "5000:8080"
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  myindustry-identity:
+    build:
+      context: .
+      dockerfile: MyIndustry.Identity.Api/Dockerfile
+    container_name: myindustry-identity
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__MyIndustryIdentityDb: Host=myindustry-database-ss66da;Port=5432;Database=myindustry_identity;Username=postgres;Password=pNpvoM2jerE7OoCQ4oIw
+      ConnectionStrings__Redis: myindustry-redis-kmrpdg:6379,password=W5OZNt0HnUvqZUroZtDM
+      IdentityUrl: http://myindustry-identity:8080
+      RabbitMq__Host: myindustry-rabbitmq-rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: myindustry
+      RabbitMq__Password: "mo[C!332r+6l"
+    ports:
+      - "5001:8080"
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  myindustry-gateway:
+    build:
+      context: .
+      dockerfile: MyIndustry.Gateway/Dockerfile
+    container_name: myindustry-gateway
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "5002:8080"
+    networks:
+      - dokploy-network
+    depends_on:
+      - myindustry-api
+      - myindustry-identity
+
+  myindustry-queue:
+    build:
+      context: .
+      dockerfile: MyIndustry.Queue/Dockerfile
+    container_name: myindustry-queue
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__MyIndustry: Host=myindustry-database-ss66da;Port=5432;Database=myindustry;Username=postgres;Password=pNpvoM2jerE7OoCQ4oIw
+      RabbitMq__Host: myindustry-rabbitmq-rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: myindustry
+      RabbitMq__Password: "mo[C!332r+6l"
+    networks:
+      - dokploy-network
+
+# ===================
+# Network
+# ===================
+# Using Dokploy's default network to connect with built-in services
+
+networks:
+  dokploy-network:
+    external: true
+    name: dokploy-network
