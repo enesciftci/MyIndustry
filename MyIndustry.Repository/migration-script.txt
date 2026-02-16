@@ -1,0 +1,7 @@
+    dotnet ef migrations add InitialCreate --project ../MyIndustry/MyIndustry.Repository/MyIndustry.Repository.csproj --startup-project 
+    ../MyIndustry/MyIndustry.Api/MyIndustry.Api.csproj
+    
+    dotnet ef database update
+    
+    
+      dotnet ef migrations add usernameemail --project ../MyIndustry.Identity.Repository/MyIndustry.Identity.Repository.csproj --startup-project ../MyIndustry.Identity.Api/MyIndustry.Identity.Api.csproj 

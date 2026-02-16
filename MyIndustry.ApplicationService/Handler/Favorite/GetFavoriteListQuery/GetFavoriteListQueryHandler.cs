@@ -1,0 +1,49 @@
+using MassTransit.Initializers;
+using Microsoft.EntityFrameworkCore;
+using MyIndustry.ApplicationService.Dto;
+using MyIndustry.Domain.ValueObjects;
+
+namespace MyIndustry.ApplicationService.Handler.Favorite.GetFavoriteListQuery;
+
+public class GetFavoriteListQueryHandler : IRequestHandler<GetFavoriteListQuery, GetFavoriteListQueryResult>
+{
+    private readonly IGenericRepository<Domain.Aggregate.Favorite> _favoriteRepository;
+
+    public GetFavoriteListQueryHandler(IGenericRepository<Domain.Aggregate.Favorite> favoriteRepository)
+    {
+        _favoriteRepository = favoriteRepository;
+    }
+
+    public async Task<GetFavoriteListQueryResult> Handle(GetFavoriteListQuery request, CancellationToken cancellationToken)
+    {
+        var favorites = await _favoriteRepository
+            .GetAllQuery()
+            .Where(p => p.UserId == request.UserId)
+            .Include(p => p.Service)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken: cancellationToken);
+            
+            var favoriteDtos = favorites.Select(p=> new FavoriteDto()
+            {
+                Id = p.Id,
+                IsFavorite = true,
+                Service = new ServiceDto()
+                {
+                    Id =p.Service.Id,
+                    Price = new Amount(p.Service.Price).ToInt(),
+                    Description = p.Service.Description,
+                    Title = p.Service.Title,
+                    // ImageUrls = p.Service.ImageUrls.Split(),
+                    SellerId = p.Service.SellerId,
+                    EstimatedEndDay = p.Service.EstimatedEndDay,
+                    ModifiedDate = p.Service.ModifiedDate
+                }
+            })
+            .ToList();
+
+        return new GetFavoriteListQueryResult
+        {
+            FavoriteList = favoriteDtos,
+        }.ReturnOk();
+    }
+}

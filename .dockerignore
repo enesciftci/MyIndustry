@@ -1,0 +1,44 @@
+﻿# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# IDE
+.idea/
+.vs/
+.vscode/
+*.swp
+*.swo
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+LICENSE
+
+# Test files
+**/TestResults/
+**/*.Tests/
+
+# Local settings
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Docker
+**/Dockerfile*
+docker-compose*.yml
+compose*.yaml
+.dockerignore
+
+# Misc
+*.log
+*.tmp

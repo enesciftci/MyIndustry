@@ -1,0 +1,174 @@
+﻿version: '3.8'
+
+services:
+  # ===================
+  # Infrastructure
+  # ===================
+  
+  postgres:
+    image: postgres:16-alpine
+    container_name: myindustry-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      POSTGRES_DB: ${POSTGRES_DB:-myindustry}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - myindustry-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: myindustry-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - myindustry-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis123}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: myindustry-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    networks:
+      - myindustry-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===================
+  # Application Services
+  # ===================
+
+  myindustry-api:
+    build:
+      context: .
+      dockerfile: MyIndustry.Api/Dockerfile
+    image: myindustry-api:${TAG:-latest}
+    container_name: myindustry-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__MyIndustry: Host=postgres;Port=5432;Database=${POSTGRES_DB:-myindustry};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres123}
+      IdentityUrl: ${IDENTITY_URL:-http://myindustry-identity:8080}
+    ports:
+      - "${API_PORT:-5000}:8080"
+    networks:
+      - myindustry-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  myindustry-identity:
+    build:
+      context: .
+      dockerfile: MyIndustry.Identity.Api/Dockerfile
+    image: myindustry-identity:${TAG:-latest}
+    container_name: myindustry-identity
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__MyIndustryIdentityDb: Host=postgres;Port=5432;Database=${POSTGRES_DB:-myindustry}_identity;Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres123}
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD:-redis123}
+      IdentityUrl: ${IDENTITY_URL:-http://myindustry-identity:8080}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${IDENTITY_PORT:-5001}:8080"
+    networks:
+      - myindustry-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  myindustry-gateway:
+    build:
+      context: .
+      dockerfile: MyIndustry.Gateway/Dockerfile
+    image: myindustry-gateway:${TAG:-latest}
+    container_name: myindustry-gateway
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "${GATEWAY_PORT:-5002}:8080"
+    networks:
+      - myindustry-network
+    depends_on:
+      - myindustry-api
+      - myindustry-identity
+
+  myindustry-queue:
+    build:
+      context: .
+      dockerfile: MyIndustry.Queue/Dockerfile
+    image: myindustry-queue:${TAG:-latest}
+    container_name: myindustry-queue
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__MyIndustry: Host=postgres;Port=5432;Database=${POSTGRES_DB:-myindustry};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres123}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Port: "5672"
+      RabbitMq__UserName: ${RABBITMQ_USER:-guest}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
+    networks:
+      - myindustry-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+# ===================
+# Networks & Volumes
+# ===================
+
+networks:
+  myindustry-network:
+    name: myindustry-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: myindustry-postgres-data
+  redis_data:
+    name: myindustry-redis-data
+  rabbitmq_data:
+    name: myindustry-rabbitmq-data
