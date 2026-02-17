@@ -65,6 +65,21 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+// Handle preflight OPTIONS requests before Ocelot
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        context.Response.Headers.Add("Access-Control-Allow-Headers", "*");
+        context.Response.StatusCode = 200;
+        return;
+    }
+    await next();
+});
+
 // app.UseHttpsRedirection(); // Disabled for HTTP support
 await app.UseOcelot();
 
