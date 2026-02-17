@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyIndustry.Identity.Domain.Aggregate;
-using MyIndustry.Identity.Domain.Repository;
 using MyIndustry.Identity.Domain.Service;
 using MyIndustry.Identity.Repository;
 using RabbitMqCommunicator;
@@ -34,7 +33,6 @@ builder.Services.AddCors(options =>
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICustomMessagePublisher, CustomMessageMessagePublisher>();
-builder.Services.AddScoped<IEmailVerificationCodeRepository, EmailVerificationCodeRepository>();
 
 builder.Services.AddMassTransit(x =>
 {
@@ -61,7 +59,7 @@ builder.Services.AddIdentityApiEndpoints<ApplicationUser>(p =>
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 {
-    options.TokenLifespan = TimeSpan.FromMinutes(1);
+    options.TokenLifespan = TimeSpan.FromMinutes(15); // Email verification code lifespan
 });
 
 var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using MyIndustry.Domain.ExceptionHandling;
 using MyIndustry.Identity.Domain.Aggregate;
-using MyIndustry.Identity.Domain.Repository;
 using MyIndustry.Queue.Message;
 using RabbitMqCommunicator;
 
@@ -14,18 +13,17 @@ public class UserService : IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICustomMessagePublisher _customMessagePublisher;
     private readonly IConfiguration _configuration;
-    private readonly IEmailVerificationCodeRepository _verificationCodeRepository;
+    
+    private const string EmailConfirmationPurpose = "EmailConfirmation";
 
     public UserService(
         UserManager<ApplicationUser> userManager, 
         ICustomMessagePublisher customMessagePublisher,
-        IConfiguration configuration,
-        IEmailVerificationCodeRepository verificationCodeRepository)
+        IConfiguration configuration)
     {
         _userManager = userManager;
         _customMessagePublisher = customMessagePublisher;
         _configuration = configuration;
-        _verificationCodeRepository = verificationCodeRepository;
     }
 
     public async Task CreateUser(RegisterModel register, CancellationToken cancellationToken)
@@ -57,31 +55,19 @@ public class UserService : IUserService
 
     private async Task SendEmailVerificationAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
-        // Generate token for email confirmation (ASP.NET Identity token)
+        // Generate token for email confirmation (for link-based verification)
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = HttpUtility.UrlEncode(token);
         
-        // Generate 6-digit verification code
-        var verificationCode = EmailTemplateHelper.GenerateVerificationCode();
+        // Generate 6-digit verification code using Identity's token provider
+        var verificationCode = await _userManager.GenerateUserTokenAsync(
+            user, 
+            TokenOptions.DefaultEmailProvider, 
+            EmailConfirmationPurpose);
         
         // Get frontend URL from configuration
         var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
         var confirmationLink = $"{frontendUrl}/email-verification?userId={user.Id}&token={encodedToken}";
-        
-        // Save verification code to database
-        var emailVerificationCode = new EmailVerificationCode
-        {
-            Id = Guid.NewGuid(),
-            UserId = user.Id,
-            Email = user.Email,
-            Code = verificationCode,
-            Token = token,
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(15),
-            IsUsed = false
-        };
-        
-        await _verificationCodeRepository.AddAsync(emailVerificationCode, cancellationToken);
         
         // Generate HTML email template
         var userName = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : null;
@@ -104,7 +90,6 @@ public class UserService : IUserService
             throw new Exception("User not found");
         }
 
-        // Kodun geçerliliğini doğrula
         var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider, model.VerificationCode);
 
         if (result == false)
@@ -128,28 +113,7 @@ public class UserService : IUserService
 
         if (result.Succeeded)
         {
-            // Mark verification code as used
-            var verificationCode = await _verificationCodeRepository.GetLatestByUserIdAndTokenAsync(userId, token);
-            
-            if (verificationCode != null)
-            {
-                verificationCode.IsUsed = true;
-                await _verificationCodeRepository.UpdateAsync(verificationCode, cancellationToken);
-            }
-            
-            await _customMessagePublisher.Publish(new CreateSellerMessage()
-            {
-                UserId = Guid.Parse(user.Id),
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email
-            }, cancellationToken);
-            
-            await _customMessagePublisher.Publish(new CreatePurchaserMessage()
-            {
-                UserId = Guid.Parse(user.Id),
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email
-            }, cancellationToken);
+            await PublishUserCreatedMessages(user, cancellationToken);
             return true;
         }
         else
@@ -160,49 +124,60 @@ public class UserService : IUserService
     
     public async Task<bool> ConfirmEmailByCode(string email, string code, CancellationToken cancellationToken)
     {
-        var verificationCode = await _verificationCodeRepository.GetLatestByEmailAndCodeAsync(email, code);
-
-        if (verificationCode == null)
-        {
-            throw new BusinessRuleException("Doğrulama kodu bulunamadı.");
-        }
-
-        if (verificationCode.IsExpired)
-        {
-            throw new BusinessRuleException("Doğrulama kodunun süresi dolmuş. Lütfen yeni kod talep edin.");
-        }
-
-        var user = await _userManager.FindByIdAsync(verificationCode.UserId);
+        var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
         {
-            throw new Exception("Kullanıcı bulunamadı.");
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
         }
 
-        var result = await _userManager.ConfirmEmailAsync(user, verificationCode.Token);
+        if (user.EmailConfirmed)
+        {
+            throw new BusinessRuleException("Email adresi zaten doğrulanmış.");
+        }
+
+        // Verify the 6-digit code using Identity's token provider
+        var isValid = await _userManager.VerifyUserTokenAsync(
+            user, 
+            TokenOptions.DefaultEmailProvider, 
+            EmailConfirmationPurpose, 
+            code);
+
+        if (!isValid)
+        {
+            throw new BusinessRuleException("Doğrulama kodu geçersiz veya süresi dolmuş.");
+        }
+
+        // Mark email as confirmed
+        user.EmailConfirmed = true;
+        var result = await _userManager.UpdateAsync(user);
 
         if (result.Succeeded)
         {
-            verificationCode.IsUsed = true;
-            await _verificationCodeRepository.UpdateAsync(verificationCode, cancellationToken);
-
-            await _customMessagePublisher.Publish(new CreateSellerMessage()
-            {
-                UserId = Guid.Parse(user.Id),
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email
-            }, cancellationToken);
+            // Update security stamp to invalidate old codes
+            await _userManager.UpdateSecurityStampAsync(user);
             
-            await _customMessagePublisher.Publish(new CreatePurchaserMessage()
-            {
-                UserId = Guid.Parse(user.Id),
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email
-            }, cancellationToken);
-            
+            await PublishUserCreatedMessages(user, cancellationToken);
             return true;
         }
 
         throw new Exception("Email doğrulama başarısız oldu.");
+    }
+    
+    private async Task PublishUserCreatedMessages(ApplicationUser user, CancellationToken cancellationToken)
+    {
+        await _customMessagePublisher.Publish(new CreateSellerMessage()
+        {
+            UserId = Guid.Parse(user.Id),
+            PhoneNumber = user.PhoneNumber,
+            Email = user.Email
+        }, cancellationToken);
+        
+        await _customMessagePublisher.Publish(new CreatePurchaserMessage()
+        {
+            UserId = Guid.Parse(user.Id),
+            PhoneNumber = user.PhoneNumber,
+            Email = user.Email
+        }, cancellationToken);
     }
 
     public async Task SendConfirmationEmailMessage(ApplicationUser user, CancellationToken cancellationToken)
