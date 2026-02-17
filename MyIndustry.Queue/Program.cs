@@ -15,11 +15,13 @@ var builder = Host.CreateDefaultBuilder(args);
 
 builder.ConfigureAppConfiguration((context, config) =>
 {
-    var environmentName = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
-    var d = Environment.GetEnvironmentVariables();
-    // appsettings.json dosyasını yükleyin
+    var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") 
+                          ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") 
+                          ?? "Production";
+    
     config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
     config.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+    config.AddEnvironmentVariables(); // Environment variables override appsettings
 });
 builder.ConfigureServices((hostContext, services) =>
 {
