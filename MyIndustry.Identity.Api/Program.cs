@@ -109,29 +109,11 @@ builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommuni
 
 var app = builder.Build();
 
-// Auto-create database tables
+// Auto-create database tables (only if not exists)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    
-    try
-    {
-        logger.LogInformation("Starting database initialization...");
-        
-        // Delete existing database to ensure clean state
-        db.Database.EnsureDeleted();
-        logger.LogInformation("Database deleted (if existed)");
-        
-        // Create database with all tables
-        var created = db.Database.EnsureCreated();
-        logger.LogInformation($"Database EnsureCreated result: {created}");
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Database initialization failed!");
-        throw;
-    }
+    db.Database.EnsureCreated();
 }
 
 // Configure the HTTP request pipeline.
