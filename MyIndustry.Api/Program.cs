@@ -80,6 +80,14 @@ builder.Services.AddMediatR(configuration =>
     configuration.RegisterServicesFromAssembly(typeof(CreatePurchaserCommandHandler).Assembly);
 });
 var app = builder.Build();
+
+// Auto-migrate database
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
+    db.Database.Migrate();
+}
+
 app.UseStaticFiles();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
