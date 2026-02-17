@@ -109,11 +109,11 @@ builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommuni
 
 var app = builder.Build();
 
-// Auto-migrate database
+// Auto-create database tables
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
 }
 
 // Configure the HTTP request pipeline.
