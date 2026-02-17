@@ -15,7 +15,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
+if (builder.Environment.IsDevelopment())
+    Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 builder.Services.AddAuthorization();
 
@@ -90,11 +91,15 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
     .AddDbContextPool<MyIndustryIdentityDbContext>(options =>
+    {
         options.UseNpgsql(builder.Configuration.GetConnectionString("MyIndustryIdentityDb"), npgsqlDbContextOptionsBuilder =>
                 npgsqlDbContextOptionsBuilder.EnableRetryOnFailure(2, TimeSpan.FromSeconds(10), null)
                     .CommandTimeout(60))
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
-            .EnableSensitiveDataLogging());
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
+        
+        if (builder.Environment.IsDevelopment())
+            options.EnableSensitiveDataLogging();
+    });
 
 var redisConfiguration = builder.Configuration.GetConnectionString("Redis");
 var redis = ConnectionMultiplexer.Connect(redisConfiguration);

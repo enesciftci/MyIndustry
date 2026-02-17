@@ -5,15 +5,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 
-Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
+if (builder.Environment.IsDevelopment())
+    Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 builder.Services
     .AddDbContextPool<MyIndustryDbContext>(options =>
+    {
         options.UseNpgsql(builder.Configuration.GetConnectionString("MyIndustry"), npgsqlDbContextOptionsBuilder =>
                 npgsqlDbContextOptionsBuilder.EnableRetryOnFailure(2, TimeSpan.FromSeconds(10), null)
                     .CommandTimeout(60))
-            .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll)
-            .EnableSensitiveDataLogging());
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
+        
+        if (builder.Environment.IsDevelopment())
+            options.EnableSensitiveDataLogging();
+    });
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
