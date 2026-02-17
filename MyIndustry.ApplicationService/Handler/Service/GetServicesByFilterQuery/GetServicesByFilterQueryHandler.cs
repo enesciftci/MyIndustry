@@ -17,8 +17,19 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
 
     public async Task<GetServicesByFilterQueryResult> Handle(GetServicesByFilterQuery request, CancellationToken cancellationToken)
     {
-        var query = _serviceRepository.GetAllQuery();
+        var query = _serviceRepository.GetAllQuery()
+            .Where(p => p.IsApproved && p.IsActive);
 
+        // Search by title or description
+        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
+        {
+            var searchLower = request.SearchTerm.ToLower();
+            query = query.Where(p => 
+                p.Title.ToLower().Contains(searchLower) || 
+                p.Description.ToLower().Contains(searchLower));
+        }
+
+        // Filter by city/district
         if (request.CityId.HasValue)
         {
             query = query.Where(p => p.Seller.Addresses.Any(x => x.City == request.CityId.Value));
@@ -29,24 +40,36 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             }
         }
 
-        var allCategories = await _categoryRepository.GetAllQuery().ToListAsync(cancellationToken);
+        // Filter by category (if provided)
+        if (request.CategoryId.HasValue && request.CategoryId.Value != Guid.Empty)
+        {
+            var allCategories = await _categoryRepository.GetAllQuery().ToListAsync(cancellationToken);
+            var categoryIds = GetAllCategoryIds(request.CategoryId.Value);
+            query = query.Where(p => categoryIds.Contains(p.CategoryId));
+            
+            List<Guid> GetAllCategoryIds(Guid parentId)
+            {
+                var children = allCategories.Where(c => c.ParentId == parentId).ToList();
+                var ids = new List<Guid> { parentId };
+                foreach (var child in children)
+                {
+                    ids.AddRange(GetAllCategoryIds(child.Id));
+                }
+                return ids;
+            }
+        }
 
-        var categoryIds = GetAllCategoryIds(request.CategoryId);
-
-        
         var servicesData = await query
-            .Where(p =>
-                categoryIds.Contains(p.CategoryId) &&
-                p.IsApproved &&
-                p.IsActive)
             .Select(p => new
             {
                 Id = p.Id,
                 Title = p.Title,
                 Description = p.Description,
-                ImageUrls = p.ImageUrls ,
+                ImageUrls = p.ImageUrls,
                 Price = p.Price,
-                SellerId = p.SellerId
+                SellerId = p.SellerId,
+                ViewCount = p.ViewCount,
+                EstimatedEndDay = p.EstimatedEndDay
             })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -60,21 +83,11 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
                 ? [] 
                 : p.ImageUrls.Split(',', StringSplitOptions.RemoveEmptyEntries),
             Price = new Amount(p.Price).ToInt(),
-            SellerId = p.SellerId
+            SellerId = p.SellerId,
+            ViewCount = p.ViewCount,
+            EstimatedEndDay = p.EstimatedEndDay
         }).ToList();
+        
         return new GetServicesByFilterQueryResult() { Services = services }.ReturnOk();
-
-        List<Guid> GetAllCategoryIds(Guid parentId)
-        {
-            var children = allCategories.Where(c => c.ParentId == parentId).ToList();
-            var ids = new List<Guid> { parentId };
-
-            foreach (var child in children)
-            {
-                ids.AddRange(GetAllCategoryIds(child.Id));
-            }
-
-            return ids;
-        }
     }
 }
