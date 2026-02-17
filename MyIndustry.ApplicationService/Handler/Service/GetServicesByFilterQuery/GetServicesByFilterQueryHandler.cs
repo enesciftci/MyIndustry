@@ -20,13 +20,14 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
         var query = _serviceRepository.GetAllQuery()
             .Where(p => p.IsApproved && p.IsActive);
 
-        // Search by title or description
+        // Search by service title, description, or seller/company name
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
             var searchLower = request.SearchTerm.ToLower();
             query = query.Where(p => 
                 p.Title.ToLower().Contains(searchLower) || 
-                p.Description.ToLower().Contains(searchLower));
+                p.Description.ToLower().Contains(searchLower) ||
+                p.Seller.Title.ToLower().Contains(searchLower));
         }
 
         // Filter by city/district
