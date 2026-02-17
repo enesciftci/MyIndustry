@@ -1,3 +1,4 @@
+using MyIndustry.Api.Data;
 using MyIndustry.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -86,11 +87,14 @@ builder.Services.AddMediatR(configuration =>
 });
 var app = builder.Build();
 
-// Auto-create database tables (only if not exists)
+// Auto-create database tables and seed data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
     db.Database.EnsureCreated();
+    
+    // Seed dummy data
+    await DataSeeder.SeedAsync(db);
 }
 
 app.UseStaticFiles();
