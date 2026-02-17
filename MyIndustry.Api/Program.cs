@@ -86,13 +86,11 @@ builder.Services.AddMediatR(configuration =>
 });
 var app = builder.Build();
 
-// Auto-create database tables (DELETE AND RECREATE - REMOVE EnsureDeleted AFTER FIRST RUN!)
+// Auto-create database tables (only if not exists)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
-    db.Database.EnsureDeleted(); // ⚠️ REMOVE THIS LINE AFTER TABLES ARE CREATED!
     db.Database.EnsureCreated();
-    Console.WriteLine("Database tables created for Main API.");
 }
 
 app.UseStaticFiles();
