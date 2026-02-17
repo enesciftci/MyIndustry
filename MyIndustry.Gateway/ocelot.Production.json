@@ -243,13 +243,6 @@
       "UpstreamPathTemplate": "/api/v1/sellers/list",
       "UpstreamHttpMethod": [
         "Get"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
       ]
     },
     {
@@ -264,13 +257,6 @@
       "UpstreamPathTemplate": "/api/v1/categories/list",
       "UpstreamHttpMethod": [
         "Get"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
       ]
     },
     {
@@ -285,13 +271,6 @@
       "UpstreamPathTemplate": "/api/v1/categories/tree",
       "UpstreamHttpMethod": [
         "Get"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
       ]
     },
     {
@@ -306,13 +285,6 @@
       "UpstreamPathTemplate": "/api/v1/categories/main",
       "UpstreamHttpMethod": [
         "Get"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
       ]
     },
     {
@@ -327,13 +299,6 @@
       "UpstreamPathTemplate": "/api/v1/categories/{parentId}",
       "UpstreamHttpMethod": [
         "Get"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
       ]
     },
     {
