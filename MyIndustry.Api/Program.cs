@@ -93,8 +93,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors();
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled for HTTP support
 app.Run();

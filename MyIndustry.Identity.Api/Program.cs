@@ -19,6 +19,16 @@ Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(corsBuilder =>
+    {
+        corsBuilder.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICustomMessagePublisher, CustomMessageMessagePublisher>();
@@ -93,8 +103,7 @@ builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommuni
 
 
 var app = builder.Build();
-app.MapControllers();
-app.MapIdentityApi<ApplicationUser>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -102,8 +111,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
+app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection(); // Disabled for HTTP support
+
+app.MapControllers();
+app.MapIdentityApi<ApplicationUser>();
+
 app.Run();
