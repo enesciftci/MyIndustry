@@ -43,6 +43,7 @@ builder.ConfigureServices((hostContext, services) =>
         x.AddConsumer<CreatePurchaserConsumer>();
         x.AddConsumer<IncreaseServiceViewCountConsumer>();
         x.AddConsumer<SendForgotPasswordEmailConsumer>();
+        x.AddConsumer<SendConfirmationEmailConsumer>();
         x.UsingRabbitMq((context, cfg) =>
         {
             cfg.Host(rabbitMqSettings["Host"], ushort.Parse(rabbitMqSettings["Port"]), "/", h =>
@@ -55,6 +56,7 @@ builder.ConfigureServices((hostContext, services) =>
             cfg.ReceiveEndpoint("create_purchaser_queue", e => { e.ConfigureConsumer<CreatePurchaserConsumer>(context); });
             cfg.ReceiveEndpoint("increase_service_view_count_queue", e => { e.ConfigureConsumer<IncreaseServiceViewCountConsumer>(context); });
             cfg.ReceiveEndpoint("send_forgot_password_email_queue", e => { e.ConfigureConsumer<SendForgotPasswordEmailConsumer>(context); });
+            cfg.ReceiveEndpoint("send_confirmation_email_queue", e => { e.ConfigureConsumer<SendConfirmationEmailConsumer>(context); });
         });
     });
 });
