@@ -119,15 +119,13 @@ using (var scope = app.Services.CreateScope())
     {
         logger.LogInformation("Starting database initialization...");
         
-        // Delete and recreate to ensure clean state
-        // db.Database.EnsureDeleted(); // Uncomment if needed
+        // Delete existing database to ensure clean state
+        db.Database.EnsureDeleted();
+        logger.LogInformation("Database deleted (if existed)");
         
+        // Create database with all tables
         var created = db.Database.EnsureCreated();
         logger.LogInformation($"Database EnsureCreated result: {created}");
-        
-        // Check if tables exist
-        var canConnect = db.Database.CanConnect();
-        logger.LogInformation($"Database CanConnect: {canConnect}");
     }
     catch (Exception ex)
     {
