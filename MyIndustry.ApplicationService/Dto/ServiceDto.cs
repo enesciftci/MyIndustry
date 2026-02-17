@@ -12,4 +12,7 @@ public class ServiceDto
     public int ViewCount { get; set; }
     public string Title { get; set; }
     public DateTime? ModifiedDate { get; set; }
+    public DateTime? CreatedDate { get; set; }
+    public SellerDto Seller { get; set; }
+    public List<CategoryBreadcrumbDto> CategoryBreadcrumbs { get; set; }
 }
