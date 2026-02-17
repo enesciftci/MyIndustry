@@ -1,43 +1,546 @@
 {
   "Routes": [
     {
-      "DownstreamPathTemplate": "/wallet/check-external-pointtopup",
-      "DownstreamScheme": "https",
+      "DownstreamPathTemplate": "/api/v1/purchases/create",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "wallet-api.hepsipay.com",
-          "Port": 443
+          "Host": "myindustry-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/check-external-pointtopup",
+      "UpstreamPathTemplate": "/api/v1/purchases/create",
       "UpstreamHttpMethod": [
-        "Get"
+        "Post"
       ],
-      "Priority": 1,
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "DelegatingHandlers": [
         "AuthDelegatingHandler"
       ]
     },
     {
-      "DownstreamPathTemplate": "/InspectorWebService/Scanservice.asmx",
-      "DownstreamScheme": "https",
+      "DownstreamPathTemplate": "/api/v1/services/list",
+      "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "hepsipayprod.fineksus.info",
-          "Port": 443
+          "Host": "myindustry-api",
+          "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/fineksus/blacklist",
+      "UpstreamPathTemplate": "/api/v1/services/list",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/search",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/search",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/{id}",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/{id}",
+      "UpstreamHttpMethod": [
+        "Delete"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/filter",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/filter",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/subscriptionPlans/list",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/subscriptionPlans/list",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/subscriptionPlans",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/subscriptionPlans",
       "UpstreamHttpMethod": [
         "Post"
       ],
-      "Priority": 1,
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellerSubscriptions",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellerSubscriptions",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellerSubscriptions/subscribe",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellerSubscriptions/subscribe",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/list/randomly",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/list/randomly",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/{id}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/services",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellers/list",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/list",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/categorys/list",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/categories/list",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/categorys/tree",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/categories/tree",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/categorys/main",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/categories/main",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/categorys/{parentId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/categories/{parentId}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/categorys",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/categories",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/login",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/login",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/logout",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/register",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/register",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/verify",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/verify",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/confirm-email",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/confirm-email",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/reset-password",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/reset-password",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/forgot-password",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/forgot-password",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites/{serviceId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites/{serviceId}",
+      "UpstreamHttpMethod": [
+        "Delete"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
       "DelegatingHandlers": [
         "AuthDelegatingHandler"
       ]
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "https://myindustry-gateway.hepsipay.com"
+    "BaseUrl": "http://myindustry-gateway:8080"
   }
 }
