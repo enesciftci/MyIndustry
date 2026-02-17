@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyIndustry.Identity.Domain.Aggregate;
+using MyIndustry.Identity.Domain.Repository;
 using MyIndustry.Identity.Domain.Service;
 using MyIndustry.Identity.Repository;
 using RabbitMqCommunicator;
@@ -33,6 +34,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICustomMessagePublisher, CustomMessageMessagePublisher>();
+builder.Services.AddScoped<IEmailVerificationCodeRepository, EmailVerificationCodeRepository>();
 
 builder.Services.AddMassTransit(x =>
 {

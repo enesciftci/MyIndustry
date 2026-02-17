@@ -428,6 +428,34 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/auth/confirm-email-by-code",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5264
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/confirm-email-by-code",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/resend-verification-code",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5264
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/resend-verification-code",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/auth/reset-password",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

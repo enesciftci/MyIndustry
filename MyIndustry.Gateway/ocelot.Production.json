@@ -428,6 +428,34 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/auth/confirm-email-by-code",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/confirm-email-by-code",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/resend-verification-code",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/resend-verification-code",
+      "UpstreamHttpMethod": [
+        "Post"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/auth/reset-password",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

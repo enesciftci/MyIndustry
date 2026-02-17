@@ -94,6 +94,20 @@ public class AuthController : ControllerBase
         var result = await _userService.ConfirmEmail(emailConfirmationDto.UserId, emailConfirmationDto.Token, cancellationToken);
         return Ok(result);
     }
+    
+    [HttpPost("confirm-email-by-code")]
+    public async Task<IActionResult> ConfirmEmailByCode([FromBody] EmailConfirmationByCodeRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _userService.ConfirmEmailByCode(request.Email, request.Code, cancellationToken);
+        return Ok(result);
+    }
+    
+    [HttpPost("resend-verification-code")]
+    public async Task<IActionResult> ResendVerificationCode([FromBody] ResendVerificationCodeRequest request, CancellationToken cancellationToken)
+    {
+        await _userService.ResendVerificationCode(request.Email, cancellationToken);
+        return Ok(new { Message = "Doğrulama kodu tekrar gönderildi." });
+    }
 
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] PasswordForgotRequest forgotPasswordRequest, CancellationToken cancellationToken)
