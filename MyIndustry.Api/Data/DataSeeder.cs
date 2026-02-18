@@ -8,10 +8,11 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(MyIndustryDbContext context)
     {
-        // Eğer zaten veri varsa seed yapma
+        // Eğer zaten veri varsa sadece derin kategorileri kontrol et
         if (context.Categories.Any())
         {
-            Console.WriteLine("Database already has data. Skipping seed.");
+            Console.WriteLine("Database already has data. Checking for deep categories...");
+            await SeedDeepCategoriesIfMissing(context);
             return;
         }
 
@@ -61,6 +62,143 @@ public static class DataSeeder
         Console.WriteLine($"Created {services.Count} services.");
 
         Console.WriteLine("Database seeding completed!");
+    }
+
+    private static async Task SeedDeepCategoriesIfMissing(MyIndustryDbContext context)
+    {
+        var addedCount = 0;
+        
+        // Motor Yedek Parçaları altına derin kategoriler
+        var motorYedek = context.Categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları" && c.IsActive);
+        if (motorYedek != null)
+        {
+            // Çekici var mı?
+            if (!context.Categories.Any(c => c.Name == "Çekici" && c.ParentId == motorYedek.Id))
+            {
+                var cekiciId = Guid.NewGuid();
+                var kamyonId = Guid.NewGuid();
+                var otobusId = Guid.NewGuid();
+                
+                // 3. seviye - Araç Tipleri
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = cekiciId, Name = "Çekici", Description = "Çekici motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = kamyonId, Name = "Kamyon", Description = "Kamyon motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = otobusId, Name = "Otobüs", Description = "Otobüs motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow }
+                });
+                
+                // 4. seviye - Çekici Markaları
+                var scaniaId = Guid.NewGuid();
+                var volvoId = Guid.NewGuid();
+                var mercedesId = Guid.NewGuid();
+                
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = scaniaId, Name = "Scania", Description = "Scania çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = volvoId, Name = "Volvo", Description = "Volvo çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = mercedesId, Name = "Mercedes", Description = "Mercedes çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "MAN", Description = "MAN çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "DAF", Description = "DAF çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow }
+                });
+                
+                // 5. seviye - Scania Modelleri
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = Guid.NewGuid(), Name = "R410", Description = "Scania R410 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "R450", Description = "Scania R450 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "R500", Description = "Scania R500 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "S500", Description = "Scania S500 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow }
+                });
+                
+                // 5. seviye - Volvo Modelleri
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = Guid.NewGuid(), Name = "FH16", Description = "Volvo FH16 yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "FH500", Description = "Volvo FH500 yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "FM", Description = "Volvo FM yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow }
+                });
+                
+                // 5. seviye - Mercedes Modelleri
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = Guid.NewGuid(), Name = "Actros", Description = "Mercedes Actros yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Arocs", Description = "Mercedes Arocs yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Axor", Description = "Mercedes Axor yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow }
+                });
+                
+                addedCount += 18;
+                Console.WriteLine("Added deep categories for Motor Yedek Parçaları");
+            }
+        }
+        
+        // Hidrolik Pompalar altına derin kategoriler
+        var hidrolikPompa = context.Categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar" && c.IsActive);
+        if (hidrolikPompa != null)
+        {
+            if (!context.Categories.Any(c => c.Name == "Dişli Pompalar" && c.ParentId == hidrolikPompa.Id))
+            {
+                var disliPompaId = Guid.NewGuid();
+                
+                // 3. seviye - Pompa Tipleri
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = disliPompaId, Name = "Dişli Pompalar", Description = "Dişli tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Pistonlu Pompalar", Description = "Pistonlu tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Paletli Pompalar", Description = "Paletli tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow }
+                });
+                
+                // 4. seviye - Dişli Pompa Markaları
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = Guid.NewGuid(), Name = "Bosch Rexroth", Description = "Bosch Rexroth dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Parker", Description = "Parker dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Casappa", Description = "Casappa dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow }
+                });
+                
+                addedCount += 6;
+                Console.WriteLine("Added deep categories for Hidrolik Pompalar");
+            }
+        }
+        
+        // PLC ve Kontrol altına derin kategoriler
+        var plc = context.Categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol" && c.IsActive);
+        if (plc != null)
+        {
+            if (!context.Categories.Any(c => c.Name == "Siemens" && c.ParentId == plc.Id))
+            {
+                var siemensId = Guid.NewGuid();
+                
+                // 3. seviye - PLC Markaları
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = siemensId, Name = "Siemens", Description = "Siemens PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Omron", Description = "Omron PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Allen Bradley", Description = "Allen Bradley PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "Mitsubishi", Description = "Mitsubishi PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow }
+                });
+                
+                // 4. seviye - Siemens Serileri
+                context.Categories.AddRange(new[]
+                {
+                    new Category { Id = Guid.NewGuid(), Name = "S7-1200", Description = "Siemens S7-1200 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "S7-1500", Description = "Siemens S7-1500 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow },
+                    new Category { Id = Guid.NewGuid(), Name = "S7-300", Description = "Siemens S7-300 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow }
+                });
+                
+                addedCount += 7;
+                Console.WriteLine("Added deep categories for PLC ve Kontrol");
+            }
+        }
+        
+        if (addedCount > 0)
+        {
+            await context.SaveChangesAsync();
+            Console.WriteLine($"Seeded {addedCount} deep categories.");
+        }
+        else
+        {
+            Console.WriteLine("Deep categories already exist. Nothing to seed.");
+        }
     }
 
     private static List<Category> CreateCategories()
