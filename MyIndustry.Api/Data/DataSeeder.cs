@@ -14,6 +14,7 @@ public static class DataSeeder
             Console.WriteLine("Database already has data. Checking for deep categories...");
             await SeedDeepCategoriesIfMissing(context);
             await FixServiceCategories(context);
+            await FixServiceImages(context);
             return;
         }
 
@@ -362,6 +363,94 @@ public static class DataSeeder
         else
         {
             Console.WriteLine("All categories already exist.");
+        }
+    }
+
+    private static async Task FixServiceImages(MyIndustryDbContext context)
+    {
+        var services = context.Services.ToList();
+        var fixedCount = 0;
+        var random = new Random(42);
+
+        // Kategori bazlı dummy resimler
+        var imagesByCategory = new Dictionary<string, string[]>
+        {
+            ["hidrolik"] = new[] {
+                "https://picsum.photos/seed/hydraulic1/800/600",
+                "https://picsum.photos/seed/hydraulic2/800/600",
+                "https://picsum.photos/seed/pump1/800/600"
+            },
+            ["cnc"] = new[] {
+                "https://picsum.photos/seed/cnc1/800/600",
+                "https://picsum.photos/seed/cnc2/800/600",
+                "https://picsum.photos/seed/machine1/800/600"
+            },
+            ["rulman"] = new[] {
+                "https://picsum.photos/seed/bearing1/800/600",
+                "https://picsum.photos/seed/bearing2/800/600",
+                "https://picsum.photos/seed/gear1/800/600"
+            },
+            ["elektrik"] = new[] {
+                "https://picsum.photos/seed/plc1/800/600",
+                "https://picsum.photos/seed/automation1/800/600",
+                "https://picsum.photos/seed/circuit1/800/600"
+            },
+            ["metal"] = new[] {
+                "https://picsum.photos/seed/welding1/800/600",
+                "https://picsum.photos/seed/steel1/800/600",
+                "https://picsum.photos/seed/metal1/800/600"
+            },
+            ["yedek"] = new[] {
+                "https://picsum.photos/seed/parts1/800/600",
+                "https://picsum.photos/seed/spare1/800/600",
+                "https://picsum.photos/seed/industrial1/800/600"
+            }
+        };
+
+        foreach (var service in services)
+        {
+            // Resim yoksa veya boşsa ekle
+            if (string.IsNullOrWhiteSpace(service.ImageUrls) || service.ImageUrls == "[]" || service.ImageUrls == "null")
+            {
+                var titleLower = service.Title?.ToLower() ?? "";
+                string[] images;
+                
+                if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
+                    titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
+                    images = imagesByCategory["hidrolik"];
+                else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
+                         titleLower.Contains("taşlama"))
+                    images = imagesByCategory["cnc"];
+                else if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
+                         titleLower.Contains("ina"))
+                    images = imagesByCategory["rulman"];
+                else if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
+                         titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
+                         titleLower.Contains("pano"))
+                    images = imagesByCategory["elektrik"];
+                else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
+                         titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
+                    images = imagesByCategory["metal"];
+                else
+                    images = imagesByCategory["yedek"];
+                
+                var count = random.Next(1, 4);
+                var selectedImages = images.OrderBy(_ => random.Next()).Take(count).ToArray();
+                service.ImageUrls = "[\"" + string.Join("\",\"", selectedImages) + "\"]";
+                
+                Console.WriteLine($"Added images to: '{service.Title}'");
+                fixedCount++;
+            }
+        }
+
+        if (fixedCount > 0)
+        {
+            await context.SaveChangesAsync();
+            Console.WriteLine($"Added images to {fixedCount} services.");
+        }
+        else
+        {
+            Console.WriteLine("All services already have images.");
         }
     }
 
@@ -829,13 +918,76 @@ public static class DataSeeder
             ("Endüstriyel Zincir", "DIN 8187, 1 inç pitch, 5 metre", 45000, 3),
         };
 
-        var imageUrls = new[]
+        // Kategori bazlı dummy resimler (picsum.photos kullanarak)
+        var imagesByCategory = new Dictionary<string, string[]>
         {
-            "[\"https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800\",\"https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=800\"]",
-            "[\"https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800\",\"https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?w=800\"]",
-            "[\"https://images.unsplash.com/photo-1581092160607-ee67df17a6e0?w=800\"]",
-            "[\"https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=800\",\"https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=800\"]",
+            // Hidrolik - mavi tonlu makine resimleri
+            ["hidrolik"] = new[] {
+                "https://picsum.photos/seed/hydraulic1/800/600",
+                "https://picsum.photos/seed/hydraulic2/800/600",
+                "https://picsum.photos/seed/pump1/800/600"
+            },
+            // CNC - metal işleme resimleri  
+            ["cnc"] = new[] {
+                "https://picsum.photos/seed/cnc1/800/600",
+                "https://picsum.photos/seed/cnc2/800/600",
+                "https://picsum.photos/seed/machine1/800/600"
+            },
+            // Rulman - mekanik parça resimleri
+            ["rulman"] = new[] {
+                "https://picsum.photos/seed/bearing1/800/600",
+                "https://picsum.photos/seed/bearing2/800/600",
+                "https://picsum.photos/seed/gear1/800/600"
+            },
+            // Elektrik/Otomasyon - elektronik resimleri
+            ["elektrik"] = new[] {
+                "https://picsum.photos/seed/plc1/800/600",
+                "https://picsum.photos/seed/automation1/800/600",
+                "https://picsum.photos/seed/circuit1/800/600"
+            },
+            // Metal işleme - kaynak/kesim resimleri
+            ["metal"] = new[] {
+                "https://picsum.photos/seed/welding1/800/600",
+                "https://picsum.photos/seed/steel1/800/600",
+                "https://picsum.photos/seed/metal1/800/600"
+            },
+            // Genel yedek parça
+            ["yedek"] = new[] {
+                "https://picsum.photos/seed/parts1/800/600",
+                "https://picsum.photos/seed/spare1/800/600",
+                "https://picsum.photos/seed/industrial1/800/600"
+            }
         };
+
+        string GetImagesForTitle(string title)
+        {
+            var titleLower = title.ToLower();
+            string[] images;
+            
+            if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
+                titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
+                images = imagesByCategory["hidrolik"];
+            else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
+                     titleLower.Contains("taşlama") || titleLower.Contains("parça imalat"))
+                images = imagesByCategory["cnc"];
+            else if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
+                     titleLower.Contains("ina"))
+                images = imagesByCategory["rulman"];
+            else if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
+                     titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
+                     titleLower.Contains("pano"))
+                images = imagesByCategory["elektrik"];
+            else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
+                     titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
+                images = imagesByCategory["metal"];
+            else
+                images = imagesByCategory["yedek"];
+            
+            // 1-3 arası rastgele resim sayısı
+            var count = random.Next(1, 4);
+            var selectedImages = images.OrderBy(_ => random.Next()).Take(count).ToArray();
+            return "[\"" + string.Join("\",\"", selectedImages) + "\"]";
+        }
 
         // Kategori eşleştirme kuralları - servis adına göre uygun kategori bul
         Category FindBestCategory(string title)
@@ -919,7 +1071,7 @@ public static class DataSeeder
                 IsActive = true,
                 IsApproved = true,
                 ViewCount = random.Next(10, 500),
-                ImageUrls = imageUrls[random.Next(imageUrls.Length)],
+                ImageUrls = GetImagesForTitle(title),
                 CreatedDate = DateTime.UtcNow.AddDays(-random.Next(1, 60))
             });
         }
