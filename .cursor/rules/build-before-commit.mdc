@@ -1,0 +1,39 @@
+---
+alwaysApply: true
+---
+# Build Before Commit Rule
+
+## Critical Rule
+**NEVER commit without building first!**
+
+Before any git commit or git push operation, you MUST:
+
+1. Run dotnet build for the entire solution
+2. Verify the build completes with 0 errors
+3. Only then proceed with git operations
+
+## Build Commands
+
+For backend (.NET):
+cd /Users/enes.ciftci/Desktop/personalApps/MyIndustry
+dotnet build
+
+For frontend (React):
+cd /Users/enes.ciftci/Desktop/ui/MyIndustry.UI
+npm run build
+
+## Commit Workflow
+
+1. Make code changes
+2. Run build -> dotnet build or npm run build
+3. Check for errors -> Must be 0 Error(s)
+4. Stage changes -> git add -A
+5. Commit -> git commit -m "..."
+6. Push -> git push origin main
+
+## Important Notes
+
+- Warnings are acceptable, errors are NOT
+- If build fails, FIX the errors before committing
+- This prevents broken builds in CI/CD pipelines (Dokploy)
+- Always verify both backend AND frontend if changes affect both
