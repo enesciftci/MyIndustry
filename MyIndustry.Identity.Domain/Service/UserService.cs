@@ -274,18 +274,20 @@ public class UserService : IUserService
         if (user == null)
             throw new BusinessRuleException("Kullanıcı bulunamadı.");
 
-        // Generate 6-digit code
+        // Generate 6-digit code using ASP.NET Identity's token provider
         var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, PhoneChangePurpose);
         
         // Store pending phone change
         PendingPhoneChanges[userId] = newPhoneNumber;
         
-        // TODO: Send SMS via SmsSender
-        // For now, just log it
-        Console.WriteLine($"[PHONE VERIFICATION] User: {userId}, Phone: {newPhoneNumber}, Code: {code}");
+        // Send SMS via RabbitMQ queue
+        await _customMessagePublisher.Publish(new SendPhoneVerificationMessage 
+        { 
+            PhoneNumber = newPhoneNumber, 
+            VerificationCode = code 
+        }, cancellationToken);
         
-        // In production, publish to SMS queue:
-        // await _customMessagePublisher.Publish(new SendSmsMessage { Phone = newPhoneNumber, Message = $"Doğrulama kodunuz: {code}" }, cancellationToken);
+        Console.WriteLine($"[PHONE VERIFICATION] Sent to queue - User: {userId}, Phone: {newPhoneNumber}");
         
         return true;
     }

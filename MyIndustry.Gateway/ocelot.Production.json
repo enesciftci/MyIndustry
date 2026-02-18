@@ -302,90 +302,6 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/sellers/phone/send-verification",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
-        }
-      ],
-      "UpstreamPathTemplate": "/api/v1/sellers/phone/send-verification",
-      "UpstreamHttpMethod": [
-        "Post"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/sellers/phone/verify",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
-        }
-      ],
-      "UpstreamPathTemplate": "/api/v1/sellers/phone/verify",
-      "UpstreamHttpMethod": [
-        "Post"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/sellers/email/send-verification",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
-        }
-      ],
-      "UpstreamPathTemplate": "/api/v1/sellers/email/send-verification",
-      "UpstreamHttpMethod": [
-        "Post"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
-      ]
-    },
-    {
-      "DownstreamPathTemplate": "/api/v1/sellers/email/verify",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
-        }
-      ],
-      "UpstreamPathTemplate": "/api/v1/sellers/email/verify",
-      "UpstreamHttpMethod": [
-        "Post"
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
-      },
-      "DelegatingHandlers": [
-        "AuthDelegatingHandler"
-      ]
-    },
-    {
       "DownstreamPathTemplate": "/api/v1/categorys/list",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -600,6 +516,111 @@
       "UpstreamPathTemplate": "/api/v1/auth/forgot-password",
       "UpstreamHttpMethod": [
         "Post"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/send-phone-verification",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/send-phone-verification",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/verify-phone",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/verify-phone",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/send-email-change-verification",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/send-email-change-verification",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/verify-email-change",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/verify-email-change",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/auth/profile",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/auth/profile",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
       ]
     },
     {
