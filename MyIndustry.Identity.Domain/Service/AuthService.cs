@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using MyIndustry.Identity.Domain.Aggregate;
@@ -141,7 +142,7 @@ public class AuthService : IAuthService
     private async Task<string> CreateJwtToken(ApplicationUser user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = JwtKey.ToArray();
+        var key = Encoding.UTF8.GetBytes(JwtKey);
         var userClaims = await _userManager.GetClaimsAsync(user);
         var roles = await _userManager.GetRolesAsync(user);
         var roleClaims = new List<Claim>();
