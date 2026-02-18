@@ -8,40 +8,11 @@ public class GetCategoriesQueryHandler(IGenericRepository<Domain.Aggregate.Categ
 {
     public async Task<GetCategoriesQueryResult> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
     {
-
-        // var categories = await categoryRepository
-        //     .GetAllQuery()
-        //     .Where(p => ((request.ParentId.HasValue && p.ParentId == request.ParentId) || p.ParentId == null) &&
-        //                 p.IsActive)
-        //     .Include(p => p.Children)
-        //     // .Include(p => p.SubCategories) // Şartlı Include olmaz
-        //     .Select(p => new CategoryDto()
-        //     {
-        //         Id = p.Id,
-        //         Name = p.Name,
-        //         Description = p.Description,
-        //         Children = p.Children
-        //             .Where(x => x.IsActive)
-        //             .Select(x => new CategoryDto()
-        //             {
-        //                 Id = x.Id,
-        //                 Name = x.Name,
-        //                 Description = x.Description,
-        //             }).ToList()
-        //     })
-        //     .ToListAsync(cancellationToken);
-
         var categories = await GetCategoryTreeAsync();
-        var categoriDtos = categories.Select(p => new CategoryDto()
-        {
-            Id = p.Id,
-            Name = p.Name,
-            Description = p.Description,
-            Children = p.Children
-        }).ToList();
+        
         return new GetCategoriesQueryResult()
         {
-            Categories = categoriDtos
+            Categories = categories
         }.ReturnOk();
     }
 
@@ -77,7 +48,10 @@ public class GetCategoriesQueryHandler(IGenericRepository<Domain.Aggregate.Categ
     
     public async Task<List<CategoryDto>> GetCategoryTreeAsync()
     {
-        var allCategories = categoryRepository.GetAllQuery();
+        // Sadece aktif kategorileri al
+        var allCategories = await categoryRepository.GetAllQuery()
+            .Where(c => c.IsActive)
+            .ToListAsync();
 
         var lookup = allCategories.ToLookup(c => c.ParentId);
 
@@ -89,6 +63,7 @@ public class GetCategoriesQueryHandler(IGenericRepository<Domain.Aggregate.Categ
                     Id = c.Id,
                     Name = c.Name,
                     ParentId = c.ParentId,
+                    Description = c.Description,
                     Children = BuildTree(c.Id),
                     IsActive = c.IsActive
                 })
