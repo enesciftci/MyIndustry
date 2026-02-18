@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.Domain.ValueObjects;
+using System.Text.Json;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesByFilterQuery;
 
@@ -80,9 +81,7 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             Id = p.Id,
             Title = p.Title,
             Description = p.Description,
-            ImageUrls = string.IsNullOrEmpty(p.ImageUrls) 
-                ? [] 
-                : p.ImageUrls.Split(',', StringSplitOptions.RemoveEmptyEntries),
+            ImageUrls = ParseImageUrls(p.ImageUrls),
             Price = new Amount(p.Price).ToInt(),
             SellerId = p.SellerId,
             ViewCount = p.ViewCount,
@@ -90,5 +89,21 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
         }).ToList();
         
         return new GetServicesByFilterQueryResult() { Services = services }.ReturnOk();
+    }
+
+    private static string[] ParseImageUrls(string? imageUrls)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrls))
+            return Array.Empty<string>();
+        
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<string[]>(imageUrls);
+            return parsed ?? Array.Empty<string>();
+        }
+        catch
+        {
+            return imageUrls.StartsWith("http") ? new[] { imageUrls } : Array.Empty<string>();
+        }
     }
 }

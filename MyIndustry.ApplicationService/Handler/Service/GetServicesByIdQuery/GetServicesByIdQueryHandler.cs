@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.Domain.ValueObjects;
+using System.Text.Json;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesByIdQuery;
 
@@ -41,7 +42,7 @@ public class GetServicesByIdQueryHandler : IRequestHandler<GetServicesByIdQuery,
                 Price = new Amount(service.Price).ToInt(),
                 Description = service.Description,
                 Title = service.Title,
-                ImageUrls = service.ImageUrls?.Split(','),
+                ImageUrls = ParseImageUrls(service.ImageUrls),
                 SellerId = service.SellerId,
                 EstimatedEndDay = service.EstimatedEndDay,
                 ModifiedDate = service.ModifiedDate,
@@ -56,6 +57,24 @@ public class GetServicesByIdQueryHandler : IRequestHandler<GetServicesByIdQuery,
                 } : null
             }
         }.ReturnOk();
+    }
+
+    private static string[] ParseImageUrls(string? imageUrls)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrls))
+            return Array.Empty<string>();
+        
+        try
+        {
+            // Try to parse as JSON array
+            var parsed = JsonSerializer.Deserialize<string[]>(imageUrls);
+            return parsed ?? Array.Empty<string>();
+        }
+        catch
+        {
+            // Fallback: if not valid JSON, return as single item or empty
+            return imageUrls.StartsWith("http") ? new[] { imageUrls } : Array.Empty<string>();
+        }
     }
 
     private async Task<List<CategoryBreadcrumbDto>> GetCategoryBreadcrumbs(Guid categoryId, CancellationToken cancellationToken)

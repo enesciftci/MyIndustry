@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.Domain.ValueObjects;
+using System.Text.Json;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesBySearchTermQuery;
 
@@ -15,26 +16,52 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
 
     public async Task<GetServicesBySearchTermQueryResult> Handle(GetServicesBySearchTermQuery request, CancellationToken cancellationToken)
     {
-        var searchedServices = await _servicesRepository
+        var servicesData = await _servicesRepository
             .GetAllQuery()
             .Where(p => 
                 (p.Title.Contains(request.Query) || p.Description.Contains(request.Query)) && 
                 p.IsActive)
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
-            .Select(p => new ServiceDto
+            .Select(p => new
             {
-                Id = p.Id,
-                Price = new Amount(p.Price).ToInt(),
-                Title = p.Title,
-                Description = p.Description,
-                ImageUrls = new List<string>(){p.ImageUrls}.ToArray(),
-                SellerId = p.SellerId,
-                EstimatedEndDay = p.EstimatedEndDay
+                p.Id,
+                p.Price,
+                p.Title,
+                p.Description,
+                p.ImageUrls,
+                p.SellerId,
+                p.EstimatedEndDay
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
+        var services = servicesData.Select(p => new ServiceDto
+        {
+            Id = p.Id,
+            Price = new Amount(p.Price).ToInt(),
+            Title = p.Title,
+            Description = p.Description,
+            ImageUrls = ParseImageUrls(p.ImageUrls),
+            SellerId = p.SellerId,
+            EstimatedEndDay = p.EstimatedEndDay
+        }).ToList();
 
-        return new GetServicesBySearchTermQueryResult() {Services = searchedServices}.ReturnOk();
+        return new GetServicesBySearchTermQueryResult() {Services = services}.ReturnOk();
+    }
+
+    private static string[] ParseImageUrls(string? imageUrls)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrls))
+            return Array.Empty<string>();
+        
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<string[]>(imageUrls);
+            return parsed ?? Array.Empty<string>();
+        }
+        catch
+        {
+            return imageUrls.StartsWith("http") ? new[] { imageUrls } : Array.Empty<string>();
+        }
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.Domain.ValueObjects;
+using System.Text.Json;
 
 namespace MyIndustry.ApplicationService.Handler.Service.GetServicesBySellerIdQuery;
 
@@ -17,25 +18,54 @@ public class
     public async Task<GetServicesBySellerIdQueryResult> Handle(GetServicesBySellerIdQuery request,
         CancellationToken cancellationToken)
     {
-        var services = await _services
+        var servicesData = await _services
             .GetAllQuery()
             .Where(p => p.SellerId == request.SellerId && p.IsActive)
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
-            .Select(p => new ServiceDto
+            .Select(p => new
             {
-                Id = p.Id,
-                Price = new Amount(p.Price).ToInt(),
-                Title = p.Title,
-                Description = p.Description,
-                ImageUrls = new List<string>(){p.ImageUrls}.ToArray(),
-                SellerId = p.SellerId,
-                EstimatedEndDay = p.EstimatedEndDay,
-                ViewCount = p.ViewCount,
-                IsActive = p.IsActive
+                p.Id,
+                p.Price,
+                p.Title,
+                p.Description,
+                p.ImageUrls,
+                p.SellerId,
+                p.EstimatedEndDay,
+                p.ViewCount,
+                p.IsActive
             })
             .ToListAsync(cancellationToken);
 
+        var services = servicesData.Select(p => new ServiceDto
+        {
+            Id = p.Id,
+            Price = new Amount(p.Price).ToInt(),
+            Title = p.Title,
+            Description = p.Description,
+            ImageUrls = ParseImageUrls(p.ImageUrls),
+            SellerId = p.SellerId,
+            EstimatedEndDay = p.EstimatedEndDay,
+            ViewCount = p.ViewCount,
+            IsActive = p.IsActive
+        }).ToList();
+
         return new GetServicesBySellerIdQueryResult() {Services = services}.ReturnOk();
+    }
+
+    private static string[] ParseImageUrls(string? imageUrls)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrls))
+            return Array.Empty<string>();
+        
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<string[]>(imageUrls);
+            return parsed ?? Array.Empty<string>();
+        }
+        catch
+        {
+            return imageUrls.StartsWith("http") ? new[] { imageUrls } : Array.Empty<string>();
+        }
     }
 }

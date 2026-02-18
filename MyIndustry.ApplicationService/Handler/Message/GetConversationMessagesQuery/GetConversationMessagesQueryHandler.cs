@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.Repository.Repository;
+using System.Text.Json;
 using DomainMessage = MyIndustry.Domain.Aggregate.Message;
 using DomainService = MyIndustry.Domain.Aggregate.Service;
 
@@ -60,9 +61,25 @@ public class GetConversationMessagesQueryHandler : IRequestHandler<GetConversati
         return new GetConversationMessagesQueryResult
         {
             ServiceTitle = service.Title,
-            ServiceImageUrl = service.ImageUrls?.Split(',').FirstOrDefault(),
+            ServiceImageUrl = ParseImageUrls(service.ImageUrls).FirstOrDefault(),
             OtherUserName = otherUserMessage?.SenderName ?? "Kullanıcı",
             Messages = messageDtos
         }.ReturnOk();
+    }
+
+    private static string[] ParseImageUrls(string? imageUrls)
+    {
+        if (string.IsNullOrWhiteSpace(imageUrls))
+            return Array.Empty<string>();
+        
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<string[]>(imageUrls);
+            return parsed ?? Array.Empty<string>();
+        }
+        catch
+        {
+            return imageUrls.StartsWith("http") ? new[] { imageUrls } : Array.Empty<string>();
+        }
     }
 }
