@@ -150,4 +150,65 @@ public class AuthController : ControllerBase
 
         return Ok(user);
     }
+
+    // ============ Phone Verification ============
+    
+    [HttpPost("send-phone-verification")]
+    public async Task<IActionResult> SendPhoneVerification([FromBody] SendPhoneVerificationRequest request, CancellationToken cancellationToken)
+    {
+        var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await _userService.SendPhoneVerificationCode(userId, request.PhoneNumber, cancellationToken);
+        return Ok(new { Message = "Doğrulama kodu gönderildi.", Success = result });
+    }
+
+    [HttpPost("verify-phone")]
+    public async Task<IActionResult> VerifyPhone([FromBody] VerifyPhoneRequest request, CancellationToken cancellationToken)
+    {
+        var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await _userService.VerifyPhoneCode(userId, request.Code, cancellationToken);
+        return Ok(new { Message = "Telefon numarası doğrulandı.", Success = result });
+    }
+
+    // ============ Email Change Verification ============
+
+    [HttpPost("send-email-change-verification")]
+    public async Task<IActionResult> SendEmailChangeVerification([FromBody] SendEmailChangeVerificationRequest request, CancellationToken cancellationToken)
+    {
+        var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await _userService.SendEmailChangeVerificationCode(userId, request.NewEmail, cancellationToken);
+        return Ok(new { Message = "Doğrulama kodu yeni email adresine gönderildi.", Success = result });
+    }
+
+    [HttpPost("verify-email-change")]
+    public async Task<IActionResult> VerifyEmailChange([FromBody] VerifyEmailChangeRequest request, CancellationToken cancellationToken)
+    {
+        var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await _userService.VerifyEmailChangeCode(userId, request.Code, cancellationToken);
+        return Ok(new { Message = "Email adresi başarıyla değiştirildi.", Success = result });
+    }
+
+    // ============ Profile Update ============
+
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
+    {
+        var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized();
+
+        var result = await _userService.UpdateProfile(userId, request.FirstName, request.LastName, cancellationToken);
+        return Ok(new { Message = "Profil başarıyla güncellendi.", Success = result });
+    }
 }

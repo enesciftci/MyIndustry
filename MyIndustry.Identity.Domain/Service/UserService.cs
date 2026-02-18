@@ -258,6 +258,146 @@ public class UserService : IUserService
 
         await SendEmailVerificationAsync(user, cancellationToken);
     }
+
+    // ============ Phone Verification ============
+    
+    private const string PhoneChangePurpose = "PhoneChange";
+    private const string EmailChangePurpose = "EmailChange";
+    
+    // Pending phone/email changes stored temporarily (in production, use Redis)
+    private static readonly Dictionary<string, string> PendingPhoneChanges = new();
+    private static readonly Dictionary<string, string> PendingEmailChanges = new();
+
+    public async Task<bool> SendPhoneVerificationCode(string userId, string newPhoneNumber, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        // Generate 6-digit code
+        var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, PhoneChangePurpose);
+        
+        // Store pending phone change
+        PendingPhoneChanges[userId] = newPhoneNumber;
+        
+        // TODO: Send SMS via SmsSender
+        // For now, just log it
+        Console.WriteLine($"[PHONE VERIFICATION] User: {userId}, Phone: {newPhoneNumber}, Code: {code}");
+        
+        // In production, publish to SMS queue:
+        // await _customMessagePublisher.Publish(new SendSmsMessage { Phone = newPhoneNumber, Message = $"Doğrulama kodunuz: {code}" }, cancellationToken);
+        
+        return true;
+    }
+
+    public async Task<bool> VerifyPhoneCode(string userId, string code, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        if (!PendingPhoneChanges.TryGetValue(userId, out var newPhoneNumber))
+            throw new BusinessRuleException("Bekleyen telefon değişikliği bulunamadı.");
+
+        var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, PhoneChangePurpose, code);
+        if (!isValid)
+            throw new BusinessRuleException("Doğrulama kodu geçersiz veya süresi dolmuş.");
+
+        // Update phone number
+        user.PhoneNumber = newPhoneNumber;
+        user.PhoneNumberConfirmed = true;
+        var result = await _userManager.UpdateAsync(user);
+        
+        if (result.Succeeded)
+        {
+            PendingPhoneChanges.Remove(userId);
+            await _userManager.UpdateSecurityStampAsync(user);
+            return true;
+        }
+
+        throw new BusinessRuleException("Telefon numarası güncellenemedi.");
+    }
+
+    // ============ Email Change Verification ============
+
+    public async Task<bool> SendEmailChangeVerificationCode(string userId, string newEmail, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        // Check if new email is already in use
+        var existingUser = await _userManager.FindByEmailAsync(newEmail);
+        if (existingUser != null && existingUser.Id != userId)
+            throw new BusinessRuleException("Bu email adresi zaten kullanımda.");
+
+        // Generate verification code
+        var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultEmailProvider, EmailChangePurpose);
+        
+        // Store pending email change
+        PendingEmailChanges[userId] = newEmail;
+        
+        // Send verification email to NEW email address
+        var userName = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : null;
+        var emailBody = EmailTemplateHelper.GetEmailChangeVerificationTemplate(userName, code);
+        
+        await _customMessagePublisher.Publish(new SendConfirmationEmailMessage
+        {
+            Email = newEmail,
+            Subject = "MyIndustry - Email Değişikliği Doğrulama",
+            Body = emailBody
+        }, cancellationToken);
+
+        return true;
+    }
+
+    public async Task<bool> VerifyEmailChangeCode(string userId, string code, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        if (!PendingEmailChanges.TryGetValue(userId, out var newEmail))
+            throw new BusinessRuleException("Bekleyen email değişikliği bulunamadı.");
+
+        var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultEmailProvider, EmailChangePurpose, code);
+        if (!isValid)
+            throw new BusinessRuleException("Doğrulama kodu geçersiz veya süresi dolmuş.");
+
+        // Update email
+        user.Email = newEmail;
+        user.UserName = newEmail; // Username is email
+        user.NormalizedEmail = newEmail.ToUpperInvariant();
+        user.NormalizedUserName = newEmail.ToUpperInvariant();
+        var result = await _userManager.UpdateAsync(user);
+        
+        if (result.Succeeded)
+        {
+            PendingEmailChanges.Remove(userId);
+            await _userManager.UpdateSecurityStampAsync(user);
+            return true;
+        }
+
+        throw new BusinessRuleException("Email adresi güncellenemedi.");
+    }
+
+    // ============ Profile Update ============
+
+    public async Task<bool> UpdateProfile(string userId, string firstName, string lastName, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        user.FirstName = firstName;
+        user.LastName = lastName;
+        
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new BusinessRuleException("Profil güncellenemedi.");
+
+        return true;
+    }
 }
 
 public interface IUserService
@@ -272,4 +412,15 @@ public interface IUserService
     Task<bool> ResetPassword (string userId, string token, string newPassword);
     UserDto GetUserById(string id);
     Task ResendVerificationCode(string email, CancellationToken cancellationToken);
+    
+    // Phone verification
+    Task<bool> SendPhoneVerificationCode(string userId, string newPhoneNumber, CancellationToken cancellationToken);
+    Task<bool> VerifyPhoneCode(string userId, string code, CancellationToken cancellationToken);
+    
+    // Email change verification
+    Task<bool> SendEmailChangeVerificationCode(string userId, string newEmail, CancellationToken cancellationToken);
+    Task<bool> VerifyEmailChangeCode(string userId, string code, CancellationToken cancellationToken);
+    
+    // Profile update
+    Task<bool> UpdateProfile(string userId, string firstName, string lastName, CancellationToken cancellationToken);
 }

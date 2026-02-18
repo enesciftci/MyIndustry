@@ -2,6 +2,7 @@
 
 using CoreApiCommunicator;
 using CoreApiCommunicator.Email;
+using CoreApiCommunicator.Sms;
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,6 +36,7 @@ builder.ConfigureServices((hostContext, services) =>
 
     services.AddTransient(typeof(ICoreApiCommunicator<,>), typeof(CoreApiCommunicator<,>));
     services.AddScoped<IEmailSender, EmailSender>();
+    services.AddScoped<ISmsSender, SmsSender>();
     
     var rabbitMqSettings = configuration.GetSection("RabbitMq");
     services.AddMassTransit(x =>
@@ -44,6 +46,8 @@ builder.ConfigureServices((hostContext, services) =>
         x.AddConsumer<IncreaseServiceViewCountConsumer>();
         x.AddConsumer<SendForgotPasswordEmailConsumer>();
         x.AddConsumer<SendConfirmationEmailConsumer>();
+        x.AddConsumer<SendEmailChangeVerificationConsumer>();
+        x.AddConsumer<SendPhoneVerificationConsumer>();
         x.UsingRabbitMq((context, cfg) =>
         {
             cfg.Host(rabbitMqSettings["Host"], ushort.Parse(rabbitMqSettings["Port"]), "/", h =>
@@ -57,6 +61,8 @@ builder.ConfigureServices((hostContext, services) =>
             cfg.ReceiveEndpoint("increase_service_view_count_queue", e => { e.ConfigureConsumer<IncreaseServiceViewCountConsumer>(context); });
             cfg.ReceiveEndpoint("send_forgot_password_email_queue", e => { e.ConfigureConsumer<SendForgotPasswordEmailConsumer>(context); });
             cfg.ReceiveEndpoint("send_confirmation_email_queue", e => { e.ConfigureConsumer<SendConfirmationEmailConsumer>(context); });
+            cfg.ReceiveEndpoint("send_email_change_verification_queue", e => { e.ConfigureConsumer<SendEmailChangeVerificationConsumer>(context); });
+            cfg.ReceiveEndpoint("send_phone_verification_queue", e => { e.ConfigureConsumer<SendPhoneVerificationConsumer>(context); });
         });
     });
 });

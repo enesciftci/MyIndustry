@@ -260,6 +260,132 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/sellers/profile",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/profile",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellers/profile",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/profile",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellers/phone/send-verification",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/phone/send-verification",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellers/phone/verify",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/phone/verify",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellers/email/send-verification",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/email/send-verification",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/sellers/email/verify",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellers/email/verify",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/categorys/list",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
