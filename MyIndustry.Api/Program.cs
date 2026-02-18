@@ -87,11 +87,13 @@ builder.Services.AddMediatR(configuration =>
 });
 var app = builder.Build();
 
-// Auto-create database tables and seed data
+// Auto-create database tables and run migrations
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
-    db.Database.EnsureCreated();
+    
+    // Run pending migrations (this will also create the database if it doesn't exist)
+    await db.Database.MigrateAsync();
     
     // Seed dummy data
     await DataSeeder.SeedAsync(db);
