@@ -23,11 +23,17 @@ public static class DataSeeder
         await context.SaveChangesAsync();
         Console.WriteLine($"Created {categories.Count} categories.");
 
-        // Alt kategorileri oluştur
+        // Alt kategorileri oluştur (2. seviye)
         var subCategories = CreateSubCategories(categories);
         await context.Categories.AddRangeAsync(subCategories);
         await context.SaveChangesAsync();
-        Console.WriteLine($"Created {subCategories.Count} sub-categories.");
+        Console.WriteLine($"Created {subCategories.Count} sub-categories (level 2).");
+
+        // Daha derin alt kategorileri oluştur (3., 4., 5. seviye)
+        var deeperCategories = CreateDeeperCategories(subCategories);
+        await context.Categories.AddRangeAsync(deeperCategories);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"Created {deeperCategories.Count} deeper categories (level 3-5).");
 
         // 2. Subscription Plans
         var plans = CreateSubscriptionPlans();
@@ -48,7 +54,7 @@ public static class DataSeeder
         Console.WriteLine($"Created {sellerInfos.Count} seller infos.");
 
         // 5. Services
-        var allCategories = categories.Concat(subCategories).ToList();
+        var allCategories = categories.Concat(subCategories).Concat(deeperCategories).ToList();
         var services = CreateServices(sellers, allCategories);
         await context.Services.AddRangeAsync(services);
         await context.SaveChangesAsync();
@@ -169,6 +175,91 @@ public static class DataSeeder
         });
 
         return subCategories;
+    }
+
+    private static List<Category> CreateDeeperCategories(List<Category> level2Categories)
+    {
+        var deeperCategories = new List<Category>();
+        
+        // Motor Yedek Parçaları > Çekici Markaları (3. seviye)
+        var motorYedek = level2Categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları");
+        if (motorYedek != null)
+        {
+            var cekiciId = Guid.NewGuid();
+            var kamyonId = Guid.NewGuid();
+            var otoId = Guid.NewGuid();
+            
+            // 3. seviye - Araç Tipleri
+            deeperCategories.Add(new Category { Id = cekiciId, Name = "Çekici", Description = "Çekici motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = kamyonId, Name = "Kamyon", Description = "Kamyon motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = otoId, Name = "Otobüs", Description = "Otobüs motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow });
+            
+            // 4. seviye - Çekici Markaları
+            var scaniaId = Guid.NewGuid();
+            var volvoId = Guid.NewGuid();
+            var mercedesId = Guid.NewGuid();
+            var manId = Guid.NewGuid();
+            var dafId = Guid.NewGuid();
+            
+            deeperCategories.Add(new Category { Id = scaniaId, Name = "Scania", Description = "Scania çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = volvoId, Name = "Volvo", Description = "Volvo çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = mercedesId, Name = "Mercedes", Description = "Mercedes çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = manId, Name = "MAN", Description = "MAN çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = dafId, Name = "DAF", Description = "DAF çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
+            
+            // 5. seviye - Scania Modelleri
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "R410", Description = "Scania R410 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "R450", Description = "Scania R450 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "R500", Description = "Scania R500 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S500", Description = "Scania S500 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
+            
+            // 5. seviye - Volvo Modelleri
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "FH16", Description = "Volvo FH16 yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "FH500", Description = "Volvo FH500 yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "FM", Description = "Volvo FM yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow });
+            
+            // 5. seviye - Mercedes Modelleri
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Actros", Description = "Mercedes Actros yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Arocs", Description = "Mercedes Arocs yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Axor", Description = "Mercedes Axor yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow });
+        }
+        
+        // Hidrolik Pompalar > Pompa Tipleri (3. seviye)
+        var hidrolikPompa = level2Categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar");
+        if (hidrolikPompa != null)
+        {
+            var disliPompaId = Guid.NewGuid();
+            var pistonluPompaId = Guid.NewGuid();
+            
+            deeperCategories.Add(new Category { Id = disliPompaId, Name = "Dişli Pompalar", Description = "Dişli tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = pistonluPompaId, Name = "Pistonlu Pompalar", Description = "Pistonlu tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Paletli Pompalar", Description = "Paletli tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow });
+            
+            // 4. seviye - Marka bazlı
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Bosch Rexroth", Description = "Bosch Rexroth dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Parker", Description = "Parker dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Casappa", Description = "Casappa dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow });
+        }
+        
+        // PLC ve Kontrol > Marka bazlı (3. seviye)
+        var plc = level2Categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol");
+        if (plc != null)
+        {
+            var siemensId = Guid.NewGuid();
+            var omronId = Guid.NewGuid();
+            
+            deeperCategories.Add(new Category { Id = siemensId, Name = "Siemens", Description = "Siemens PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = omronId, Name = "Omron", Description = "Omron PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Allen Bradley", Description = "Allen Bradley PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Mitsubishi", Description = "Mitsubishi PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
+            
+            // 4. seviye - Siemens serileri
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-1200", Description = "Siemens S7-1200 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-1500", Description = "Siemens S7-1500 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow });
+            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-300", Description = "Siemens S7-300 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow });
+        }
+        
+        return deeperCategories;
     }
 
     private static List<SubscriptionPlan> CreateSubscriptionPlans()
