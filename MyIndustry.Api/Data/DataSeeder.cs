@@ -602,10 +602,75 @@ public static class DataSeeder
             "[\"https://images.unsplash.com/photo-1537462715879-360eeb61a0ad?w=800\",\"https://images.unsplash.com/photo-1581092162384-8987c1d64718?w=800\"]",
         };
 
+        // Kategori eşleştirme kuralları - servis adına göre uygun kategori bul
+        Category FindBestCategory(string title)
+        {
+            var titleLower = title.ToLower();
+            
+            // PLC/Otomasyon ürünleri
+            if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
+                titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
+                titleLower.Contains("pano"))
+            {
+                var plcCategory = categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol");
+                if (plcCategory != null) return plcCategory;
+                var elektrikCategory = categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon");
+                if (elektrikCategory != null) return elektrikCategory;
+            }
+            
+            // Hidrolik ürünleri
+            if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
+                titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
+            {
+                var hidrolikPompa = categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar");
+                if (hidrolikPompa != null) return hidrolikPompa;
+                var hidrolik = categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler");
+                if (hidrolik != null) return hidrolik;
+            }
+            
+            // CNC/Talaşlı imalat
+            if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
+                titleLower.Contains("taşlama"))
+            {
+                var cnc = categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat");
+                if (cnc != null) return cnc;
+            }
+            
+            // Rulman
+            if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
+                titleLower.Contains("ina"))
+            {
+                var rulman = categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon");
+                if (rulman != null) return rulman;
+            }
+            
+            // Metal işleme / Kaynak
+            if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
+                titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
+            {
+                var metal = categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme");
+                if (metal != null) return metal;
+            }
+            
+            // Yedek parça / Genel
+            if (titleLower.Contains("redüktör") || titleLower.Contains("kompresör") || titleLower.Contains("konveyör") || 
+                titleLower.Contains("zincir"))
+            {
+                var yedek = categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları");
+                if (yedek != null) return yedek;
+                var yedekParca = categories.FirstOrDefault(c => c.Name == "Yedek Parça");
+                if (yedekParca != null) return yedekParca;
+            }
+            
+            // Varsayılan: alt kategorilerden rastgele
+            var subCategories = categories.Where(c => c.ParentId != null).ToList();
+            return subCategories[random.Next(subCategories.Count)];
+        }
+
         foreach (var (title, desc, price, days) in serviceTemplates)
         {
             var seller = sellers[random.Next(sellers.Count)];
-            var category = categories.Where(c => c.ParentId != null).ToList()[random.Next(categories.Count(c => c.ParentId != null))];
+            var category = FindBestCategory(title);
             
             services.Add(new Service
             {
