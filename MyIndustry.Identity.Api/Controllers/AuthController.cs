@@ -72,6 +72,20 @@ public class AuthController : ControllerBase
 
         return Ok();
     }
+
+    [HttpPost("refresh-token")]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        if (string.IsNullOrEmpty(request?.RefreshToken))
+            return BadRequest(new { Message = "Refresh token is required." });
+
+        var response = await _authService.RefreshTokenAsync(request.RefreshToken);
+        
+        if (!response.IsAuthenticated)
+            return Unauthorized(response);
+
+        return Ok(response);
+    }
     
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel registerModel, CancellationToken cancellationToken)
