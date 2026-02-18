@@ -417,7 +417,7 @@ TestResults/
 *.trx
 
 # EF Core tools
-Migrations/
+# Migrations/ - Removed to allow EF migrations to be tracked
 
 ../../ui
 ../MyIndustry.UI
