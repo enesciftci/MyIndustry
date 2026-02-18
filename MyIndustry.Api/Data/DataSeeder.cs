@@ -8,11 +8,12 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(MyIndustryDbContext context)
     {
-        // Eğer zaten veri varsa sadece derin kategorileri kontrol et
+        // Eğer zaten veri varsa sadece derin kategorileri kontrol et ve mevcut servisleri düzelt
         if (context.Categories.Any())
         {
             Console.WriteLine("Database already has data. Checking for deep categories...");
             await SeedDeepCategoriesIfMissing(context);
+            await FixServiceCategories(context);
             return;
         }
 
@@ -198,6 +199,77 @@ public static class DataSeeder
         else
         {
             Console.WriteLine("Deep categories already exist. Nothing to seed.");
+        }
+    }
+
+    private static async Task FixServiceCategories(MyIndustryDbContext context)
+    {
+        var categories = context.Categories.ToList();
+        var services = context.Services.ToList();
+        var fixedCount = 0;
+
+        foreach (var service in services)
+        {
+            var titleLower = service.Title?.ToLower() ?? "";
+            Category? targetCategory = null;
+
+            // PLC/Otomasyon ürünleri
+            if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
+                titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
+                titleLower.Contains("pano"))
+            {
+                targetCategory = categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol") 
+                              ?? categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon");
+            }
+            // Hidrolik ürünleri
+            else if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
+                     titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
+            {
+                targetCategory = categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar") 
+                              ?? categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler");
+            }
+            // CNC/Talaşlı imalat
+            else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
+                     titleLower.Contains("taşlama"))
+            {
+                targetCategory = categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat");
+            }
+            // Rulman
+            else if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
+                     titleLower.Contains("ina"))
+            {
+                targetCategory = categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon");
+            }
+            // Metal işleme / Kaynak
+            else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
+                     titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
+            {
+                targetCategory = categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme");
+            }
+            // Yedek parça / Genel
+            else if (titleLower.Contains("redüktör") || titleLower.Contains("kompresör") || titleLower.Contains("konveyör") || 
+                     titleLower.Contains("zincir"))
+            {
+                targetCategory = categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları") 
+                              ?? categories.FirstOrDefault(c => c.Name == "Yedek Parça");
+            }
+
+            if (targetCategory != null && service.CategoryId != targetCategory.Id)
+            {
+                Console.WriteLine($"Fixing: '{service.Title}' -> {targetCategory.Name}");
+                service.CategoryId = targetCategory.Id;
+                fixedCount++;
+            }
+        }
+
+        if (fixedCount > 0)
+        {
+            await context.SaveChangesAsync();
+            Console.WriteLine($"Fixed {fixedCount} service categories.");
+        }
+        else
+        {
+            Console.WriteLine("All service categories are correct.");
         }
     }
 
