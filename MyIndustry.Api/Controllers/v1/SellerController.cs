@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using MyIndustry.ApplicationService.Handler;
 using MyIndustry.ApplicationService.Handler.Seller.CreateSellerCommand;
+using MyIndustry.ApplicationService.Handler.Seller.GetSellerByIdQuery;
 using MyIndustry.ApplicationService.Handler.Seller.GetSellerListQuery;
 using MyIndustry.ApplicationService.Handler.Seller.GetSellerProfileQuery;
 using MyIndustry.ApplicationService.Handler.Seller.UpdateSellerCommand;
@@ -34,6 +35,16 @@ public class SellerController : BaseController
             Pager = new Pager(index, size)
         };
         
+        return CreateResponse(await _mediator.Send(query, cancellationToken));
+    }
+
+    /// <summary>
+    /// Get seller by ID (public)
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var query = new GetSellerByIdQuery { SellerId = id };
         return CreateResponse(await _mediator.Send(query, cancellationToken));
     }
 
