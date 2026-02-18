@@ -25,4 +25,21 @@ public class BaseController: ControllerBase
 
         throw new UnauthorizedAccessException();
     }
+
+    protected string GetUserEmail()
+    {
+        return User.Claims.FirstOrDefault(p => p.Type == "email")?.Value ?? "";
+    }
+
+    protected string GetUserName()
+    {
+        var firstName = User.Claims.FirstOrDefault(p => p.Type == "given_name")?.Value ?? "";
+        var lastName = User.Claims.FirstOrDefault(p => p.Type == "family_name")?.Value ?? "";
+        
+        if (!string.IsNullOrEmpty(firstName) || !string.IsNullOrEmpty(lastName))
+            return $"{firstName} {lastName}".Trim();
+        
+        // Fallback to email if name not available
+        return GetUserEmail().Split('@').FirstOrDefault() ?? "Kullanıcı";
+    }
 }

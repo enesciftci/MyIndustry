@@ -44,6 +44,35 @@ public static class ResponseBaseExtensions
         return responseBase;
     }
 
+    public static TResponse ReturnBadRequest<TResponse>(this TResponse responseBase, string message) where TResponse : ResponseBase
+    {
+        responseBase.Success = false;
+        responseBase.MessageCode = "1001";
+        responseBase.Message = message;
+        responseBase.UserMessage = message;
+
+        return responseBase;
+    }
+
+    public static TResponse ReturnNotFound<TResponse>(this TResponse responseBase, string message) where TResponse : ResponseBase
+    {
+        responseBase.Success = false;
+        responseBase.MessageCode = "1004";
+        responseBase.Message = message;
+        responseBase.UserMessage = message;
+
+        return responseBase;
+    }
+
+    public static TResponse ReturnOk<TResponse>(this TResponse responseBase, string message) where TResponse : ResponseBase
+    {
+        responseBase.Success = true;
+        responseBase.MessageCode = "0000";
+        responseBase.Message = message;
+        responseBase.UserMessage = message;
+
+        return responseBase;
+    }
 
     public static TResponse Return<TResponse>(this TResponse responseBase, bool success, string messageCode,
         string message, string userMessage, Dictionary<string, string> logParameters = null)

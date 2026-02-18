@@ -26,6 +26,7 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
         AddSellerInfoConfig(modelBuilder);
         AddSellerSubscriptionConfig(modelBuilder);
         AddSellerAddressConfig(modelBuilder);
+        AddMessageConfig(modelBuilder);
         base.OnModelCreating(modelBuilder);
     }
     // public DbSet<Commission> Commissions { get; set; }
@@ -44,6 +45,7 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     // public DbSet<SubCategory> SubCategories { get; set; }
     public DbSet<Address> Adresses { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     private void AddSellerAddressConfig(ModelBuilder modelBuilder)
     {
@@ -170,6 +172,21 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
             .WithOne(p => p.Seller)
             .HasForeignKey<SellerInfo>(p => p.SellerId)
             .OnDelete(DeleteBehavior.Cascade);
+    }
+    
+    private void AddMessageConfig(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.Service)
+            .WithMany()
+            .HasForeignKey(m => m.ServiceId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Message>()
+            .HasIndex(m => new { m.ReceiverId, m.IsRead });
+        
+        modelBuilder.Entity<Message>()
+            .HasIndex(m => new { m.ServiceId, m.SenderId, m.ReceiverId });
     }
     
     public void SetAuditFields()

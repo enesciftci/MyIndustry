@@ -706,6 +706,132 @@
       "DelegatingHandlers": [
         "AuthDelegatingHandler"
       ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/messages",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/messages",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/messages/conversations",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/messages/conversations",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/messages/conversation/{serviceId}/{otherUserId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/messages/conversation/{serviceId}/{otherUserId}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/messages/reply",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/messages/reply",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/messages/read/{serviceId}/{otherUserId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/messages/read/{serviceId}/{otherUserId}",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/messages/unread-count",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/messages/unread-count",
+      "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
     }
   ],
   "GlobalConfiguration": {
