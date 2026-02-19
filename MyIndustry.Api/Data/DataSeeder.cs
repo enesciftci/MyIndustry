@@ -8,11 +8,10 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(MyIndustryDbContext context)
     {
-        // Eğer zaten veri varsa sadece derin kategorileri kontrol et ve mevcut servisleri düzelt
+        // Eğer zaten veri varsa sadece kategori ve servis düzeltmelerini yap
         if (context.Categories.Any())
         {
-            Console.WriteLine("Database already has data. Checking for deep categories...");
-            await SeedDeepCategoriesIfMissing(context);
+            Console.WriteLine("Database already has data. Checking and fixing data...");
             await FixServiceCategories(context);
             await FixServiceImages(context);
             return;
@@ -20,44 +19,44 @@ public static class DataSeeder
 
         Console.WriteLine("Seeding database with dummy data...");
 
-        // 1. Kategoriler
-        var categories = CreateCategories();
+        // 1. Ana Kategoriler (Level 1)
+        var categories = CreateMainCategories();
         await context.Categories.AddRangeAsync(categories);
         await context.SaveChangesAsync();
-        Console.WriteLine($"Created {categories.Count} categories.");
+        Console.WriteLine($"Created {categories.Count} main categories.");
 
-        // Alt kategorileri oluştur (2. seviye)
+        // 2. Alt Kategoriler (Level 2)
         var subCategories = CreateSubCategories(categories);
         await context.Categories.AddRangeAsync(subCategories);
         await context.SaveChangesAsync();
-        Console.WriteLine($"Created {subCategories.Count} sub-categories (level 2).");
+        Console.WriteLine($"Created {subCategories.Count} sub-categories.");
 
-        // Daha derin alt kategorileri oluştur (3., 4., 5. seviye)
-        var deeperCategories = CreateDeeperCategories(subCategories);
-        await context.Categories.AddRangeAsync(deeperCategories);
+        // 3. Derin Kategoriler (Level 3-5)
+        var deepCategories = CreateDeepCategories(subCategories);
+        await context.Categories.AddRangeAsync(deepCategories);
         await context.SaveChangesAsync();
-        Console.WriteLine($"Created {deeperCategories.Count} deeper categories (level 3-5).");
+        Console.WriteLine($"Created {deepCategories.Count} deep categories.");
 
-        // 2. Subscription Plans
+        // 4. Subscription Plans
         var plans = CreateSubscriptionPlans();
         await context.SubscriptionPlans.AddRangeAsync(plans);
         await context.SaveChangesAsync();
         Console.WriteLine($"Created {plans.Count} subscription plans.");
 
-        // 3. Sellers
+        // 5. Sellers
         var sellers = CreateSellers();
         await context.Sellers.AddRangeAsync(sellers);
         await context.SaveChangesAsync();
         Console.WriteLine($"Created {sellers.Count} sellers.");
 
-        // 4. Seller Infos
+        // 6. Seller Infos
         var sellerInfos = CreateSellerInfos(sellers);
         await context.SellerInfos.AddRangeAsync(sellerInfos);
         await context.SaveChangesAsync();
         Console.WriteLine($"Created {sellerInfos.Count} seller infos.");
 
-        // 5. Services
-        var allCategories = categories.Concat(subCategories).Concat(deeperCategories).ToList();
+        // 7. Services - Tüm kategorileri al ve servisleri oluştur
+        var allCategories = context.Categories.ToList();
         var services = CreateServices(sellers, allCategories);
         await context.Services.AddRangeAsync(services);
         await context.SaveChangesAsync();
@@ -66,304 +65,98 @@ public static class DataSeeder
         Console.WriteLine("Database seeding completed!");
     }
 
-    private static async Task SeedDeepCategoriesIfMissing(MyIndustryDbContext context)
+    private static List<Category> CreateMainCategories()
     {
-        var addedCount = 0;
-        
-        // ========== 1. SEVİYE - Ana Kategoriler ==========
-        var yedekParca = context.Categories.FirstOrDefault(c => c.Name == "Yedek Parça" && c.ParentId == null);
-        if (yedekParca == null)
+        return new List<Category>
         {
-            yedekParca = new Category { Id = Guid.NewGuid(), Name = "Yedek Parça", Description = "Endüstriyel yedek parçalar", IsActive = true, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(yedekParca);
-            addedCount++;
-        }
+            new Category { Id = Guid.NewGuid(), Name = "Yedek Parça", Description = "Endüstriyel yedek parçalar", IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Category { Id = Guid.NewGuid(), Name = "Hidrolik Sistemler", Description = "Hidrolik pompalar ve sistemler", IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Category { Id = Guid.NewGuid(), Name = "Elektrik ve Otomasyon", Description = "Elektrik ve otomasyon sistemleri", IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Category { Id = Guid.NewGuid(), Name = "CNC ve Talaşlı İmalat", Description = "CNC işleme hizmetleri", IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Category { Id = Guid.NewGuid(), Name = "Kaynak ve Metal İşleme", Description = "Kaynak ve metal işleme", IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Category { Id = Guid.NewGuid(), Name = "Rulman ve Transmisyon", Description = "Rulmanlar ve transmisyon", IsActive = true, CreatedDate = DateTime.UtcNow },
+        };
+    }
+
+    private static List<Category> CreateSubCategories(List<Category> mainCategories)
+    {
+        var subCategories = new List<Category>();
         
-        var hidrolik = context.Categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler" && c.ParentId == null);
-        if (hidrolik == null)
-        {
-            hidrolik = new Category { Id = Guid.NewGuid(), Name = "Hidrolik Sistemler", Description = "Hidrolik pompalar ve sistemler", IsActive = true, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(hidrolik);
-            addedCount++;
-        }
-        
-        var elektrik = context.Categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon" && c.ParentId == null);
-        if (elektrik == null)
-        {
-            elektrik = new Category { Id = Guid.NewGuid(), Name = "Elektrik ve Otomasyon", Description = "Elektrik ve otomasyon sistemleri", IsActive = true, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(elektrik);
-            addedCount++;
-        }
-        
-        var cnc = context.Categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat" && c.ParentId == null);
-        if (cnc == null)
-        {
-            cnc = new Category { Id = Guid.NewGuid(), Name = "CNC ve Talaşlı İmalat", Description = "CNC işleme hizmetleri", IsActive = true, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(cnc);
-            addedCount++;
-        }
-        
-        var kaynak = context.Categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme" && c.ParentId == null);
-        if (kaynak == null)
-        {
-            kaynak = new Category { Id = Guid.NewGuid(), Name = "Kaynak ve Metal İşleme", Description = "Kaynak ve metal işleme", IsActive = true, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(kaynak);
-            addedCount++;
-        }
-        
-        var rulman = context.Categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon" && c.ParentId == null);
-        if (rulman == null)
-        {
-            rulman = new Category { Id = Guid.NewGuid(), Name = "Rulman ve Transmisyon", Description = "Rulmanlar ve transmisyon", IsActive = true, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(rulman);
-            addedCount++;
-        }
-        
-        // Kaydet - ID'ler oluşsun
-        if (addedCount > 0) await context.SaveChangesAsync();
-        
-        // ========== 2. SEVİYE - Alt Kategoriler ==========
-        
+        var yedekParca = mainCategories.First(c => c.Name == "Yedek Parça");
+        var hidrolik = mainCategories.First(c => c.Name == "Hidrolik Sistemler");
+        var elektrik = mainCategories.First(c => c.Name == "Elektrik ve Otomasyon");
+        var cnc = mainCategories.First(c => c.Name == "CNC ve Talaşlı İmalat");
+        var kaynak = mainCategories.First(c => c.Name == "Kaynak ve Metal İşleme");
+        var rulman = mainCategories.First(c => c.Name == "Rulman ve Transmisyon");
+
         // Yedek Parça altı
-        var motorYedek = context.Categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları" && c.ParentId == yedekParca.Id);
-        if (motorYedek == null)
-        {
-            motorYedek = new Category { Id = Guid.NewGuid(), Name = "Motor Yedek Parçaları", Description = "Motor yedek parçaları", IsActive = true, ParentId = yedekParca.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(motorYedek);
-            addedCount++;
-        }
-        
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Motor Yedek Parçaları", ParentId = yedekParca.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Pompa Yedek Parçaları", ParentId = yedekParca.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
         // Hidrolik altı
-        var hidrolikPompa = context.Categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar" && c.ParentId == hidrolik.Id);
-        if (hidrolikPompa == null)
-        {
-            hidrolikPompa = new Category { Id = Guid.NewGuid(), Name = "Hidrolik Pompalar", Description = "Hidrolik pompalar", IsActive = true, ParentId = hidrolik.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(hidrolikPompa);
-            addedCount++;
-        }
-        
-        var hidrolikSilindir = context.Categories.FirstOrDefault(c => c.Name == "Hidrolik Silindirler" && c.ParentId == hidrolik.Id);
-        if (hidrolikSilindir == null)
-        {
-            hidrolikSilindir = new Category { Id = Guid.NewGuid(), Name = "Hidrolik Silindirler", Description = "Hidrolik silindirler", IsActive = true, ParentId = hidrolik.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(hidrolikSilindir);
-            addedCount++;
-        }
-        
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Hidrolik Pompalar", ParentId = hidrolik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Hidrolik Silindirler", ParentId = hidrolik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Hidrolik Valfler", ParentId = hidrolik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
         // Elektrik altı
-        var plc = context.Categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol" && c.ParentId == elektrik.Id);
-        if (plc == null)
-        {
-            plc = new Category { Id = Guid.NewGuid(), Name = "PLC ve Kontrol", Description = "PLC sistemleri", IsActive = true, ParentId = elektrik.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(plc);
-            addedCount++;
-        }
-        
-        var sensorler = context.Categories.FirstOrDefault(c => c.Name == "Sensörler" && c.ParentId == elektrik.Id);
-        if (sensorler == null)
-        {
-            sensorler = new Category { Id = Guid.NewGuid(), Name = "Sensörler", Description = "Endüstriyel sensörler", IsActive = true, ParentId = elektrik.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(sensorler);
-            addedCount++;
-        }
-        
-        var motorSurucu = context.Categories.FirstOrDefault(c => c.Name == "Motor Sürücüler" && c.ParentId == elektrik.Id);
-        if (motorSurucu == null)
-        {
-            motorSurucu = new Category { Id = Guid.NewGuid(), Name = "Motor Sürücüler", Description = "Frekans invertörleri", IsActive = true, ParentId = elektrik.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(motorSurucu);
-            addedCount++;
-        }
-        
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "PLC ve Kontrol", ParentId = elektrik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Sensörler", ParentId = elektrik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Motor Sürücüler", ParentId = elektrik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
         // CNC altı
-        var cncTorna = context.Categories.FirstOrDefault(c => c.Name == "CNC Torna" && c.ParentId == cnc.Id);
-        if (cncTorna == null)
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "CNC Torna", ParentId = cnc.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "CNC Freze", ParentId = cnc.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Taşlama", ParentId = cnc.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
+        // Kaynak altı
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Lazer Kesim", ParentId = kaynak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Argon Kaynak", ParentId = kaynak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
+        return subCategories;
+    }
+
+    private static List<Category> CreateDeepCategories(List<Category> level2Categories)
+    {
+        var deepCategories = new List<Category>();
+
+        // PLC ve Kontrol > Markalar
+        var plc = level2Categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol");
+        if (plc != null)
         {
-            cncTorna = new Category { Id = Guid.NewGuid(), Name = "CNC Torna", Description = "CNC torna işleme", IsActive = true, ParentId = cnc.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(cncTorna);
-            addedCount++;
+            var siemensId = Guid.NewGuid();
+            var omronId = Guid.NewGuid();
+            deepCategories.Add(new Category { Id = siemensId, Name = "Siemens", ParentId = plc.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = omronId, Name = "Omron", ParentId = plc.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Allen Bradley", ParentId = plc.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
+            // Siemens > Modeller
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-1200", ParentId = siemensId, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-1500", ParentId = siemensId, IsActive = true, CreatedDate = DateTime.UtcNow });
         }
-        
-        var cncFreze = context.Categories.FirstOrDefault(c => c.Name == "CNC Freze" && c.ParentId == cnc.Id);
-        if (cncFreze == null)
+
+        // Hidrolik Pompalar > Tipler
+        var hidrolikPompa = level2Categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar");
+        if (hidrolikPompa != null)
         {
-            cncFreze = new Category { Id = Guid.NewGuid(), Name = "CNC Freze", Description = "CNC freze işleme", IsActive = true, ParentId = cnc.Id, CreatedDate = DateTime.UtcNow };
-            context.Categories.Add(cncFreze);
-            addedCount++;
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Dişli Pompalar", ParentId = hidrolikPompa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Pistonlu Pompalar", ParentId = hidrolikPompa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
         }
-        
-        // Kaydet
-        if (addedCount > 0) await context.SaveChangesAsync();
-        
-        // ========== 3. SEVİYE - Derin Kategoriler ==========
-        
-        // Motor Yedek Parçaları > Çekici, Kamyon, Otobüs
-        Guid cekiciId, kamyonId, otobusId;
-        var cekici = context.Categories.FirstOrDefault(c => c.Name == "Çekici" && c.ParentId == motorYedek.Id);
-        if (cekici == null)
+
+        // Motor Yedek Parçaları > Araç Tipleri
+        var motorYedek = level2Categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları");
+        if (motorYedek != null)
         {
-            cekiciId = Guid.NewGuid();
-            kamyonId = Guid.NewGuid();
-            otobusId = Guid.NewGuid();
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = cekiciId, Name = "Çekici", Description = "Çekici yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = kamyonId, Name = "Kamyon", Description = "Kamyon yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = otobusId, Name = "Otobüs", Description = "Otobüs yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 3;
+            var cekiciId = Guid.NewGuid();
+            deepCategories.Add(new Category { Id = cekiciId, Name = "Çekici", ParentId = motorYedek.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kamyon", ParentId = motorYedek.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
+            // Çekici > Markalar
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Scania", ParentId = cekiciId, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Volvo", ParentId = cekiciId, IsActive = true, CreatedDate = DateTime.UtcNow });
+            deepCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Mercedes", ParentId = cekiciId, IsActive = true, CreatedDate = DateTime.UtcNow });
         }
-        else
-        {
-            cekiciId = cekici.Id;
-        }
-        
-        // Hidrolik Pompalar > Dişli, Pistonlu, Paletli
-        Guid disliPompaId;
-        var disliPompa = context.Categories.FirstOrDefault(c => c.Name == "Dişli Pompalar" && c.ParentId == hidrolikPompa.Id);
-        if (disliPompa == null)
-        {
-            disliPompaId = Guid.NewGuid();
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = disliPompaId, Name = "Dişli Pompalar", Description = "Dişli pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Pistonlu Pompalar", Description = "Pistonlu pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Paletli Pompalar", Description = "Paletli pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 3;
-        }
-        else
-        {
-            disliPompaId = disliPompa.Id;
-        }
-        
-        // PLC ve Kontrol > Siemens, Omron, Allen Bradley
-        Guid siemensId;
-        var siemens = context.Categories.FirstOrDefault(c => c.Name == "Siemens" && c.ParentId == plc.Id);
-        if (siemens == null)
-        {
-            siemensId = Guid.NewGuid();
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = siemensId, Name = "Siemens", Description = "Siemens PLC", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Omron", Description = "Omron PLC", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Allen Bradley", Description = "Allen Bradley PLC", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Mitsubishi", Description = "Mitsubishi PLC", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 4;
-        }
-        else
-        {
-            siemensId = siemens.Id;
-        }
-        
-        // Kaydet
-        if (addedCount > 0) await context.SaveChangesAsync();
-        
-        // ========== 4. SEVİYE ==========
-        
-        // Çekici > Scania, Volvo, Mercedes, MAN, DAF
-        Guid scaniaId = Guid.Empty, volvoId = Guid.Empty, mercedesId = Guid.Empty;
-        if (!context.Categories.Any(c => c.Name == "Scania" && c.ParentId == cekiciId))
-        {
-            scaniaId = Guid.NewGuid();
-            volvoId = Guid.NewGuid();
-            mercedesId = Guid.NewGuid();
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = scaniaId, Name = "Scania", Description = "Scania", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = volvoId, Name = "Volvo", Description = "Volvo", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = mercedesId, Name = "Mercedes", Description = "Mercedes", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "MAN", Description = "MAN", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "DAF", Description = "DAF", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 5;
-        }
-        else
-        {
-            var sc = context.Categories.FirstOrDefault(c => c.Name == "Scania" && c.ParentId == cekiciId);
-            if (sc != null) scaniaId = sc.Id;
-            var vl = context.Categories.FirstOrDefault(c => c.Name == "Volvo" && c.ParentId == cekiciId);
-            if (vl != null) volvoId = vl.Id;
-            var mc = context.Categories.FirstOrDefault(c => c.Name == "Mercedes" && c.ParentId == cekiciId);
-            if (mc != null) mercedesId = mc.Id;
-        }
-        
-        // Dişli Pompalar > Bosch, Parker, Casappa
-        if (!context.Categories.Any(c => c.Name == "Bosch Rexroth" && c.ParentId == disliPompaId))
-        {
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = Guid.NewGuid(), Name = "Bosch Rexroth", Description = "Bosch Rexroth", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Parker", Description = "Parker", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Casappa", Description = "Casappa", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 3;
-        }
-        
-        // Siemens > S7-1200, S7-1500, S7-300
-        if (!context.Categories.Any(c => c.Name == "S7-1200" && c.ParentId == siemensId))
-        {
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = Guid.NewGuid(), Name = "S7-1200", Description = "S7-1200", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "S7-1500", Description = "S7-1500", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "S7-300", Description = "S7-300", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 3;
-        }
-        
-        // Kaydet
-        if (addedCount > 0) await context.SaveChangesAsync();
-        
-        // ========== 5. SEVİYE ==========
-        
-        // Scania > R410, R450, R500, S500
-        if (scaniaId != Guid.Empty && !context.Categories.Any(c => c.Name == "R410" && c.ParentId == scaniaId))
-        {
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = Guid.NewGuid(), Name = "R410", Description = "Scania R410", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "R450", Description = "Scania R450", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "R500", Description = "Scania R500", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "S500", Description = "Scania S500", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 4;
-        }
-        
-        // Volvo > FH16, FH500, FM
-        if (volvoId != Guid.Empty && !context.Categories.Any(c => c.Name == "FH16" && c.ParentId == volvoId))
-        {
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = Guid.NewGuid(), Name = "FH16", Description = "Volvo FH16", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "FH500", Description = "Volvo FH500", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "FM", Description = "Volvo FM", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 3;
-        }
-        
-        // Mercedes > Actros, Arocs, Axor
-        if (mercedesId != Guid.Empty && !context.Categories.Any(c => c.Name == "Actros" && c.ParentId == mercedesId))
-        {
-            context.Categories.AddRange(new[]
-            {
-                new Category { Id = Guid.NewGuid(), Name = "Actros", Description = "Mercedes Actros", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Arocs", Description = "Mercedes Arocs", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow },
-                new Category { Id = Guid.NewGuid(), Name = "Axor", Description = "Mercedes Axor", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow }
-            });
-            addedCount += 3;
-        }
-        
-        if (addedCount > 0)
-        {
-            await context.SaveChangesAsync();
-            Console.WriteLine($"Seeded {addedCount} categories (all levels).");
-        }
-        else
-        {
-            Console.WriteLine("All categories already exist.");
-        }
+
+        return deepCategories;
     }
 
     private static async Task FixServiceImages(MyIndustryDbContext context)
@@ -372,73 +165,12 @@ public static class DataSeeder
         var fixedCount = 0;
         var random = new Random(42);
 
-        // Kategori bazlı dummy resimler
-        var imagesByCategory = new Dictionary<string, string[]>
-        {
-            ["hidrolik"] = new[] {
-                "https://picsum.photos/seed/hydraulic1/800/600",
-                "https://picsum.photos/seed/hydraulic2/800/600",
-                "https://picsum.photos/seed/pump1/800/600"
-            },
-            ["cnc"] = new[] {
-                "https://picsum.photos/seed/cnc1/800/600",
-                "https://picsum.photos/seed/cnc2/800/600",
-                "https://picsum.photos/seed/machine1/800/600"
-            },
-            ["rulman"] = new[] {
-                "https://picsum.photos/seed/bearing1/800/600",
-                "https://picsum.photos/seed/bearing2/800/600",
-                "https://picsum.photos/seed/gear1/800/600"
-            },
-            ["elektrik"] = new[] {
-                "https://picsum.photos/seed/plc1/800/600",
-                "https://picsum.photos/seed/automation1/800/600",
-                "https://picsum.photos/seed/circuit1/800/600"
-            },
-            ["metal"] = new[] {
-                "https://picsum.photos/seed/welding1/800/600",
-                "https://picsum.photos/seed/steel1/800/600",
-                "https://picsum.photos/seed/metal1/800/600"
-            },
-            ["yedek"] = new[] {
-                "https://picsum.photos/seed/parts1/800/600",
-                "https://picsum.photos/seed/spare1/800/600",
-                "https://picsum.photos/seed/industrial1/800/600"
-            }
-        };
-
         foreach (var service in services)
         {
-            // Resim yoksa veya boşsa ekle
             if (string.IsNullOrWhiteSpace(service.ImageUrls) || service.ImageUrls == "[]" || service.ImageUrls == "null")
             {
-                var titleLower = service.Title?.ToLower() ?? "";
-                string[] images;
-                
-                if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
-                    titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
-                    images = imagesByCategory["hidrolik"];
-                else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
-                         titleLower.Contains("taşlama"))
-                    images = imagesByCategory["cnc"];
-                else if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
-                         titleLower.Contains("ina"))
-                    images = imagesByCategory["rulman"];
-                else if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
-                         titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
-                         titleLower.Contains("pano"))
-                    images = imagesByCategory["elektrik"];
-                else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
-                         titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
-                    images = imagesByCategory["metal"];
-                else
-                    images = imagesByCategory["yedek"];
-                
-                var count = random.Next(1, 4);
-                var selectedImages = images.OrderBy(_ => random.Next()).Take(count).ToArray();
-                service.ImageUrls = "[\"" + string.Join("\",\"", selectedImages) + "\"]";
-                
-                Console.WriteLine($"Added images to: '{service.Title}'");
+                var images = GetImagesForTitle(service.Title ?? "", random);
+                service.ImageUrls = images;
                 fixedCount++;
             }
         }
@@ -446,11 +178,7 @@ public static class DataSeeder
         if (fixedCount > 0)
         {
             await context.SaveChangesAsync();
-            Console.WriteLine($"Added images to {fixedCount} services.");
-        }
-        else
-        {
-            Console.WriteLine("All services already have images.");
+            Console.WriteLine($"Fixed images for {fixedCount} services.");
         }
     }
 
@@ -462,53 +190,10 @@ public static class DataSeeder
 
         foreach (var service in services)
         {
-            var titleLower = service.Title?.ToLower() ?? "";
-            Category? targetCategory = null;
-
-            // PLC/Otomasyon ürünleri
-            if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
-                titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
-                titleLower.Contains("pano"))
-            {
-                targetCategory = categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol") 
-                              ?? categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon");
-            }
-            // Hidrolik ürünleri
-            else if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
-                     titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
-            {
-                targetCategory = categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar") 
-                              ?? categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler");
-            }
-            // CNC/Talaşlı imalat
-            else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
-                     titleLower.Contains("taşlama"))
-            {
-                targetCategory = categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat");
-            }
-            // Rulman
-            else if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
-                     titleLower.Contains("ina"))
-            {
-                targetCategory = categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon");
-            }
-            // Metal işleme / Kaynak
-            else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
-                     titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
-            {
-                targetCategory = categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme");
-            }
-            // Yedek parça / Genel
-            else if (titleLower.Contains("redüktör") || titleLower.Contains("kompresör") || titleLower.Contains("konveyör") || 
-                     titleLower.Contains("zincir"))
-            {
-                targetCategory = categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları") 
-                              ?? categories.FirstOrDefault(c => c.Name == "Yedek Parça");
-            }
-
+            var targetCategory = FindBestCategory(service.Title ?? "", categories);
             if (targetCategory != null && service.CategoryId != targetCategory.Id)
             {
-                Console.WriteLine($"Fixing: '{service.Title}' -> {targetCategory.Name}");
+                Console.WriteLine($"Fixing category: '{service.Title}' -> {targetCategory.Name}");
                 service.CategoryId = targetCategory.Id;
                 fixedCount++;
             }
@@ -519,267 +204,94 @@ public static class DataSeeder
             await context.SaveChangesAsync();
             Console.WriteLine($"Fixed {fixedCount} service categories.");
         }
+    }
+
+    private static Category? FindBestCategory(string title, List<Category> categories)
+    {
+        var titleLower = title.ToLower();
+
+        // PLC/Otomasyon ürünleri -> Elektrik ve Otomasyon
+        if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") ||
+            titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
+            titleLower.Contains("pano"))
+        {
+            return categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol")
+                ?? categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon");
+        }
+
+        // Hidrolik ürünleri -> Hidrolik Sistemler
+        if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") ||
+            titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
+        {
+            return categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar")
+                ?? categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler");
+        }
+
+        // CNC/Talaşlı imalat
+        if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") ||
+            titleLower.Contains("taşlama"))
+        {
+            return categories.FirstOrDefault(c => c.Name == "CNC Torna")
+                ?? categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat");
+        }
+
+        // Rulman
+        if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") ||
+            titleLower.Contains("ina"))
+        {
+            return categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon");
+        }
+
+        // Metal işleme / Kaynak
+        if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") ||
+            titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
+        {
+            return categories.FirstOrDefault(c => c.Name == "Lazer Kesim")
+                ?? categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme");
+        }
+
+        // Yedek parça / Genel
+        if (titleLower.Contains("redüktör") || titleLower.Contains("kompresör") || titleLower.Contains("konveyör") ||
+            titleLower.Contains("zincir"))
+        {
+            return categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları")
+                ?? categories.FirstOrDefault(c => c.Name == "Yedek Parça");
+        }
+
+        return null;
+    }
+
+    private static string GetImagesForTitle(string title, Random random)
+    {
+        var titleLower = title.ToLower();
+        string[] images;
+
+        if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir"))
+            images = new[] { "https://picsum.photos/seed/hydraulic1/800/600", "https://picsum.photos/seed/pump1/800/600" };
+        else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze"))
+            images = new[] { "https://picsum.photos/seed/cnc1/800/600", "https://picsum.photos/seed/machine1/800/600" };
+        else if (titleLower.Contains("rulman") || titleLower.Contains("skf"))
+            images = new[] { "https://picsum.photos/seed/bearing1/800/600", "https://picsum.photos/seed/gear1/800/600" };
+        else if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("pano"))
+            images = new[] { "https://picsum.photos/seed/plc1/800/600", "https://picsum.photos/seed/circuit1/800/600" };
+        else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer"))
+            images = new[] { "https://picsum.photos/seed/welding1/800/600", "https://picsum.photos/seed/metal1/800/600" };
         else
-        {
-            Console.WriteLine("All service categories are correct.");
-        }
-    }
+            images = new[] { "https://picsum.photos/seed/parts1/800/600", "https://picsum.photos/seed/industrial1/800/600" };
 
-    private static List<Category> CreateCategories()
-    {
-        return new List<Category>
-        {
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Yedek Parça",
-                Description = "Endüstriyel yedek parçalar ve komponentler",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Makine ve Ekipman",
-                Description = "Endüstriyel makineler ve ekipmanlar",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Hidrolik Sistemler",
-                Description = "Hidrolik pompalar, silindirler ve sistemler",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Pnömatik Sistemler",
-                Description = "Pnömatik ekipmanlar ve komponentler",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Elektrik ve Otomasyon",
-                Description = "Elektrik malzemeleri ve otomasyon sistemleri",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "CNC ve Talaşlı İmalat",
-                Description = "CNC işleme ve talaşlı imalat hizmetleri",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Kaynak ve Metal İşleme",
-                Description = "Kaynak ve metal işleme hizmetleri",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Category
-            {
-                Id = Guid.NewGuid(),
-                Name = "Rulman ve Transmisyon",
-                Description = "Rulmanlar, kayışlar ve transmisyon elemanları",
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            }
-        };
-    }
-
-    private static List<Category> CreateSubCategories(List<Category> parentCategories)
-    {
-        var subCategories = new List<Category>();
-        
-        // Yedek Parça alt kategorileri
-        var yedekParca = parentCategories.First(c => c.Name == "Yedek Parça");
-        subCategories.AddRange(new[]
-        {
-            new Category { Id = Guid.NewGuid(), Name = "Motor Yedek Parçaları", Description = "Elektrik ve dizel motor parçaları", IsActive = true, ParentId = yedekParca.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Pompa Yedek Parçaları", Description = "Her türlü pompa yedek parçası", IsActive = true, ParentId = yedekParca.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Kompresör Parçaları", Description = "Kompresör yedek parçaları", IsActive = true, ParentId = yedekParca.Id, CreatedDate = DateTime.UtcNow },
-        });
-
-        // Hidrolik alt kategorileri
-        var hidrolik = parentCategories.First(c => c.Name == "Hidrolik Sistemler");
-        subCategories.AddRange(new[]
-        {
-            new Category { Id = Guid.NewGuid(), Name = "Hidrolik Pompalar", Description = "Dişli, pistonlu ve paletli pompalar", IsActive = true, ParentId = hidrolik.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Hidrolik Silindirler", Description = "Tek ve çift etkili silindirler", IsActive = true, ParentId = hidrolik.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Hidrolik Valfler", Description = "Yön kontrol ve basınç valfleri", IsActive = true, ParentId = hidrolik.Id, CreatedDate = DateTime.UtcNow },
-        });
-
-        // CNC alt kategorileri
-        var cnc = parentCategories.First(c => c.Name == "CNC ve Talaşlı İmalat");
-        subCategories.AddRange(new[]
-        {
-            new Category { Id = Guid.NewGuid(), Name = "CNC Torna", Description = "CNC torna işleme hizmetleri", IsActive = true, ParentId = cnc.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "CNC Freze", Description = "CNC freze işleme hizmetleri", IsActive = true, ParentId = cnc.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Taşlama", Description = "Hassas taşlama işlemleri", IsActive = true, ParentId = cnc.Id, CreatedDate = DateTime.UtcNow },
-        });
-
-        // Elektrik alt kategorileri
-        var elektrik = parentCategories.First(c => c.Name == "Elektrik ve Otomasyon");
-        subCategories.AddRange(new[]
-        {
-            new Category { Id = Guid.NewGuid(), Name = "PLC ve Kontrol", Description = "PLC sistemleri ve kontrol panelleri", IsActive = true, ParentId = elektrik.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Sensörler", Description = "Endüstriyel sensörler", IsActive = true, ParentId = elektrik.Id, CreatedDate = DateTime.UtcNow },
-            new Category { Id = Guid.NewGuid(), Name = "Motor Sürücüler", Description = "Frekans invertörleri ve sürücüler", IsActive = true, ParentId = elektrik.Id, CreatedDate = DateTime.UtcNow },
-        });
-
-        return subCategories;
-    }
-
-    private static List<Category> CreateDeeperCategories(List<Category> level2Categories)
-    {
-        var deeperCategories = new List<Category>();
-        
-        // Motor Yedek Parçaları > Çekici Markaları (3. seviye)
-        var motorYedek = level2Categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları");
-        if (motorYedek != null)
-        {
-            var cekiciId = Guid.NewGuid();
-            var kamyonId = Guid.NewGuid();
-            var otoId = Guid.NewGuid();
-            
-            // 3. seviye - Araç Tipleri
-            deeperCategories.Add(new Category { Id = cekiciId, Name = "Çekici", Description = "Çekici motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = kamyonId, Name = "Kamyon", Description = "Kamyon motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = otoId, Name = "Otobüs", Description = "Otobüs motor yedek parçaları", IsActive = true, ParentId = motorYedek.Id, CreatedDate = DateTime.UtcNow });
-            
-            // 4. seviye - Çekici Markaları
-            var scaniaId = Guid.NewGuid();
-            var volvoId = Guid.NewGuid();
-            var mercedesId = Guid.NewGuid();
-            var manId = Guid.NewGuid();
-            var dafId = Guid.NewGuid();
-            
-            deeperCategories.Add(new Category { Id = scaniaId, Name = "Scania", Description = "Scania çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = volvoId, Name = "Volvo", Description = "Volvo çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = mercedesId, Name = "Mercedes", Description = "Mercedes çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = manId, Name = "MAN", Description = "MAN çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = dafId, Name = "DAF", Description = "DAF çekici yedek parçaları", IsActive = true, ParentId = cekiciId, CreatedDate = DateTime.UtcNow });
-            
-            // 5. seviye - Scania Modelleri
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "R410", Description = "Scania R410 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "R450", Description = "Scania R450 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "R500", Description = "Scania R500 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S500", Description = "Scania S500 yedek parçaları", IsActive = true, ParentId = scaniaId, CreatedDate = DateTime.UtcNow });
-            
-            // 5. seviye - Volvo Modelleri
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "FH16", Description = "Volvo FH16 yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "FH500", Description = "Volvo FH500 yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "FM", Description = "Volvo FM yedek parçaları", IsActive = true, ParentId = volvoId, CreatedDate = DateTime.UtcNow });
-            
-            // 5. seviye - Mercedes Modelleri
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Actros", Description = "Mercedes Actros yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Arocs", Description = "Mercedes Arocs yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Axor", Description = "Mercedes Axor yedek parçaları", IsActive = true, ParentId = mercedesId, CreatedDate = DateTime.UtcNow });
-        }
-        
-        // Hidrolik Pompalar > Pompa Tipleri (3. seviye)
-        var hidrolikPompa = level2Categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar");
-        if (hidrolikPompa != null)
-        {
-            var disliPompaId = Guid.NewGuid();
-            var pistonluPompaId = Guid.NewGuid();
-            
-            deeperCategories.Add(new Category { Id = disliPompaId, Name = "Dişli Pompalar", Description = "Dişli tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = pistonluPompaId, Name = "Pistonlu Pompalar", Description = "Pistonlu tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Paletli Pompalar", Description = "Paletli tip hidrolik pompalar", IsActive = true, ParentId = hidrolikPompa.Id, CreatedDate = DateTime.UtcNow });
-            
-            // 4. seviye - Marka bazlı
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Bosch Rexroth", Description = "Bosch Rexroth dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Parker", Description = "Parker dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Casappa", Description = "Casappa dişli pompalar", IsActive = true, ParentId = disliPompaId, CreatedDate = DateTime.UtcNow });
-        }
-        
-        // PLC ve Kontrol > Marka bazlı (3. seviye)
-        var plc = level2Categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol");
-        if (plc != null)
-        {
-            var siemensId = Guid.NewGuid();
-            var omronId = Guid.NewGuid();
-            
-            deeperCategories.Add(new Category { Id = siemensId, Name = "Siemens", Description = "Siemens PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = omronId, Name = "Omron", Description = "Omron PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Allen Bradley", Description = "Allen Bradley PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Mitsubishi", Description = "Mitsubishi PLC sistemleri", IsActive = true, ParentId = plc.Id, CreatedDate = DateTime.UtcNow });
-            
-            // 4. seviye - Siemens serileri
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-1200", Description = "Siemens S7-1200 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-1500", Description = "Siemens S7-1500 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow });
-            deeperCategories.Add(new Category { Id = Guid.NewGuid(), Name = "S7-300", Description = "Siemens S7-300 serisi", IsActive = true, ParentId = siemensId, CreatedDate = DateTime.UtcNow });
-        }
-        
-        return deeperCategories;
+        var count = random.Next(1, 3);
+        var selectedImages = images.Take(count).ToArray();
+        return "[\"" + string.Join("\",\"", selectedImages) + "\"]";
     }
 
     private static List<SubscriptionPlan> CreateSubscriptionPlans()
     {
         return new List<SubscriptionPlan>
         {
-            new SubscriptionPlan
-            {
-                Id = Guid.NewGuid(),
-                Name = "Ücretsiz",
-                Description = "Başlangıç paketi - Sınırlı ilan hakkı",
-                SubscriptionType = SubscriptionType.Free,
-                MonthlyPrice = 0,
-                MonthlyPostLimit = 3,
-                PostDurationInDays = 30,
-                FeaturedPostLimit = 0,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new SubscriptionPlan
-            {
-                Id = Guid.NewGuid(),
-                Name = "Standart",
-                Description = "Küçük işletmeler için ideal paket",
-                SubscriptionType = SubscriptionType.Standard,
-                MonthlyPrice = 29900, // 299 TL (kuruş cinsinden)
-                MonthlyPostLimit = 15,
-                PostDurationInDays = 45,
-                FeaturedPostLimit = 2,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new SubscriptionPlan
-            {
-                Id = Guid.NewGuid(),
-                Name = "Premium",
-                Description = "Orta ölçekli işletmeler için gelişmiş paket",
-                SubscriptionType = SubscriptionType.Premium,
-                MonthlyPrice = 59900, // 599 TL
-                MonthlyPostLimit = 50,
-                PostDurationInDays = 60,
-                FeaturedPostLimit = 10,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new SubscriptionPlan
-            {
-                Id = Guid.NewGuid(),
-                Name = "Kurumsal",
-                Description = "Büyük firmalar için sınırsız paket",
-                SubscriptionType = SubscriptionType.Corporate,
-                MonthlyPrice = 149900, // 1499 TL
-                MonthlyPostLimit = 999,
-                PostDurationInDays = 90,
-                FeaturedPostLimit = 50,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            }
+            new SubscriptionPlan { Id = Guid.NewGuid(), Name = "Ücretsiz", Description = "Başlangıç paketi", SubscriptionType = SubscriptionType.Free, MonthlyPrice = 0, MonthlyPostLimit = 3, PostDurationInDays = 30, FeaturedPostLimit = 0, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new SubscriptionPlan { Id = Guid.NewGuid(), Name = "Standart", Description = "Küçük işletmeler için", SubscriptionType = SubscriptionType.Standard, MonthlyPrice = 29900, MonthlyPostLimit = 15, PostDurationInDays = 45, FeaturedPostLimit = 2, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new SubscriptionPlan { Id = Guid.NewGuid(), Name = "Premium", Description = "Orta ölçekli işletmeler için", SubscriptionType = SubscriptionType.Premium, MonthlyPrice = 59900, MonthlyPostLimit = 50, PostDurationInDays = 60, FeaturedPostLimit = 10, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new SubscriptionPlan { Id = Guid.NewGuid(), Name = "Kurumsal", Description = "Büyük firmalar için", SubscriptionType = SubscriptionType.Corporate, MonthlyPrice = 149900, MonthlyPostLimit = 999, PostDurationInDays = 90, FeaturedPostLimit = 50, IsActive = true, CreatedDate = DateTime.UtcNow }
         };
     }
 
@@ -787,74 +299,18 @@ public static class DataSeeder
     {
         return new List<Seller>
         {
-            new Seller
-            {
-                Id = Guid.NewGuid(),
-                IdentityNumber = "1234567890",
-                Title = "Anadolu Hidrolik",
-                Description = "25 yıllık tecrübemizle hidrolik sistemler ve yedek parça tedariğinde lider firmayız.",
-                Sector = SellerSector.IronMongery,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Seller
-            {
-                Id = Guid.NewGuid(),
-                IdentityNumber = "2345678901",
-                Title = "Marmara CNC",
-                Description = "Modern CNC tezgahlarımızla hassas işçilik ve hızlı teslimat garantisi.",
-                Sector = SellerSector.IronMongery,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Seller
-            {
-                Id = Guid.NewGuid(),
-                IdentityNumber = "3456789012",
-                Title = "Ege Rulman",
-                Description = "Türkiye'nin en geniş rulman stoku ile hizmetinizdeyiz.",
-                Sector = SellerSector.IronMongery,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Seller
-            {
-                Id = Guid.NewGuid(),
-                IdentityNumber = "4567890123",
-                Title = "Akdeniz Otomasyon",
-                Description = "Endüstriyel otomasyon sistemleri kurulum ve bakım hizmetleri.",
-                Sector = SellerSector.IronMongery,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Seller
-            {
-                Id = Guid.NewGuid(),
-                IdentityNumber = "5678901234",
-                Title = "Karadeniz Metal",
-                Description = "Metal işleme, kaynak ve imalat hizmetlerinde 30 yıllık deneyim.",
-                Sector = SellerSector.Dumper,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            },
-            new Seller
-            {
-                Id = Guid.NewGuid(),
-                IdentityNumber = "6789012345",
-                Title = "İç Anadolu Makine",
-                Description = "Endüstriyel makine satış, servis ve yedek parça hizmetleri.",
-                Sector = SellerSector.IronMongery,
-                IsActive = true,
-                CreatedDate = DateTime.UtcNow
-            }
+            new Seller { Id = Guid.NewGuid(), IdentityNumber = "1234567890", Title = "Anadolu Hidrolik", Description = "25 yıllık tecrübe ile hidrolik sistemler.", Sector = SellerSector.IronMongery, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Seller { Id = Guid.NewGuid(), IdentityNumber = "2345678901", Title = "Marmara CNC", Description = "Modern CNC tezgahlarla hassas işçilik.", Sector = SellerSector.IronMongery, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Seller { Id = Guid.NewGuid(), IdentityNumber = "3456789012", Title = "Ege Rulman", Description = "Türkiye'nin en geniş rulman stoku.", Sector = SellerSector.IronMongery, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Seller { Id = Guid.NewGuid(), IdentityNumber = "4567890123", Title = "Akdeniz Otomasyon", Description = "Endüstriyel otomasyon sistemleri.", Sector = SellerSector.IronMongery, IsActive = true, CreatedDate = DateTime.UtcNow },
+            new Seller { Id = Guid.NewGuid(), IdentityNumber = "5678901234", Title = "Karadeniz Metal", Description = "Metal işleme ve kaynak hizmetleri.", Sector = SellerSector.Dumper, IsActive = true, CreatedDate = DateTime.UtcNow },
         };
     }
 
     private static List<SellerInfo> CreateSellerInfos(List<Seller> sellers)
     {
         var infos = new List<SellerInfo>();
-        var cities = new[] { "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Konya" };
-        var domains = new[] { "anadoluhidrolik", "marmaracnc", "egerulman", "akdenizotomasyon", "karadenizemetal", "icanadolumakine" };
+        var domains = new[] { "anadoluhidrolik", "marmaracnc", "egerulman", "akdenizotomasyon", "karadenizemetal" };
 
         for (int i = 0; i < sellers.Count; i++)
         {
@@ -869,196 +325,57 @@ public static class DataSeeder
                 CreatedDate = DateTime.UtcNow
             });
         }
-
         return infos;
     }
 
     private static List<Service> CreateServices(List<Seller> sellers, List<Category> categories)
     {
         var services = new List<Service>();
-        var random = new Random(42); // Sabit seed ile tekrarlanabilir sonuçlar
+        var random = new Random(42);
 
-        var serviceTemplates = new[]
+        var serviceTemplates = new (string title, string desc, int price, int days, string categoryHint)[]
         {
-            // Hidrolik
-            ("Hidrolik Pompa - Dişli Tip 50 Lt/dk", "Yüksek basınç dişli pompa, 250 bar çalışma basıncı, döküm gövde", 450000, 7),
-            ("Hidrolik Silindir Ø80x500 mm", "Çift etkili hidrolik silindir, krom kaplı mil, sertleştirilmiş burçlar", 320000, 10),
-            ("Hidrolik Yön Kontrol Valfi", "4/3 yön kontrol valfi, 24V DC bobin, P-max 320 bar", 180000, 5),
-            ("Hidrolik Tank 100 Lt", "Çelik tank, seviye göstergesi ve hava filtresi dahil", 250000, 14),
-            ("Hidrolik Hortum Seti", "DN12 yüksek basınç hortum, 2 metre, rekor dahil", 45000, 3),
-            
-            // CNC
-            ("CNC Torna İşleme Hizmeti", "Hassas CNC torna işleme, ±0.01 tolerans, her türlü malzeme", 15000, 5),
-            ("CNC Freze İşleme", "3 ve 5 eksen CNC freze, karmaşık geometriler, prototip üretim", 25000, 7),
-            ("Hassas Taşlama Hizmeti", "Silindirik ve düzlem taşlama, Ra 0.4 yüzey kalitesi", 20000, 4),
-            ("Özel Parça İmalatı", "Teknik resme göre özel parça üretimi, küçük ve büyük seri", 50000, 14),
-            
-            // Rulman
-            ("SKF 6205-2RS Rulman", "Orijinal SKF, çift taraflı kauçuk conta, yüksek hız", 8500, 2),
-            ("FAG 32210 Konik Rulman", "Konik makaralı rulman, ağır yük kapasitesi", 24000, 3),
-            ("INA HK2516 İğne Rulman", "İğne makaralı rulman, kompakt tasarım", 6500, 2),
-            ("Rulman Montaj Seti", "Isıtıcı, çektirme ve montaj aletleri seti", 350000, 7),
-            
-            // Elektrik/Otomasyon
-            ("Siemens S7-1200 PLC", "CPU 1214C DC/DC/DC, 14 DI / 10 DO, Ethernet", 850000, 5),
-            ("Omron Fotosel Sensör", "E3Z serisi, 4m algılama mesafesi, PNP çıkış", 32000, 3),
-            ("Delta VFD Frekans İnvertör 7.5kW", "380V 3 faz, vektör kontrol, RS485 haberleşme", 420000, 7),
-            ("Endüstriyel Pano İmalatı", "Özel tasarım elektrik panosu, montaj ve kablolama dahil", 1500000, 21),
-            
-            // Metal İşleme
-            ("Çelik Konstrüksiyon İmalatı", "Teknik projeye göre çelik konstrüksiyon, boyalı teslim", 5000000, 30),
-            ("Lazer Kesim Hizmeti", "CNC lazer kesim, 20mm'e kadar sac, hassas kesim", 10000, 3),
-            ("Argon Kaynak Hizmeti", "TIG/MIG kaynak, paslanmaz ve alüminyum", 25000, 5),
-            ("Sac Bükme İşlemi", "CNC abkant pres, 4m boy kapasitesi", 8000, 2),
-            
-            // Genel Yedek Parça
-            ("Redüktör Yedek Parça Seti", "SEW R47 serisi için komple tamir seti", 180000, 10),
-            ("Kompresör Tamir Kiti", "Atlas Copco GA serisi için bakım seti", 95000, 7),
-            ("Konveyör Bant Tamburu", "Ø400x800 mm, kauçuk kaplı, rulmanlar dahil", 280000, 14),
-            ("Endüstriyel Zincir", "DIN 8187, 1 inç pitch, 5 metre", 45000, 3),
+            // Hidrolik - Hidrolik Sistemler kategorisine
+            ("Hidrolik Pompa - Dişli Tip 50 Lt/dk", "Yüksek basınç dişli pompa, 250 bar", 450000, 7, "Hidrolik"),
+            ("Hidrolik Silindir Ø80x500 mm", "Çift etkili hidrolik silindir", 320000, 10, "Hidrolik"),
+            ("Hidrolik Yön Kontrol Valfi", "4/3 yön kontrol valfi, 24V DC", 180000, 5, "Hidrolik"),
+            ("Hidrolik Tank 100 Lt", "Çelik tank, filtre dahil", 250000, 14, "Hidrolik"),
+
+            // CNC - CNC ve Talaşlı İmalat kategorisine
+            ("CNC Torna İşleme Hizmeti", "Hassas CNC torna, ±0.01 tolerans", 15000, 5, "CNC"),
+            ("CNC Freze İşleme", "3 ve 5 eksen CNC freze", 25000, 7, "CNC"),
+            ("Hassas Taşlama Hizmeti", "Ra 0.4 yüzey kalitesi", 20000, 4, "CNC"),
+
+            // Rulman - Rulman ve Transmisyon kategorisine
+            ("SKF 6205-2RS Rulman", "Orijinal SKF, çift kauçuk conta", 8500, 2, "Rulman"),
+            ("FAG 32210 Konik Rulman", "Konik makaralı rulman", 24000, 3, "Rulman"),
+            ("Rulman Montaj Seti", "Isıtıcı ve montaj aletleri", 350000, 7, "Rulman"),
+
+            // Elektrik/Otomasyon - Elektrik ve Otomasyon kategorisine
+            ("Siemens S7-1200 PLC", "CPU 1214C DC/DC/DC, Ethernet", 850000, 5, "PLC"),
+            ("Omron Fotosel Sensör", "E3Z serisi, 4m mesafe", 32000, 3, "PLC"),
+            ("Delta VFD Frekans İnvertör", "7.5kW, 380V 3 faz", 420000, 7, "PLC"),
+            ("Endüstriyel Pano İmalatı", "Özel tasarım elektrik panosu", 1500000, 21, "PLC"),
+
+            // Metal İşleme - Kaynak ve Metal İşleme kategorisine
+            ("Çelik Konstrüksiyon İmalatı", "Teknik projeye göre üretim", 5000000, 30, "Kaynak"),
+            ("Lazer Kesim Hizmeti", "CNC lazer, 20mm'e kadar", 10000, 3, "Kaynak"),
+            ("Argon Kaynak Hizmeti", "TIG/MIG kaynak", 25000, 5, "Kaynak"),
+
+            // Yedek Parça - Yedek Parça kategorisine
+            ("Redüktör Yedek Parça Seti", "SEW R47 serisi tamir seti", 180000, 10, "Yedek"),
+            ("Kompresör Tamir Kiti", "Atlas Copco GA bakım seti", 95000, 7, "Yedek"),
+            ("Konveyör Bant Tamburu", "Ø400x800 mm, kauçuk kaplı", 280000, 14, "Yedek"),
         };
 
-        // Kategori bazlı dummy resimler (picsum.photos kullanarak)
-        var imagesByCategory = new Dictionary<string, string[]>
-        {
-            // Hidrolik - mavi tonlu makine resimleri
-            ["hidrolik"] = new[] {
-                "https://picsum.photos/seed/hydraulic1/800/600",
-                "https://picsum.photos/seed/hydraulic2/800/600",
-                "https://picsum.photos/seed/pump1/800/600"
-            },
-            // CNC - metal işleme resimleri  
-            ["cnc"] = new[] {
-                "https://picsum.photos/seed/cnc1/800/600",
-                "https://picsum.photos/seed/cnc2/800/600",
-                "https://picsum.photos/seed/machine1/800/600"
-            },
-            // Rulman - mekanik parça resimleri
-            ["rulman"] = new[] {
-                "https://picsum.photos/seed/bearing1/800/600",
-                "https://picsum.photos/seed/bearing2/800/600",
-                "https://picsum.photos/seed/gear1/800/600"
-            },
-            // Elektrik/Otomasyon - elektronik resimleri
-            ["elektrik"] = new[] {
-                "https://picsum.photos/seed/plc1/800/600",
-                "https://picsum.photos/seed/automation1/800/600",
-                "https://picsum.photos/seed/circuit1/800/600"
-            },
-            // Metal işleme - kaynak/kesim resimleri
-            ["metal"] = new[] {
-                "https://picsum.photos/seed/welding1/800/600",
-                "https://picsum.photos/seed/steel1/800/600",
-                "https://picsum.photos/seed/metal1/800/600"
-            },
-            // Genel yedek parça
-            ["yedek"] = new[] {
-                "https://picsum.photos/seed/parts1/800/600",
-                "https://picsum.photos/seed/spare1/800/600",
-                "https://picsum.photos/seed/industrial1/800/600"
-            }
-        };
-
-        string GetImagesForTitle(string title)
-        {
-            var titleLower = title.ToLower();
-            string[] images;
-            
-            if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
-                titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
-                images = imagesByCategory["hidrolik"];
-            else if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
-                     titleLower.Contains("taşlama") || titleLower.Contains("parça imalat"))
-                images = imagesByCategory["cnc"];
-            else if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
-                     titleLower.Contains("ina"))
-                images = imagesByCategory["rulman"];
-            else if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
-                     titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
-                     titleLower.Contains("pano"))
-                images = imagesByCategory["elektrik"];
-            else if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
-                     titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
-                images = imagesByCategory["metal"];
-            else
-                images = imagesByCategory["yedek"];
-            
-            // 1-3 arası rastgele resim sayısı
-            var count = random.Next(1, 4);
-            var selectedImages = images.OrderBy(_ => random.Next()).Take(count).ToArray();
-            return "[\"" + string.Join("\",\"", selectedImages) + "\"]";
-        }
-
-        // Kategori eşleştirme kuralları - servis adına göre uygun kategori bul
-        Category FindBestCategory(string title)
-        {
-            var titleLower = title.ToLower();
-            
-            // PLC/Otomasyon ürünleri
-            if (titleLower.Contains("plc") || titleLower.Contains("siemens") || titleLower.Contains("omron") || 
-                titleLower.Contains("fotosel") || titleLower.Contains("sensör") || titleLower.Contains("invertör") ||
-                titleLower.Contains("pano"))
-            {
-                var plcCategory = categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol");
-                if (plcCategory != null) return plcCategory;
-                var elektrikCategory = categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon");
-                if (elektrikCategory != null) return elektrikCategory;
-            }
-            
-            // Hidrolik ürünleri
-            if (titleLower.Contains("hidrolik") || titleLower.Contains("pompa") || titleLower.Contains("silindir") || 
-                titleLower.Contains("valf") || titleLower.Contains("tank") || titleLower.Contains("hortum"))
-            {
-                var hidrolikPompa = categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar");
-                if (hidrolikPompa != null) return hidrolikPompa;
-                var hidrolik = categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler");
-                if (hidrolik != null) return hidrolik;
-            }
-            
-            // CNC/Talaşlı imalat
-            if (titleLower.Contains("cnc") || titleLower.Contains("torna") || titleLower.Contains("freze") || 
-                titleLower.Contains("taşlama"))
-            {
-                var cnc = categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat");
-                if (cnc != null) return cnc;
-            }
-            
-            // Rulman
-            if (titleLower.Contains("rulman") || titleLower.Contains("skf") || titleLower.Contains("fag") || 
-                titleLower.Contains("ina"))
-            {
-                var rulman = categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon");
-                if (rulman != null) return rulman;
-            }
-            
-            // Metal işleme / Kaynak
-            if (titleLower.Contains("kaynak") || titleLower.Contains("lazer") || titleLower.Contains("kesim") || 
-                titleLower.Contains("bükme") || titleLower.Contains("konstrüksiyon"))
-            {
-                var metal = categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme");
-                if (metal != null) return metal;
-            }
-            
-            // Yedek parça / Genel
-            if (titleLower.Contains("redüktör") || titleLower.Contains("kompresör") || titleLower.Contains("konveyör") || 
-                titleLower.Contains("zincir"))
-            {
-                var yedek = categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları");
-                if (yedek != null) return yedek;
-                var yedekParca = categories.FirstOrDefault(c => c.Name == "Yedek Parça");
-                if (yedekParca != null) return yedekParca;
-            }
-            
-            // Varsayılan: alt kategorilerden rastgele
-            var subCategories = categories.Where(c => c.ParentId != null).ToList();
-            return subCategories[random.Next(subCategories.Count)];
-        }
-
-        foreach (var (title, desc, price, days) in serviceTemplates)
+        // Default category if no match found
+        var defaultCategory = categories.First(c => c.ParentId == null);
+        
+        foreach (var (title, desc, price, days, categoryHint) in serviceTemplates)
         {
             var seller = sellers[random.Next(sellers.Count)];
-            var category = FindBestCategory(title);
-            
+            var category = FindCategoryByHint(categoryHint, categories) ?? defaultCategory;
+
             services.Add(new Service
             {
                 Id = Guid.NewGuid(),
@@ -1071,11 +388,25 @@ public static class DataSeeder
                 IsActive = true,
                 IsApproved = true,
                 ViewCount = random.Next(10, 500),
-                ImageUrls = GetImagesForTitle(title),
+                ImageUrls = GetImagesForTitle(title, random),
                 CreatedDate = DateTime.UtcNow.AddDays(-random.Next(1, 60))
             });
         }
 
         return services;
+    }
+
+    private static Category? FindCategoryByHint(string hint, List<Category> categories)
+    {
+        return hint switch
+        {
+            "Hidrolik" => categories.FirstOrDefault(c => c.Name == "Hidrolik Pompalar") ?? categories.FirstOrDefault(c => c.Name == "Hidrolik Sistemler"),
+            "CNC" => categories.FirstOrDefault(c => c.Name == "CNC Torna") ?? categories.FirstOrDefault(c => c.Name == "CNC ve Talaşlı İmalat"),
+            "Rulman" => categories.FirstOrDefault(c => c.Name == "Rulman ve Transmisyon"),
+            "PLC" => categories.FirstOrDefault(c => c.Name == "PLC ve Kontrol") ?? categories.FirstOrDefault(c => c.Name == "Elektrik ve Otomasyon"),
+            "Kaynak" => categories.FirstOrDefault(c => c.Name == "Lazer Kesim") ?? categories.FirstOrDefault(c => c.Name == "Kaynak ve Metal İşleme"),
+            "Yedek" => categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları") ?? categories.FirstOrDefault(c => c.Name == "Yedek Parça"),
+            _ => categories.FirstOrDefault(c => c.ParentId == null)
+        };
     }
 }

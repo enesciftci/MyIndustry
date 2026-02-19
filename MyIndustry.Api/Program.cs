@@ -91,9 +91,31 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    // Check if we should reset the database (via environment variable)
+    var resetDb = Environment.GetEnvironmentVariable("RESET_DATABASE") == "true";
+    
+    if (resetDb)
+    {
+        logger.LogWarning("RESET_DATABASE is true - Dropping and recreating all tables...");
+        await db.Database.EnsureDeletedAsync();
+        logger.LogInformation("Database deleted successfully.");
+    }
     
     // Run pending migrations (this will also create the database if it doesn't exist)
-    await db.Database.MigrateAsync();
+    try
+    {
+        await db.Database.MigrateAsync();
+        logger.LogInformation("Migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Migration failed. Attempting fresh database creation...");
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+        logger.LogInformation("Fresh database created and migrations applied.");
+    }
     
     // Seed dummy data
     await DataSeeder.SeedAsync(db);
