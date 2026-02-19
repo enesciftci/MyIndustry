@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.Repository.Repository;
+using MyIndustry.Repository.UnitOfWork;
 using DomainMessage = MyIndustry.Domain.Aggregate.Message;
 using DomainService = MyIndustry.Domain.Aggregate.Service;
 
@@ -10,13 +11,16 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sen
 {
     private readonly IGenericRepository<DomainMessage> _messageRepository;
     private readonly IGenericRepository<DomainService> _serviceRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public SendMessageCommandHandler(
         IGenericRepository<DomainMessage> messageRepository,
-        IGenericRepository<DomainService> serviceRepository)
+        IGenericRepository<DomainService> serviceRepository,
+        IUnitOfWork unitOfWork)
     {
         _messageRepository = messageRepository;
         _serviceRepository = serviceRepository;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<SendMessageCommandResult> Handle(SendMessageCommand request, CancellationToken cancellationToken)
@@ -50,6 +54,7 @@ public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, Sen
         };
 
         await _messageRepository.AddAsync(message, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new SendMessageCommandResult
         {
