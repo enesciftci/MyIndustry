@@ -19,23 +19,31 @@ public sealed class GetSellerListQueryHandler : IRequestHandler<GetSellerListQue
     {
         var sellers = await _sellerRepository
             .GetAllQuery()
+            .Include(s => s.Services)
+            .Include(s => s.SellerInfo)
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
-            .Select(p=>new SellerDto()
+            .Select(p => new SellerDto()
             {
                 Id = p.Id,
                 CreatedDate = p.CreatedDate,
-                // Address = p.Address,
-                // City = p.City, 
                 Description = p.Description,
-                // District = p.District,
                 Sector = p.Sector,
                 Title = p.Title,
                 AgreementUrl = p.AgreementUrl,
-                // IdentityNumber = _securityProvider.DecryptAes256(p.IdentityNumber),
-                // todo seller infodan al
-                // PhoneNumber = p.PhoneNumber,
-                // Email = p.Email
+                ServiceCount = p.Services.Count(s => s.IsActive && s.IsApproved),
+                IsVerified = p.IsActive,
+                Logo = p.SellerInfo != null ? p.SellerInfo.LogoUrl : null,
+                SellerInfo = p.SellerInfo != null ? new SellerInfoDto
+                {
+                    LogoUrl = p.SellerInfo.LogoUrl,
+                    PhoneNumber = p.SellerInfo.PhoneNumber,
+                    Email = p.SellerInfo.Email,
+                    WebSiteUrl = p.SellerInfo.WebSiteUrl,
+                    TwitterUrl = p.SellerInfo.TwitterUrl,
+                    FacebookUrl = p.SellerInfo.FacebookUrl,
+                    InstagramUrl = p.SellerInfo.InstagramUrl
+                } : null
             })
             .ToListAsync(cancellationToken);
 

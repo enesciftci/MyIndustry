@@ -17,4 +17,11 @@ public class SellerDto
     public SellerSector Sector { get; set; }
     public string AgreementUrl { get; set; }
     public SellerSubscriptionDto SellerSubscriptionDto { get; set; }
+    
+    // Additional fields for seller list and detail
+    public int ServiceCount { get; set; }
+    public string Logo { get; set; }
+    public bool IsVerified { get; set; }
+    public string Location { get; set; }
+    public SellerInfoDto SellerInfo { get; set; }
 }
