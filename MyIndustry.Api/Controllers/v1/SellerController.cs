@@ -21,9 +21,14 @@ public class SellerController : BaseController
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Create new seller profile
+    /// </summary>
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] CreateSellerCommand command, CancellationToken cancellationToken)
     {
+        command = command with { UserId = GetUserId() };
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
 
