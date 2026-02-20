@@ -15,8 +15,16 @@ public sealed class CreatePurchaserCommandHandler : IRequestHandler<CreatePurcha
 
     public async Task<CreatePurchaserCommandResult> Handle(CreatePurchaserCommand request, CancellationToken cancellationToken)
     {
+        // Check if purchaser already exists
+        var exists = await _purchasers.AnyAsync(p => p.Id == request.UserId, cancellationToken);
+        if (exists)
+        {
+            return new CreatePurchaserCommandResult(); // Already exists, return success
+        }
+
         await _purchasers.AddAsync(new Domain.Aggregate.Purchaser()
         {
+            Id = request.UserId, // Link to Identity user
             IsActive = true,
             PurchaserInfo = new PurchaserInfo()
             {
