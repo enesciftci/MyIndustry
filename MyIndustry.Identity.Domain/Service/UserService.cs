@@ -159,13 +159,8 @@ public class UserService : IUserService
     
     private async Task PublishUserCreatedMessages(ApplicationUser user, CancellationToken cancellationToken)
     {
-        await _customMessagePublisher.Publish(new CreateSellerMessage()
-        {
-            UserId = Guid.Parse(user.Id),
-            PhoneNumber = user.PhoneNumber,
-            Email = user.Email
-        }, cancellationToken);
-        
+        // Only create Purchaser automatically
+        // Seller profile should be created through SellerSetup flow
         await _customMessagePublisher.Publish(new CreatePurchaserMessage()
         {
             UserId = Guid.Parse(user.Id),
