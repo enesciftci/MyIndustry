@@ -2,7 +2,7 @@ namespace MyIndustry.Identity.Domain.Service;
 
 public static class EmailTemplateHelper
 {
-    public static string GetEmailConfirmationTemplate(string userName, string confirmationCode, string confirmationLink)
+    public static string GetEmailConfirmationTemplate(string userName, string confirmationLink)
     {
         return $@"
 <!DOCTYPE html>
@@ -37,40 +37,28 @@ public static class EmailTemplateHelper
                             </h2>
                             
                             <p style=""margin: 0 0 25px; color: #4a5568; font-size: 16px; line-height: 1.6;"">
-                                MyIndustry'ye hoş geldiniz! Hesabınızı aktifleştirmek için aşağıdaki doğrulama kodunu kullanın:
-                            </p>
-                            
-                            <!-- Verification Code Box -->
-                            <div style=""background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px dashed #3b82f6; border-radius: 12px; padding: 30px; text-align: center; margin: 30px 0;"">
-                                <p style=""margin: 0 0 10px; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;"">
-                                    Doğrulama Kodunuz
-                                </p>
-                                <p style=""margin: 0; color: #1e40af; font-size: 42px; font-weight: 700; letter-spacing: 8px; font-family: 'Courier New', monospace;"">
-                                    {confirmationCode}
-                                </p>
-                            </div>
-                            
-                            <p style=""margin: 25px 0; color: #64748b; font-size: 14px; text-align: center;"">
-                                — veya —
+                                MyIndustry'ye hoş geldiniz! Hesabınızı aktifleştirmek için aşağıdaki butona tıklamanız yeterli:
                             </p>
                             
                             <!-- Button -->
-                            <div style=""text-align: center; margin: 25px 0;"">
-                                <a href=""{confirmationLink}"" style=""display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);"">
-                                    Email Adresimi Doğrula
+                            <div style=""text-align: center; margin: 35px 0;"">
+                                <a href=""{confirmationLink}"" style=""display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 20px 50px; border-radius: 12px; font-size: 18px; font-weight: 600; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);"">
+                                    ✓ Hesabımı Doğrula
                                 </a>
                             </div>
                             
-                            <p style=""margin: 30px 0 0; color: #94a3b8; font-size: 13px; line-height: 1.6;"">
-                                Bu kod <strong style=""color: #64748b;"">15 dakika</strong> içinde geçerliliğini yitirecektir.
+                            <p style=""margin: 30px 0 15px; color: #64748b; font-size: 14px; line-height: 1.6; text-align: center;"">
+                                Butona tıklayamıyorsanız, aşağıdaki bağlantıyı kopyalayıp tarayıcınıza yapıştırın:
                             </p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Divider -->
-                    <tr>
-                        <td style=""padding: 0 40px;"">
-                            <hr style=""border: none; border-top: 1px solid #e2e8f0; margin: 0;"">
+                            <p style=""margin: 0; color: #3b82f6; font-size: 12px; word-break: break-all; text-align: center; background-color: #f1f5f9; padding: 12px; border-radius: 8px;"">
+                                {confirmationLink}
+                            </p>
+                            
+                            <div style=""background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 0 8px 8px 0; margin: 30px 0 0;"">
+                                <p style=""margin: 0; color: #92400e; font-size: 14px;"">
+                                    ⏰ Bu bağlantı <strong>1 saat</strong> içinde geçerliliğini yitirecektir. Süre dolarsa yeni bağlantı talep edebilirsiniz.
+                                </p>
+                            </div>
                         </td>
                     </tr>
                     

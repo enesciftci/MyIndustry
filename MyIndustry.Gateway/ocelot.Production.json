@@ -512,7 +512,7 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/auth/resend-verification-code",
+      "DownstreamPathTemplate": "/api/v1/auth/resend-verification-email",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -520,7 +520,7 @@
           "Port": 80
         }
       ],
-      "UpstreamPathTemplate": "/api/v1/auth/resend-verification-code",
+      "UpstreamPathTemplate": "/api/v1/auth/resend-verification-email",
       "UpstreamHttpMethod": [
         "Post"
       ]

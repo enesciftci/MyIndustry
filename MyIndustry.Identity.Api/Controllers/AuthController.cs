@@ -116,11 +116,11 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
     
-    [HttpPost("resend-verification-code")]
-    public async Task<IActionResult> ResendVerificationCode([FromBody] ResendVerificationCodeRequest request, CancellationToken cancellationToken)
+    [HttpPost("resend-verification-email")]
+    public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationCodeRequest request, CancellationToken cancellationToken)
     {
         await _userService.ResendVerificationCode(request.Email, cancellationToken);
-        return Ok(new { Message = "Doğrulama kodu tekrar gönderildi." });
+        return Ok(new { Message = "Doğrulama bağlantısı email adresinize tekrar gönderildi." });
     }
 
     [HttpPost("forgot-password")]

@@ -55,29 +55,23 @@ public class UserService : IUserService
 
     private async Task SendEmailVerificationAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
-        // Generate token for email confirmation (for link-based verification)
+        // Generate token for email confirmation (link-based verification only)
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
         var encodedToken = HttpUtility.UrlEncode(token);
-        
-        // Generate 6-digit verification code using Identity's token provider
-        var verificationCode = await _userManager.GenerateUserTokenAsync(
-            user, 
-            TokenOptions.DefaultEmailProvider, 
-            EmailConfirmationPurpose);
         
         // Get frontend URL from configuration
         var frontendUrl = _configuration["FrontendUrl"] ?? "http://localhost:3000";
         var confirmationLink = $"{frontendUrl}/email-verification?userId={user.Id}&token={encodedToken}";
         
-        // Generate HTML email template
+        // Generate HTML email template (link only - easier for users)
         var userName = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : null;
-        var emailBody = EmailTemplateHelper.GetEmailConfirmationTemplate(userName, verificationCode, confirmationLink);
+        var emailBody = EmailTemplateHelper.GetEmailConfirmationTemplate(userName, confirmationLink);
         
         // Publish message to queue
         await _customMessagePublisher.Publish(new SendConfirmationEmailMessage
         {
             Email = user.Email,
-            Subject = "MyIndustry - Email Doğrulama",
+            Subject = "MyIndustry - Hesabınızı Doğrulayın",
             Body = emailBody
         }, cancellationToken);
     }
