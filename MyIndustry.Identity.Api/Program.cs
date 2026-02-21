@@ -116,6 +116,16 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
+    // Check if we should reset the database (via environment variable)
+    var resetDb = Environment.GetEnvironmentVariable("RESET_IDENTITY_DATABASE") == "true";
+    
+    if (resetDb)
+    {
+        logger.LogWarning("RESET_IDENTITY_DATABASE is true - Dropping and recreating database...");
+        await db.Database.EnsureDeletedAsync();
+        logger.LogInformation("Identity database deleted successfully.");
+    }
+    
     try
     {
         logger.LogInformation("Applying database migrations...");
@@ -124,7 +134,11 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error applying database migrations");
+        logger.LogError(ex, "Error applying database migrations. Attempting fresh database creation...");
+        // If migration fails (e.g., database was created with EnsureCreated), reset and try again
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+        logger.LogInformation("Fresh database created and migrations applied.");
     }
     
     // Seed admin user to database
