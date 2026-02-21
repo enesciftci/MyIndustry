@@ -20,12 +20,14 @@ public class ServiceController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly IWebHostEnvironment _env;
+    private readonly ILogger<ServiceController> _logger;
 
 
-    public ServiceController(IMediator mediator, IWebHostEnvironment env)
+    public ServiceController(IMediator mediator, IWebHostEnvironment env, ILogger<ServiceController> logger)
     {
         _mediator = mediator;
         _env = env;
+        _logger = logger;
     }
 
     [HttpPost]
@@ -39,6 +41,9 @@ public class ServiceController : BaseController
         [FromForm] List<IFormFile> images,
         CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Creating service: Title={Title}, CategoryId={CategoryId}, SellerId={SellerId}, ImageCount={ImageCount}", 
+            title, categoryId, GetUserId(), images?.Count ?? 0);
+        
         var urls = new List<string>();
 
         // Determine the uploads directory - use /app/wwwroot/uploads in production
@@ -46,33 +51,45 @@ public class ServiceController : BaseController
             ? Path.Combine(_env.WebRootPath, "uploads")
             : Path.Combine(_env.ContentRootPath, "wwwroot", "uploads");
         
+        _logger.LogInformation("WebRootPath={WebRootPath}, ContentRootPath={ContentRootPath}, UploadsPath={UploadsPath}", 
+            _env.WebRootPath ?? "null", _env.ContentRootPath, uploadsPath);
+        
         // Fallback to /tmp/uploads if the standard path doesn't exist or isn't writable
         if (!Directory.Exists(uploadsPath))
         {
+            _logger.LogWarning("Uploads path does not exist, attempting to create: {UploadsPath}", uploadsPath);
             try
             {
                 Directory.CreateDirectory(uploadsPath);
+                _logger.LogInformation("Created uploads directory: {UploadsPath}", uploadsPath);
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogWarning(ex, "Failed to create uploads directory at {UploadsPath}, falling back to /tmp/uploads", uploadsPath);
                 // If we can't create in the standard location, use /tmp
                 uploadsPath = "/tmp/uploads";
                 Directory.CreateDirectory(uploadsPath);
+                _logger.LogInformation("Using fallback uploads directory: {UploadsPath}", uploadsPath);
             }
         }
 
-        foreach (var file in images)
+        if (images != null && images.Count > 0)
         {
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(uploadsPath, fileName);
-
-            await using (var stream = new FileStream(filePath, FileMode.Create))
+            foreach (var file in images)
             {
-                await file.CopyToAsync(stream, cancellationToken);
-            }
+                _logger.LogInformation("Processing file: {FileName}, Size={Size}", file.FileName, file.Length);
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploadsPath, fileName);
 
-            var url = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
-            urls.Add(url);
+                await using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream, cancellationToken);
+                }
+                _logger.LogInformation("File saved: {FilePath}", filePath);
+
+                var url = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
+                urls.Add(url);
+            }
         }
         
         var command = new CreateServiceCommand
@@ -84,9 +101,16 @@ public class ServiceController : BaseController
             CategoryId = categoryId,
             // SubCategoryId = subCategoryId,
             SellerId = GetUserId(),
-            ImageUrls = string.Join(',',urls)
+            ImageUrls = string.Join(',', urls)
         };
-        return CreateResponse(await _mediator.Send(command, cancellationToken));
+        
+        _logger.LogInformation("Sending CreateServiceCommand: SellerId={SellerId}, CategoryId={CategoryId}", command.SellerId, command.CategoryId);
+        
+        var result = await _mediator.Send(command, cancellationToken);
+        
+        _logger.LogInformation("CreateServiceCommand completed: Success={Success}", result?.Success);
+        
+        return CreateResponse(result);
     }
 
     [HttpGet("list")]

@@ -1,4 +1,5 @@
 using MyIndustry.Domain.ExceptionHandling;
+using System.Text.Json;
 
 namespace MyIndustry.Api.Middleware;
 
@@ -23,32 +24,65 @@ public class ExceptionHandlingMiddleware
         }
         catch (BusinessRuleException ex)
         {
+            // Get the actual message - either from the shadowed property or base class
+            var actualMessage = ex.Message ?? ((Exception)ex).Message ?? "Bilinmeyen hata";
+            
+            _logger.LogWarning(ex, "Business rule exception: Code={Code}, Message={Message}, UserMessage={UserMessage}, BaseMessage={BaseMessage}", 
+                ex.Code, ex.Message, ex.UserMessage, ((Exception)ex).Message);
+            
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-            var exception = new BusinessRuleException
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            
+            var response = new
             {
-                Code = ex.Code,
-                Message = ex.Message,
-                UserMessage = ex.UserMessage
+                success = false,
+                code = ex.Code ?? "BUSINESS_ERROR",
+                message = actualMessage,
+                userMessage = ex.UserMessage ?? actualMessage
             };
-            await context.Response.WriteAsJsonAsync(exception);
+            
+            await context.Response.WriteAsJsonAsync(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception occurred.");
+            // Log full exception details including inner exceptions
+            _logger.LogError(ex, 
+                "Unhandled exception occurred. Type={ExceptionType}, Message={Message}, Path={Path}, Method={Method}", 
+                ex.GetType().FullName,
+                ex.Message,
+                context.Request.Path,
+                context.Request.Method);
+            
+            // Log inner exception if exists
+            if (ex.InnerException != null)
+            {
+                _logger.LogError(ex.InnerException, 
+                    "Inner exception: Type={InnerType}, Message={InnerMessage}",
+                    ex.InnerException.GetType().FullName,
+                    ex.InnerException.Message);
+            }
+            
+            // Log stack trace separately for better visibility
+            _logger.LogError("Stack trace: {StackTrace}", ex.StackTrace);
 
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             
-            var problemDetails = new ProblemDetails
+            // Always return useful error info (can be disabled in production if needed)
+            var response = new
             {
-                Status = StatusCodes.Status500InternalServerError,
-                Title = "An unexpected error occurred.",
-                Detail = _env.IsDevelopment() ? ex.ToString() : "Please contact support.",
-                Instance = context.Request.Path
+                success = false,
+                error = new
+                {
+                    type = ex.GetType().Name,
+                    message = ex.Message,
+                    detail = ex.ToString(),
+                    innerException = ex.InnerException?.Message,
+                    path = context.Request.Path.Value
+                }
             };
 
-            await context.Response.WriteAsJsonAsync(problemDetails);
+            await context.Response.WriteAsJsonAsync(response);
         }
     }
 }

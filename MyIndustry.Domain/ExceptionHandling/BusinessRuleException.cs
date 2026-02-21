@@ -23,5 +23,7 @@ public class BusinessRuleException : Exception
     public BusinessRuleException(string message)
         : base(message)
     {
+        this.Message = message;
+        this.UserMessage = message;
     }
 }
