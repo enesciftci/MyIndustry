@@ -36,11 +36,50 @@ public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCo
             encryptedIdentityNumber = _securityProvider.EncryptAes256(request.IdentityNumber);
         }
 
-        var sellerExists =
-            await _sellerRepository.AnyAsync(p => p.IdentityNumber == encryptedIdentityNumber, cancellationToken);
+        // Check if this user already has a seller profile
+        var existingSeller = await _sellerRepository
+            .GetAllQuery()
+            .Include(s => s.SellerSubscription)
+            .FirstOrDefaultAsync(p => p.Id == request.UserId, cancellationToken);
 
-        if (sellerExists)
-            throw new BusinessRuleException("Aynı VKN/TCKN ile satıcı mevcut.");
+        if (existingSeller != null)
+        {
+            // User already has a seller profile - check if they need subscription
+            if (existingSeller.SellerSubscription == null)
+            {
+                // Add subscription to existing seller
+                var freePlanForExisting = await _subscriptionPlanRepository
+                    .GetAllQuery()
+                    .FirstOrDefaultAsync(p => p.SubscriptionType == SubscriptionType.Free && p.IsActive, cancellationToken);
+
+                if (freePlanForExisting != null)
+                {
+                    existingSeller.SellerSubscription = new DomainSellerSubscription()
+                    {
+                        Id = Guid.NewGuid(),
+                        SellerId = existingSeller.Id,
+                        SubscriptionPlanId = freePlanForExisting.Id,
+                        StartDate = DateTime.UtcNow,
+                        ExpiryDate = DateTime.UtcNow.AddDays(freePlanForExisting.PostDurationInDays),
+                        RemainingPostQuota = freePlanForExisting.MonthlyPostLimit,
+                        RemainingFeaturedQuota = freePlanForExisting.FeaturedPostLimit,
+                        IsAutoRenew = true,
+                        IsActive = true
+                    };
+                    _sellerRepository.Update(existingSeller);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
+            }
+            // Already has seller profile with subscription - just return success
+            return new CreateSellerCommandResult().ReturnOk();
+        }
+
+        // Check if identity number is already used by another seller
+        var identityExists =
+            await _sellerRepository.AnyAsync(p => p.IdentityNumber == encryptedIdentityNumber && p.Id != request.UserId, cancellationToken);
+
+        if (identityExists)
+            throw new BusinessRuleException("Aynı VKN/TCKN ile başka bir satıcı mevcut.");
 
         // Get the free subscription plan
         var freePlan = await _subscriptionPlanRepository
