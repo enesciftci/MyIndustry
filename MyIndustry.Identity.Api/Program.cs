@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyIndustry.Identity.Domain.Aggregate;
+using MyIndustry.Identity.Domain.Aggregate.ValueObjects;
 using MyIndustry.Identity.Domain.Service;
 using MyIndustry.Identity.Repository;
 using RabbitMqCommunicator;
@@ -114,6 +115,47 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
     db.Database.EnsureCreated();
+    
+    // Seed admin user
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    var adminEmail = "admin@myindustry.com";
+    var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+    
+    if (existingAdmin == null)
+    {
+        var adminUser = new ApplicationUser
+        {
+            Email = adminEmail,
+            UserName = adminEmail,
+            FirstName = "Admin",
+            LastName = "User",
+            Type = UserType.Admin,
+            EmailConfirmed = true // Admin için email doğrulamasını atla
+        };
+        
+        var result = await userManager.CreateAsync(adminUser, "Admin123!");
+        
+        if (result.Succeeded)
+        {
+            logger.LogInformation("Admin user created successfully: {Email}", adminEmail);
+        }
+        else
+        {
+            logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+    }
+    else
+    {
+        // Ensure existing admin has correct type
+        if (existingAdmin.Type != UserType.Admin)
+        {
+            existingAdmin.Type = UserType.Admin;
+            await userManager.UpdateAsync(existingAdmin);
+            logger.LogInformation("Updated existing user to admin: {Email}", adminEmail);
+        }
+    }
 }
 
 // Configure the HTTP request pipeline.
