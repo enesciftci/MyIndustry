@@ -122,6 +122,18 @@ using (var scope = app.Services.CreateScope())
 
 app.UseStaticFiles();
 
+// Also serve files from /tmp/uploads as a fallback for production environments
+var tmpUploadsPath = "/tmp/uploads";
+if (Directory.Exists(tmpUploadsPath) || !app.Environment.IsDevelopment())
+{
+    Directory.CreateDirectory(tmpUploadsPath);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(tmpUploadsPath),
+        RequestPath = "/uploads"
+    });
+}
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.MapControllers();

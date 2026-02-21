@@ -41,15 +41,30 @@ public class ServiceController : BaseController
     {
         var urls = new List<string>();
 
-        // Use WebRootPath if available, otherwise use a fallback path
-        var webRootPath = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
+        // Determine the uploads directory - use /app/wwwroot/uploads in production
+        var uploadsPath = _env.WebRootPath != null 
+            ? Path.Combine(_env.WebRootPath, "uploads")
+            : Path.Combine(_env.ContentRootPath, "wwwroot", "uploads");
+        
+        // Fallback to /tmp/uploads if the standard path doesn't exist or isn't writable
+        if (!Directory.Exists(uploadsPath))
+        {
+            try
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+            catch
+            {
+                // If we can't create in the standard location, use /tmp
+                uploadsPath = "/tmp/uploads";
+                Directory.CreateDirectory(uploadsPath);
+            }
+        }
 
         foreach (var file in images)
         {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(webRootPath, "uploads", fileName);
-
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            var filePath = Path.Combine(uploadsPath, fileName);
 
             await using (var stream = new FileStream(filePath, FileMode.Create))
             {
