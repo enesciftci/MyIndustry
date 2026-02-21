@@ -116,36 +116,39 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
     db.Database.EnsureCreated();
     
-    // Seed admin user - Sadece bu email admin olabilir
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    // Seed admin user - Environment variable'dan oku
+    var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+    var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
     
-    const string adminEmail = "admin@admin.com";
-    const string adminPassword = "anadolu11Aa.*!";
-    
-    var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
-    
-    if (existingAdmin == null)
+    if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
     {
-        var adminUser = new ApplicationUser
-        {
-            Email = adminEmail,
-            UserName = adminEmail,
-            FirstName = "Admin",
-            LastName = "Administrator",
-            Type = UserType.Admin,
-            EmailConfirmed = true
-        };
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         
-        var result = await userManager.CreateAsync(adminUser, adminPassword);
+        var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
         
-        if (result.Succeeded)
+        if (existingAdmin == null)
         {
-            logger.LogInformation("Admin user created successfully: {Email}", adminEmail);
-        }
-        else
-        {
-            logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+            var adminUser = new ApplicationUser
+            {
+                Email = adminEmail,
+                UserName = adminEmail,
+                FirstName = "Admin",
+                LastName = "Administrator",
+                Type = UserType.Admin,
+                EmailConfirmed = true
+            };
+            
+            var result = await userManager.CreateAsync(adminUser, adminPassword);
+            
+            if (result.Succeeded)
+            {
+                logger.LogInformation("Admin user created successfully");
+            }
+            else
+            {
+                logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
         }
     }
 }
