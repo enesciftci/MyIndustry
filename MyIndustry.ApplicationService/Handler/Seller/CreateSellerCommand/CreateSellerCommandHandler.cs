@@ -44,6 +44,8 @@ public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCo
             IsActive = true,
             SellerInfo = new SellerInfo()
             {
+                Id = Guid.NewGuid(),
+                SellerId = request.UserId,
                 Email = request.Email, 
                 PhoneNumber = request.PhoneNumber
             }
