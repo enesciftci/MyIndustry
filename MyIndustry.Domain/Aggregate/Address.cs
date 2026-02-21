@@ -9,5 +9,4 @@ public class Address : Entity
     public bool IsMain { get; set; }
     public bool IsActive { get; set; }
     public Seller Seller { get; set; }
-    public Purchaser Purchaser { get; set; }
 }

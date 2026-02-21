@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.Repository.Repository;
 using DomainSeller = MyIndustry.Domain.Aggregate.Seller;
-using DomainPurchaser = MyIndustry.Domain.Aggregate.Purchaser;
 using DomainService = MyIndustry.Domain.Aggregate.Service;
 using DomainMessage = MyIndustry.Domain.Aggregate.Message;
 using DomainCategory = MyIndustry.Domain.Aggregate.Category;
@@ -13,20 +12,17 @@ namespace MyIndustry.ApplicationService.Handler.Admin.GetAdminStatsQuery;
 public class GetAdminStatsQueryHandler : IRequestHandler<GetAdminStatsQuery, GetAdminStatsQueryResult>
 {
     private readonly IGenericRepository<DomainSeller> _sellerRepository;
-    private readonly IGenericRepository<DomainPurchaser> _purchaserRepository;
     private readonly IGenericRepository<DomainService> _serviceRepository;
     private readonly IGenericRepository<DomainMessage> _messageRepository;
     private readonly IGenericRepository<DomainCategory> _categoryRepository;
 
     public GetAdminStatsQueryHandler(
         IGenericRepository<DomainSeller> sellerRepository,
-        IGenericRepository<DomainPurchaser> purchaserRepository,
         IGenericRepository<DomainService> serviceRepository,
         IGenericRepository<DomainMessage> messageRepository,
         IGenericRepository<DomainCategory> categoryRepository)
     {
         _sellerRepository = sellerRepository;
-        _purchaserRepository = purchaserRepository;
         _serviceRepository = serviceRepository;
         _messageRepository = messageRepository;
         _categoryRepository = categoryRepository;
@@ -36,15 +32,11 @@ public class GetAdminStatsQueryHandler : IRequestHandler<GetAdminStatsQuery, Get
     {
         var now = DateTime.UtcNow;
         var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
-        var sixMonthsAgo = now.AddMonths(-6);
 
-        // User Stats
+        // Seller Stats (Users are now in Identity, we only track sellers here)
         var totalSellers = await _sellerRepository.GetAllQuery().CountAsync(cancellationToken);
-        var totalBuyers = await _purchaserRepository.GetAllQuery().CountAsync(cancellationToken);
         var newSellersThisMonth = await _sellerRepository.GetAllQuery()
             .CountAsync(s => s.CreatedDate >= startOfMonth, cancellationToken);
-        var newBuyersThisMonth = await _purchaserRepository.GetAllQuery()
-            .CountAsync(p => p.CreatedDate >= startOfMonth, cancellationToken);
 
         // Listing Stats
         var allListings = await _serviceRepository.GetAllQuery().ToListAsync(cancellationToken);
@@ -105,10 +97,8 @@ public class GetAdminStatsQueryHandler : IRequestHandler<GetAdminStatsQuery, Get
 
             var sellersInMonth = await _sellerRepository.GetAllQuery()
                 .CountAsync(s => s.CreatedDate >= monthStart && s.CreatedDate < monthEnd, cancellationToken);
-            var buyersInMonth = await _purchaserRepository.GetAllQuery()
-                .CountAsync(p => p.CreatedDate >= monthStart && p.CreatedDate < monthEnd, cancellationToken);
             
-            userChart.Add(new ChartDataPoint { Label = monthLabel, Value = sellersInMonth + buyersInMonth });
+            userChart.Add(new ChartDataPoint { Label = monthLabel, Value = sellersInMonth });
 
             var listingsInMonth = allListings.Count(s => s.CreatedDate >= monthStart && s.CreatedDate < monthEnd);
             listingChart.Add(new ChartDataPoint { Label = monthLabel, Value = listingsInMonth });
@@ -116,10 +106,10 @@ public class GetAdminStatsQueryHandler : IRequestHandler<GetAdminStatsQuery, Get
 
         var stats = new AdminStatsDto
         {
-            TotalUsers = totalSellers + totalBuyers,
+            TotalUsers = totalSellers, // Users are in Identity, we count sellers here
             TotalSellers = totalSellers,
-            TotalBuyers = totalBuyers,
-            NewUsersThisMonth = newSellersThisMonth + newBuyersThisMonth,
+            TotalBuyers = 0, // Purchaser entity removed - user info is in Identity
+            NewUsersThisMonth = newSellersThisMonth,
             TotalListings = totalListings,
             PendingListings = pendingListings,
             ApprovedListings = approvedListings,

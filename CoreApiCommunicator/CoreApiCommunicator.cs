@@ -15,20 +15,14 @@ public class CoreApiCommunicator<TRequest,TResponse> :
         return await PostAsync("core-api", "api/v1/sellers", request, cancellationToken);
     }
 
-    public async Task<TResponse> CreatePurchaser(TRequest request, CancellationToken cancellationToken)
-    {
-        return await PostAsync("core-api", "api/v1/purchasers", request, cancellationToken);
-    }
-
     public async Task<TResponse> IncreaseServiceViewCount(TRequest request, CancellationToken cancellationToken)
     {
-        return await PostAsync("core-api", "api/v1/purchasers", request, cancellationToken);
+        return await PostAsync("core-api", "api/v1/services/view-count", request, cancellationToken);
     }
 }
 
 public interface ICoreApiCommunicator<TRequest,TResponse>
 {
     Task<TResponse> CreateSeller(TRequest request, CancellationToken cancellationToken);
-    Task<TResponse> CreatePurchaser(TRequest request, CancellationToken cancellationToken);
     Task<TResponse> IncreaseServiceViewCount(TRequest request, CancellationToken cancellationToken);
 }

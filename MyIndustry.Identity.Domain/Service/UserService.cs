@@ -157,16 +157,11 @@ public class UserService : IUserService
         throw new Exception("Email doğrulama başarısız oldu.");
     }
     
-    private async Task PublishUserCreatedMessages(ApplicationUser user, CancellationToken cancellationToken)
+    private Task PublishUserCreatedMessages(ApplicationUser user, CancellationToken cancellationToken)
     {
-        // Only create Purchaser automatically
-        // Seller profile should be created through SellerSetup flow
-        await _customMessagePublisher.Publish(new CreatePurchaserMessage()
-        {
-            UserId = Guid.Parse(user.Id),
-            PhoneNumber = user.PhoneNumber,
-            Email = user.Email
-        }, cancellationToken);
+        // Purchaser entity kaldırıldı - User bilgileri artık sadece Identity'de tutuluyor
+        // Seller profile, SellerSetup sayfasından oluşturuluyor
+        return Task.CompletedTask;
     }
 
     public async Task SendConfirmationEmailMessage(ApplicationUser user, CancellationToken cancellationToken)

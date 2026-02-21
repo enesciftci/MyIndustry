@@ -22,7 +22,6 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
         AddSubscriptionCampaignConfig(modelBuilder);
         AddSubCategoryConfig(modelBuilder);
         AddServiceViewLogConfig(modelBuilder);
-        AddPurchaserInfoConfig(modelBuilder);
         AddSellerInfoConfig(modelBuilder);
         AddSellerSubscriptionConfig(modelBuilder);
         AddSellerAddressConfig(modelBuilder);
@@ -36,8 +35,6 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
     public DbSet<ServiceViewLog> ServiceViewLogs { get; set; }
     public DbSet<SubscriptionRenewalHistory> SubscriptionRenewalHistories { get; set; }
-    public DbSet<Purchaser> Purchasers { get; set; }
-    public DbSet<PurchaserInfo> PurchaserInfos { get; set; }
     public DbSet<Seller> Sellers { get; set; }
     public DbSet<SellerInfo> SellerInfos { get; set; }
     public DbSet<Service> Services { get; set; }
@@ -51,12 +48,6 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     {
         modelBuilder.Entity<Address>()
             .HasOne(p => p.Seller)
-            .WithMany(p => p.Addresses)
-            .HasForeignKey(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-        
-        modelBuilder.Entity<Address>()
-            .HasOne(p => p.Purchaser)
             .WithMany(p => p.Addresses)
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
@@ -155,14 +146,6 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
             .HasOne(p => p.Service)
             .WithMany(p => p.ServiceViewLogs)
             .HasForeignKey(p => p.ServiceId)
-            .OnDelete(DeleteBehavior.Cascade);
-    }
-    private void AddPurchaserInfoConfig(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Purchaser>()
-            .HasOne(p => p.PurchaserInfo)
-            .WithOne(p => p.Purchaser)
-            .HasForeignKey<PurchaserInfo>(p => p.PurchaserId)
             .OnDelete(DeleteBehavior.Cascade);
     }
     private void AddSellerInfoConfig(ModelBuilder modelBuilder)

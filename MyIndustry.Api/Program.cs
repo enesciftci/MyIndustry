@@ -82,8 +82,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddMediatR(configuration =>
 {
-
-    configuration.RegisterServicesFromAssembly(typeof(CreatePurchaserCommandHandler).Assembly);
+    configuration.RegisterServicesFromAssembly(typeof(MyIndustry.ApplicationService.Handler.Seller.CreateSellerCommand.CreateSellerCommandHandler).Assembly);
 });
 var app = builder.Build();
 

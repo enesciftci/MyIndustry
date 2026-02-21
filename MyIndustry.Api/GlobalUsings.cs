@@ -7,7 +7,6 @@ global using Microsoft.EntityFrameworkCore;
 global using Microsoft.IdentityModel.Tokens;
 global using Microsoft.OpenApi.Models;
 global using MyIndustry.Api.Filters;
-global using MyIndustry.ApplicationService.Handler.Purchaser.CreatePurchaserCommand;
 global using MyIndustry.Domain.Provider;
 global using MyIndustry.Repository.DbContext;
 global using MyIndustry.Repository.Repository;

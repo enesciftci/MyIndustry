@@ -41,8 +41,8 @@ builder.ConfigureServices((hostContext, services) =>
     var rabbitMqSettings = configuration.GetSection("RabbitMq");
     services.AddMassTransit(x =>
     {
-        // Seller artık SellerSetup sayfasından oluşturuluyor, CreateSellerConsumer kaldırıldı
-        x.AddConsumer<CreatePurchaserConsumer>();
+        // Seller artık SellerSetup sayfasından oluşturuluyor
+        // Purchaser entity kaldırıldı - User bilgileri Identity'den alınıyor
         x.AddConsumer<IncreaseServiceViewCountConsumer>();
         x.AddConsumer<SendForgotPasswordEmailConsumer>();
         x.AddConsumer<SendConfirmationEmailConsumer>();
@@ -55,7 +55,6 @@ builder.ConfigureServices((hostContext, services) =>
                 h.Password(rabbitMqSettings["Password"]);
             });
 
-            cfg.ReceiveEndpoint("create_purchaser_queue", e => { e.ConfigureConsumer<CreatePurchaserConsumer>(context); });
             cfg.ReceiveEndpoint("increase_service_view_count_queue", e => { e.ConfigureConsumer<IncreaseServiceViewCountConsumer>(context); });
             cfg.ReceiveEndpoint("send_forgot_password_email_queue", e => { e.ConfigureConsumer<SendForgotPasswordEmailConsumer>(context); });
             cfg.ReceiveEndpoint("send_confirmation_email_queue", e => { e.ConfigureConsumer<SendConfirmationEmailConsumer>(context); });
