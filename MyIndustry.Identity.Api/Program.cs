@@ -110,11 +110,22 @@ builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommuni
 
 var app = builder.Build();
 
-// Auto-create database tables (only if not exists)
+// Auto-migrate database
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
-    db.Database.EnsureCreated();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    try
+    {
+        logger.LogInformation("Applying database migrations...");
+        await db.Database.MigrateAsync();
+        logger.LogInformation("Database migrations applied successfully");
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error applying database migrations");
+    }
     
     // Seed admin user to database
     await SeedAdminUser(scope.ServiceProvider);
