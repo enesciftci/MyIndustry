@@ -39,15 +39,17 @@ public class ServiceController : BaseController
         [FromForm] List<IFormFile> images,
         CancellationToken cancellationToken)
     {
-
         var urls = new List<string>();
+
+        // Use WebRootPath if available, otherwise use a fallback path
+        var webRootPath = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
 
         foreach (var file in images)
         {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            var filePath = Path.Combine(_env.WebRootPath, "uploads", fileName);
+            var filePath = Path.Combine(webRootPath, "uploads", fileName);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
 
             await using (var stream = new FileStream(filePath, FileMode.Create))
             {
