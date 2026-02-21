@@ -384,6 +384,54 @@ public class UserService : IUserService
 
         return true;
     }
+
+    // ============ Admin Methods ============
+
+    public async Task<(List<UserListDto> Users, int TotalCount)> GetAllUsers(int index, int size, string? search, int? userType, CancellationToken cancellationToken)
+    {
+        var query = _userManager.Users.AsQueryable();
+
+        // Filter by user type if specified
+        if (userType.HasValue)
+        {
+            query = query.Where(u => (int)u.Type == userType.Value);
+        }
+
+        // Search by email or name
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.ToLower();
+            query = query.Where(u => 
+                u.Email.ToLower().Contains(searchLower) ||
+                (u.FirstName != null && u.FirstName.ToLower().Contains(searchLower)) ||
+                (u.LastName != null && u.LastName.ToLower().Contains(searchLower)));
+        }
+
+        // Exclude admin users from list
+        query = query.Where(u => (int)u.Type != 99);
+
+        var totalCount = query.Count();
+
+        var users = query
+            .OrderByDescending(u => u.Id)
+            .Skip((index - 1) * size)
+            .Take(size)
+            .Select(u => new UserListDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                PhoneNumber = u.PhoneNumber,
+                UserType = (int)u.Type,
+                EmailConfirmed = u.EmailConfirmed,
+                PhoneNumberConfirmed = u.PhoneNumberConfirmed,
+                CreatedDate = DateTime.UtcNow // Identity doesn't track creation date by default
+            })
+            .ToList();
+
+        return (users, totalCount);
+    }
 }
 
 public interface IUserService
@@ -409,4 +457,20 @@ public interface IUserService
     
     // Profile update
     Task<bool> UpdateProfile(string userId, string firstName, string lastName, CancellationToken cancellationToken);
+    
+    // Admin methods
+    Task<(List<UserListDto> Users, int TotalCount)> GetAllUsers(int index, int size, string? search, int? userType, CancellationToken cancellationToken);
+}
+
+public class UserListDto
+{
+    public string Id { get; set; }
+    public string Email { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? PhoneNumber { get; set; }
+    public int UserType { get; set; }
+    public bool EmailConfirmed { get; set; }
+    public bool PhoneNumberConfirmed { get; set; }
+    public DateTime CreatedDate { get; set; }
 }
