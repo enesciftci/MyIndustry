@@ -27,15 +27,20 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel loginModel, CancellationToken cancellationToken)
     {
-        var redisAuthModel =
-            await _redisCommunicator.GetCacheValueAsync<AuthenticationModel>($"auth:{loginModel.Email}");
-
-        if (redisAuthModel is not null)
-            return Ok(redisAuthModel);
-
         var user = await _userService.GetUserByEmail(loginModel.Email);
         if (user is null)
             return Unauthorized(new { Message = "Geçersiz kullanıcı adı veya şifre." });
+        
+        var redisAuthModel =
+            await _redisCommunicator.GetCacheValueAsync<AuthenticationModel>($"auth:{loginModel.Email}");
+
+        // Return cached response only if user type matches
+        if (redisAuthModel is not null && redisAuthModel.User?.UserType == user.Type)
+            return Ok(redisAuthModel);
+        
+        // Clear old cache if exists (user type might have changed)
+        if (redisAuthModel is not null)
+            _redisCommunicator.DeleteValue($"auth:{loginModel.Email}");
         
         if (!user.EmailConfirmed)
         {
@@ -55,7 +60,12 @@ public class AuthController : ControllerBase
         response.User = new UserDto()
         {
             Id = user.Id,
-            Email = user.Email
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            PhoneNumber = user.PhoneNumber,
+            UserName = user.UserName,
+            UserType = user.Type
         };
         
         await _redisCommunicator.SetCacheValueAsync($"auth:{loginModel.Email}", response, TimeSpan.FromHours(2));
