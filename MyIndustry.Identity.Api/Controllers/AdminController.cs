@@ -38,4 +38,34 @@ public class AdminController : ControllerBase
             size
         });
     }
+
+    /// <summary>
+    /// Suspend a user account
+    /// </summary>
+    [HttpPost("users/{userId}/suspend")]
+    public async Task<IActionResult> SuspendUser(
+        string userId,
+        [FromBody] SuspendUserRequest? request,
+        CancellationToken cancellationToken)
+    {
+        await _userService.SuspendUser(userId, request?.Reason, cancellationToken);
+        return Ok(new { success = true, message = "Kullanıcı hesabı donduruldu." });
+    }
+
+    /// <summary>
+    /// Unsuspend a user account
+    /// </summary>
+    [HttpPost("users/{userId}/unsuspend")]
+    public async Task<IActionResult> UnsuspendUser(
+        string userId,
+        CancellationToken cancellationToken)
+    {
+        await _userService.UnsuspendUser(userId, cancellationToken);
+        return Ok(new { success = true, message = "Kullanıcı hesabı aktifleştirildi." });
+    }
+}
+
+public class SuspendUserRequest
+{
+    public string? Reason { get; set; }
 }

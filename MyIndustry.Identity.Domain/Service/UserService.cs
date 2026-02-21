@@ -426,11 +426,49 @@ public class UserService : IUserService
                 UserType = (int)u.Type,
                 EmailConfirmed = u.EmailConfirmed,
                 PhoneNumberConfirmed = u.PhoneNumberConfirmed,
+                IsSuspended = u.IsSuspended,
+                SuspensionReason = u.SuspensionReason,
                 CreatedDate = DateTime.UtcNow // Identity doesn't track creation date by default
             })
             .ToList();
 
         return (users, totalCount);
+    }
+
+    public async Task<bool> SuspendUser(string userId, string? reason, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        // Admin kullanıcıları dondurulamaz
+        if (user.Type == Aggregate.ValueObjects.UserType.Admin)
+            throw new BusinessRuleException("Admin kullanıcıları dondurulamaz.");
+
+        user.IsSuspended = true;
+        user.SuspensionReason = reason;
+        
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new BusinessRuleException("Kullanıcı dondurulamadı.");
+
+        return true;
+    }
+
+    public async Task<bool> UnsuspendUser(string userId, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
+
+        user.IsSuspended = false;
+        user.SuspensionReason = null;
+        
+        var result = await _userManager.UpdateAsync(user);
+        if (!result.Succeeded)
+            throw new BusinessRuleException("Kullanıcı aktifleştirilemedi.");
+
+        return true;
     }
 }
 
@@ -460,6 +498,8 @@ public interface IUserService
     
     // Admin methods
     Task<(List<UserListDto> Users, int TotalCount)> GetAllUsers(int index, int size, string? search, int? userType, CancellationToken cancellationToken);
+    Task<bool> SuspendUser(string userId, string? reason, CancellationToken cancellationToken);
+    Task<bool> UnsuspendUser(string userId, CancellationToken cancellationToken);
 }
 
 public class UserListDto
@@ -472,5 +512,7 @@ public class UserListDto
     public int UserType { get; set; }
     public bool EmailConfirmed { get; set; }
     public bool PhoneNumberConfirmed { get; set; }
+    public bool IsSuspended { get; set; }
+    public string? SuspensionReason { get; set; }
     public DateTime CreatedDate { get; set; }
 }

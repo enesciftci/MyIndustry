@@ -5,6 +5,8 @@ using MyIndustry.ApplicationService.Handler;
 using MyIndustry.ApplicationService.Handler.Admin.ApproveListingCommand;
 using MyIndustry.ApplicationService.Handler.Admin.GetAdminListingsQuery;
 using MyIndustry.ApplicationService.Handler.Admin.GetAdminStatsQuery;
+using MyIndustry.ApplicationService.Handler.Admin.SuspendSellerCommand;
+using MyIndustry.ApplicationService.Handler.Admin.SuspendListingCommand;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -67,10 +69,52 @@ public class AdminController : BaseController
         };
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
+
+    /// <summary>
+    /// Suspend or unsuspend a listing
+    /// </summary>
+    [HttpPost("listings/{id}/suspend")]
+    public async Task<IActionResult> SuspendListing(
+        Guid id,
+        [FromBody] SuspendRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new SuspendListingCommand
+        {
+            ServiceId = id,
+            Suspend = request.Suspend,
+            Reason = request.Reason
+        };
+        return CreateResponse(await _mediator.Send(command, cancellationToken));
+    }
+
+    /// <summary>
+    /// Suspend or unsuspend a seller
+    /// </summary>
+    [HttpPost("sellers/{id}/suspend")]
+    public async Task<IActionResult> SuspendSeller(
+        Guid id,
+        [FromBody] SuspendRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new SuspendSellerCommand
+        {
+            SellerId = id,
+            Suspend = request.Suspend,
+            Reason = request.Reason
+        };
+        return CreateResponse(await _mediator.Send(command, cancellationToken));
+    }
 }
 
 public class ApproveListingRequest
 {
     public bool Approve { get; set; }
     public string? RejectionReason { get; set; }
+}
+
+public class SuspendRequest
+{
+    public bool Suspend { get; set; }
+    public string? Reason { get; set; }
 }

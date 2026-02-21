@@ -14,4 +14,14 @@ public class ApplicationUser :IdentityUser
     }
 
     public UserType Type { get; set; }
+    
+    /// <summary>
+    /// Kullanıcı hesabı dondurulmuş mu?
+    /// </summary>
+    public bool IsSuspended { get; set; } = false;
+    
+    /// <summary>
+    /// Dondurulma sebebi
+    /// </summary>
+    public string? SuspensionReason { get; set; }
 }
