@@ -25,9 +25,11 @@ public class AuthService : IAuthService
     public async Task<AuthenticationModel> GetTokenAsync(string email, string password)
     {
         AuthenticationModel authenticationModel;
+        const string invalidCredentialsMessage = "Geçersiz kullanıcı adı veya şifre.";
+        
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
-            return new AuthenticationModel { IsAuthenticated = false, Message = $"No Accounts Registered with { email }." };
+            return new AuthenticationModel { IsAuthenticated = false, Message = invalidCredentialsMessage };
 
         if (await _userManager.CheckPasswordAsync(user, password))
         {
@@ -61,7 +63,7 @@ public class AuthService : IAuthService
             authenticationModel = new AuthenticationModel()
             {
                 IsAuthenticated = false,
-                Message = $"Incorrect Credentials for user {user.Email}."
+                Message = invalidCredentialsMessage
             };
         }
 
