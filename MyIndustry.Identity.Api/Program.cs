@@ -116,41 +116,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
     db.Database.EnsureCreated();
     
-    // Seed admin user - Environment variable'dan oku
-    var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
-    var adminPassword = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
-    
-    if (!string.IsNullOrEmpty(adminEmail) && !string.IsNullOrEmpty(adminPassword))
-    {
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        
-        var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
-        
-        if (existingAdmin == null)
-        {
-            var adminUser = new ApplicationUser
-            {
-                Email = adminEmail,
-                UserName = adminEmail,
-                FirstName = "Admin",
-                LastName = "Administrator",
-                Type = UserType.Admin,
-                EmailConfirmed = true
-            };
-            
-            var result = await userManager.CreateAsync(adminUser, adminPassword);
-            
-            if (result.Succeeded)
-            {
-                logger.LogInformation("Admin user created successfully");
-            }
-            else
-            {
-                logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
-            }
-        }
-    }
+    // Seed admin user to database
+    await SeedAdminUser(scope.ServiceProvider);
 }
 
 // Configure the HTTP request pipeline.
@@ -169,3 +136,39 @@ app.MapControllers();
 app.MapIdentityApi<ApplicationUser>();
 
 app.Run();
+
+// Admin kullanıcıyı veritabanına ekle
+static async Task SeedAdminUser(IServiceProvider serviceProvider)
+{
+    var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+    
+    const string adminEmail = "admin@admin.com";
+    const string adminPassword = "anadolu11Aa.*!";
+    
+    var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
+    
+    if (existingAdmin == null)
+    {
+        var adminUser = new ApplicationUser
+        {
+            Email = adminEmail,
+            UserName = adminEmail,
+            FirstName = "Admin",
+            LastName = "Administrator",
+            Type = UserType.Admin,
+            EmailConfirmed = true
+        };
+        
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
+        
+        if (result.Succeeded)
+        {
+            logger.LogInformation("Admin user seeded to database successfully");
+        }
+        else
+        {
+            logger.LogError("Failed to seed admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
+    }
+}
