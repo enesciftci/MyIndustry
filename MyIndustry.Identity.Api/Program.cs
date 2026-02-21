@@ -116,11 +116,13 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
     db.Database.EnsureCreated();
     
-    // Seed admin user
+    // Seed admin user - Sadece bu email admin olabilir
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     
-    var adminEmail = "admin@myindustry.com";
+    const string adminEmail = "admin@admin.com";
+    const string adminPassword = "anadolu11Aa.*!";
+    
     var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
     
     if (existingAdmin == null)
@@ -130,12 +132,12 @@ using (var scope = app.Services.CreateScope())
             Email = adminEmail,
             UserName = adminEmail,
             FirstName = "Admin",
-            LastName = "User",
+            LastName = "Administrator",
             Type = UserType.Admin,
-            EmailConfirmed = true // Admin için email doğrulamasını atla
+            EmailConfirmed = true
         };
         
-        var result = await userManager.CreateAsync(adminUser, "Admin123!");
+        var result = await userManager.CreateAsync(adminUser, adminPassword);
         
         if (result.Succeeded)
         {
@@ -144,16 +146,6 @@ using (var scope = app.Services.CreateScope())
         else
         {
             logger.LogError("Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
-        }
-    }
-    else
-    {
-        // Ensure existing admin has correct type
-        if (existingAdmin.Type != UserType.Admin)
-        {
-            existingAdmin.Type = UserType.Admin;
-            await userManager.UpdateAsync(existingAdmin);
-            logger.LogInformation("Updated existing user to admin: {Email}", adminEmail);
         }
     }
 }
