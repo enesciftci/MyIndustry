@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MyIndustry.Domain.Aggregate;
 using MyIndustry.Domain.ValueObjects;
 using MyIndustry.Repository.DbContext;
@@ -8,6 +9,9 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(MyIndustryDbContext context)
     {
+        // Seed locations first (if not exists)
+        await SeedLocationsAsync(context);
+        
         // Eğer zaten veri varsa sadece kategori ve servis düzeltmelerini yap
         if (context.Categories.Any())
         {
@@ -408,5 +412,142 @@ public static class DataSeeder
             "Yedek" => categories.FirstOrDefault(c => c.Name == "Motor Yedek Parçaları") ?? categories.FirstOrDefault(c => c.Name == "Yedek Parça"),
             _ => categories.FirstOrDefault(c => c.ParentId == null)
         };
+    }
+    
+    /// <summary>
+    /// Lokasyon verilerini (İl, İlçe, Mahalle) seed eder
+    /// </summary>
+    private static async Task SeedLocationsAsync(MyIndustryDbContext context)
+    {
+        // Zaten lokasyon verisi varsa atla
+        if (context.Cities.Any())
+        {
+            Console.WriteLine("Location data already exists. Skipping location seeding.");
+            return;
+        }
+
+        Console.WriteLine("Seeding location data (Cities, Districts, Neighborhoods)...");
+
+        try
+        {
+            // JSON dosyasını oku
+            var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "locations.json");
+            
+            // Docker container'da farklı path olabilir
+            if (!File.Exists(jsonPath))
+            {
+                jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "locations.json");
+            }
+            
+            if (!File.Exists(jsonPath))
+            {
+                Console.WriteLine($"Location data file not found at: {jsonPath}");
+                Console.WriteLine("Skipping location seeding.");
+                return;
+            }
+
+            var jsonContent = await File.ReadAllTextAsync(jsonPath);
+            var locationData = JsonSerializer.Deserialize<LocationData>(jsonContent, new JsonSerializerOptions 
+            { 
+                PropertyNameCaseInsensitive = true 
+            });
+
+            if (locationData == null)
+            {
+                Console.WriteLine("Failed to parse location data.");
+                return;
+            }
+
+            // Cities
+            var cities = locationData.Cities.Select(c => new City
+            {
+                Id = Guid.Parse(c.Id),
+                Name = c.Name,
+                PlateCode = c.PlateCode,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            }).ToList();
+
+            await context.Cities.AddRangeAsync(cities);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"Created {cities.Count} cities.");
+
+            // Districts - batch insert
+            var batchSize = 500;
+            var districtsList = locationData.Districts.Select(d => new District
+            {
+                Id = Guid.Parse(d.Id),
+                Name = d.Name,
+                CityId = Guid.Parse(d.CityId),
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            }).ToList();
+
+            for (int i = 0; i < districtsList.Count; i += batchSize)
+            {
+                var batch = districtsList.Skip(i).Take(batchSize);
+                await context.Districts.AddRangeAsync(batch);
+                await context.SaveChangesAsync();
+            }
+            Console.WriteLine($"Created {districtsList.Count} districts.");
+
+            // Neighborhoods - batch insert (large dataset)
+            var neighborhoodsList = locationData.Neighborhoods.Select(n => new Neighborhood
+            {
+                Id = Guid.Parse(n.Id),
+                Name = n.Name,
+                DistrictId = Guid.Parse(n.DistrictId),
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            }).ToList();
+
+            for (int i = 0; i < neighborhoodsList.Count; i += batchSize)
+            {
+                var batch = neighborhoodsList.Skip(i).Take(batchSize);
+                await context.Neighborhoods.AddRangeAsync(batch);
+                await context.SaveChangesAsync();
+                
+                if ((i + batchSize) % 5000 == 0)
+                {
+                    Console.WriteLine($"Progress: {Math.Min(i + batchSize, neighborhoodsList.Count)}/{neighborhoodsList.Count} neighborhoods...");
+                }
+            }
+            Console.WriteLine($"Created {neighborhoodsList.Count} neighborhoods.");
+
+            Console.WriteLine("Location seeding completed!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding locations: {ex.Message}");
+        }
+    }
+
+    // JSON deserialization classes
+    private class LocationData
+    {
+        public List<CityDto> Cities { get; set; } = new();
+        public List<DistrictDto> Districts { get; set; } = new();
+        public List<NeighborhoodDto> Neighborhoods { get; set; } = new();
+    }
+
+    private class CityDto
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public int PlateCode { get; set; }
+    }
+
+    private class DistrictDto
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string CityId { get; set; } = "";
+    }
+
+    private class NeighborhoodDto
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string DistrictId { get; set; } = "";
     }
 }

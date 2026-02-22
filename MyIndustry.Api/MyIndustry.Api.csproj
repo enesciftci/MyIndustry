@@ -35,4 +35,11 @@
       </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="..\data\locations.json">
+        <Link>data\locations.json</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

@@ -26,6 +26,7 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
         AddSellerSubscriptionConfig(modelBuilder);
         AddSellerAddressConfig(modelBuilder);
         AddMessageConfig(modelBuilder);
+        AddLocationConfig(modelBuilder);
         base.OnModelCreating(modelBuilder);
     }
     // public DbSet<Commission> Commissions { get; set; }
@@ -43,6 +44,11 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Address> Adresses { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Message> Messages { get; set; }
+    
+    // Location tables
+    public DbSet<City> Cities { get; set; }
+    public DbSet<District> Districts { get; set; }
+    public DbSet<Neighborhood> Neighborhoods { get; set; }
 
     private void AddSellerAddressConfig(ModelBuilder modelBuilder)
     {
@@ -170,6 +176,39 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
         
         modelBuilder.Entity<Message>()
             .HasIndex(m => new { m.ServiceId, m.SenderId, m.ReceiverId });
+    }
+    
+    private void AddLocationConfig(ModelBuilder modelBuilder)
+    {
+        // City
+        modelBuilder.Entity<City>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+        
+        modelBuilder.Entity<City>()
+            .HasIndex(c => c.PlateCode)
+            .IsUnique();
+        
+        // District -> City relationship
+        modelBuilder.Entity<District>()
+            .HasOne(d => d.City)
+            .WithMany(c => c.Districts)
+            .HasForeignKey(d => d.CityId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<District>()
+            .HasIndex(d => new { d.CityId, d.Name })
+            .IsUnique();
+        
+        // Neighborhood -> District relationship
+        modelBuilder.Entity<Neighborhood>()
+            .HasOne(n => n.District)
+            .WithMany(d => d.Neighborhoods)
+            .HasForeignKey(n => n.DistrictId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Neighborhood>()
+            .HasIndex(n => new { n.DistrictId, n.Name });
     }
     
     public void SetAuditFields()

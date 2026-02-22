@@ -1057,6 +1057,90 @@
       "DelegatingHandlers": [
         "AuthDelegatingHandler"
       ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/locations/cities",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/locations/cities",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/locations/cities/{cityId}/districts",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/locations/cities/{cityId}/districts",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/locations/districts/{districtId}/neighborhoods",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/locations/districts/{districtId}/neighborhoods",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/locations/cities/search",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/locations/cities/search",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/locations/districts/search",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/locations/districts/search",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/locations/neighborhoods/search",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/locations/neighborhoods/search",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
     }
   ],
   "GlobalConfiguration": {

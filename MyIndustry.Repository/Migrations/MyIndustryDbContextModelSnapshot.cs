@@ -120,6 +120,67 @@ namespace MyIndustry.Repository.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.City", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<int>("PlateCode")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("PlateCode")
+                        .IsUnique();
+
+                    b.ToTable("Cities");
+                });
+
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.District", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Districts");
+                });
+
             modelBuilder.Entity("MyIndustry.Domain.Aggregate.Favorite", b =>
                 {
                     b.Property<Guid>("Id")
@@ -185,6 +246,34 @@ namespace MyIndustry.Repository.Migrations
                     b.HasIndex("ServiceId", "SenderId", "ReceiverId");
 
                     b.ToTable("Messages");
+                });
+
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.Neighborhood", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("DistrictId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DistrictId", "Name");
+
+                    b.ToTable("Neighborhoods");
                 });
 
             modelBuilder.Entity("MyIndustry.Domain.Aggregate.Seller", b =>
@@ -601,6 +690,17 @@ namespace MyIndustry.Repository.Migrations
                     b.Navigation("Parent");
                 });
 
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.District", b =>
+                {
+                    b.HasOne("MyIndustry.Domain.Aggregate.City", "City")
+                        .WithMany("Districts")
+                        .HasForeignKey("CityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("City");
+                });
+
             modelBuilder.Entity("MyIndustry.Domain.Aggregate.Favorite", b =>
                 {
                     b.HasOne("MyIndustry.Domain.Aggregate.Service", "Service")
@@ -621,6 +721,17 @@ namespace MyIndustry.Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.Neighborhood", b =>
+                {
+                    b.HasOne("MyIndustry.Domain.Aggregate.District", "District")
+                        .WithMany("Neighborhoods")
+                        .HasForeignKey("DistrictId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("District");
                 });
 
             modelBuilder.Entity("MyIndustry.Domain.Aggregate.SellerInfo", b =>
@@ -714,6 +825,16 @@ namespace MyIndustry.Repository.Migrations
                     b.Navigation("Children");
 
                     b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.City", b =>
+                {
+                    b.Navigation("Districts");
+                });
+
+            modelBuilder.Entity("MyIndustry.Domain.Aggregate.District", b =>
+                {
+                    b.Navigation("Neighborhoods");
                 });
 
             modelBuilder.Entity("MyIndustry.Domain.Aggregate.Seller", b =>
