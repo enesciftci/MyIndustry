@@ -16,8 +16,9 @@ public class ServiceDto
     public DateTime? ModifiedDate { get; set; }
     public DateTime? CreatedDate { get; set; }
     public SellerDto Seller { get; set; }
+    public Guid CategoryId { get; set; }
     public List<CategoryBreadcrumbDto> CategoryBreadcrumbs { get; set; }
-    
+
     // Location fields
     public string? City { get; set; }
     public string? District { get; set; }

@@ -51,6 +51,7 @@ public class GetServiceBySlugQueryHandler : IRequestHandler<GetServiceBySlugQuer
                 ModifiedDate = service.ModifiedDate,
                 CreatedDate = service.CreatedDate,
                 ViewCount = service.ViewCount,
+                CategoryId = service.CategoryId,
                 CategoryBreadcrumbs = categoryBreadcrumbs,
                 // Location
                 City = service.City,
