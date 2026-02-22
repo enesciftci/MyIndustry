@@ -15,6 +15,7 @@ public class SellerDto
     public int City { get; set; }
     public int District { get; set; }
     public SellerSector Sector { get; set; }
+    public string SectorName { get; set; }
     public string AgreementUrl { get; set; }
     public SellerSubscriptionDto SellerSubscriptionDto { get; set; }
     
