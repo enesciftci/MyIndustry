@@ -29,6 +29,10 @@ public class Service : Entity
     // Suspension
     public string? SuspensionReason { get; set; }
     
+    // Rejection
+    public RejectionReasonType? RejectionReasonType { get; set; }
+    public string? RejectionReasonDescription { get; set; }
+    
     public Category Category { get; set; }
     public ICollection<ServiceViewLog> ServiceViewLogs { get; set; }
     public ICollection<Favorite> Favorites { get; set; }

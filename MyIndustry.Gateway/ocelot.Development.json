@@ -596,7 +596,7 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/favorites/{serviceId}",
+      "DownstreamPathTemplate": "/api/v1/favorites/{favoriteId}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -604,7 +604,7 @@
           "Port": 5016
         }
       ],
-      "UpstreamPathTemplate": "/api/v1/favorites/{serviceId}",
+      "UpstreamPathTemplate": "/api/v1/favorites/{favoriteId}",
       "UpstreamHttpMethod": [
         "Delete"
       ],

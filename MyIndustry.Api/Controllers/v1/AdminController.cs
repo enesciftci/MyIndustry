@@ -7,6 +7,7 @@ using MyIndustry.ApplicationService.Handler.Admin.GetAdminListingsQuery;
 using MyIndustry.ApplicationService.Handler.Admin.GetAdminStatsQuery;
 using MyIndustry.ApplicationService.Handler.Admin.SuspendSellerCommand;
 using MyIndustry.ApplicationService.Handler.Admin.SuspendListingCommand;
+using MyIndustry.Domain.Aggregate.ValueObjects;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -65,7 +66,10 @@ public class AdminController : BaseController
         {
             ServiceId = id,
             Approve = request.Approve,
-            RejectionReason = request.RejectionReason
+            RejectionReasonType = request.RejectionReasonType.HasValue 
+                ? (RejectionReasonType?)request.RejectionReasonType.Value 
+                : null,
+            RejectionReasonDescription = request.RejectionReasonDescription
         };
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
@@ -110,7 +114,8 @@ public class AdminController : BaseController
 public class ApproveListingRequest
 {
     public bool Approve { get; set; }
-    public string? RejectionReason { get; set; }
+    public int? RejectionReasonType { get; set; }
+    public string? RejectionReasonDescription { get; set; }
 }
 
 public class SuspendRequest

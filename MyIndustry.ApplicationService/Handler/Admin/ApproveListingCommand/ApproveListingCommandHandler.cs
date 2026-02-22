@@ -39,8 +39,9 @@ public class ApproveListingCommandHandler : IRequestHandler<ApproveListingComman
         {
             service.IsApproved = false;
             service.IsActive = false; // Rejected listings are deactivated
+            service.RejectionReasonType = request.RejectionReasonType;
+            service.RejectionReasonDescription = request.RejectionReasonDescription;
             service.ModifiedDate = DateTime.UtcNow;
-            // Note: RejectionReason could be stored if we add a field for it
         }
 
         _serviceRepository.Update(service);
