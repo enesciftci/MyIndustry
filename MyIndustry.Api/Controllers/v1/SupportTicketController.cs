@@ -35,12 +35,15 @@ public class SupportTicketController : BaseController
             userId = GetUserId();
             // Determine user type from claims if available
             var typeClaim = User.FindFirst("type")?.Value;
-            if (typeClaim != null)
+            if (typeClaim != null && int.TryParse(typeClaim, out int parsedUserType))
             {
-                if (typeClaim == "Seller" || typeClaim == "2")
-                    userType = 2;
-                else if (typeClaim == "Purchaser" || typeClaim == "1")
-                    userType = 1;
+                // UserType enum: 0=User, 1=Purchaser, 2=Seller, 99=Admin
+                // For support tickets, we map: 0=User (Alıcı), 1=Purchaser (Alıcı), 2=Seller (Satıcı)
+                if (parsedUserType == 0 || parsedUserType == 1)
+                    userType = 1; // Alıcı (User or Purchaser)
+                else if (parsedUserType == 2)
+                    userType = 2; // Satıcı (Seller)
+                // Admin (99) is not a regular user type for support tickets, keep as 0
             }
         }
 
