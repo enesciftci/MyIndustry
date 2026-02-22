@@ -1,0 +1,3 @@
+namespace MyIndustry.ApplicationService.Handler.SubscriptionPlan.GetAllSubscriptionPlansQuery;
+
+public record GetAllSubscriptionPlansQuery : IRequest<GetAllSubscriptionPlansQueryResult>;

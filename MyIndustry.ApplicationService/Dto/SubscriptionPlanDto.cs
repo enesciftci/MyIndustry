@@ -11,5 +11,6 @@ public class SubscriptionPlanDto
     public int MonthlyPostLimit { get; set; }
     public int PostDurationInDays { get; set; }
     public int FeaturedPostLimit { get; set; }
+    public bool IsActive { get; set; }
     public Guid Id { get; set; }
 }

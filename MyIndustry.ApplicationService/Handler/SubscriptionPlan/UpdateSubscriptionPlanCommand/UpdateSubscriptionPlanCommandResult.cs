@@ -1,0 +1,3 @@
+namespace MyIndustry.ApplicationService.Handler.SubscriptionPlan.UpdateSubscriptionPlanCommand;
+
+public record UpdateSubscriptionPlanCommandResult : ResponseBase;
