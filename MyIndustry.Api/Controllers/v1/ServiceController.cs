@@ -6,6 +6,7 @@ using MyIndustry.ApplicationService.Handler.Service.DeleteServiceByIdCommand;
 using MyIndustry.ApplicationService.Handler.Service.DisableServiceByIdCommand;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByFilterQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByIdQuery;
+using MyIndustry.ApplicationService.Handler.Service.GetServiceBySlugQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByRandomlyQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesBySearchTermQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesBySellerIdQuery;
@@ -196,6 +197,12 @@ public class ServiceController : BaseController
     public async Task<IActionResult> GetServiceById(Guid id, CancellationToken cancellationToken)
     {
         return CreateResponse(await _mediator.Send(new GetServicesByIdQuery() {Id = id}, cancellationToken));
+    }
+
+    [HttpGet("slug/{slug}")]
+    public async Task<IActionResult> GetServiceBySlug(string slug, CancellationToken cancellationToken)
+    {
+        return CreateResponse(await _mediator.Send(new GetServiceBySlugQuery() {Slug = slug}, cancellationToken));
     }
     
     [HttpGet("filter")]

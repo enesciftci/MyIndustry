@@ -8,20 +8,23 @@ namespace MyIndustry.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class SEOController : ControllerBase
+public class SEOController : BaseController
 {
     private readonly IGenericRepository<Domain.Aggregate.Service> _serviceRepository;
     private readonly IGenericRepository<Domain.Aggregate.Category> _categoryRepository;
     private readonly IGenericRepository<Domain.Aggregate.Seller> _sellerRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
     public SEOController(
         IGenericRepository<Domain.Aggregate.Service> serviceRepository,
         IGenericRepository<Domain.Aggregate.Category> categoryRepository,
-        IGenericRepository<Domain.Aggregate.Seller> sellerRepository)
+        IGenericRepository<Domain.Aggregate.Seller> sellerRepository,
+        IUnitOfWork unitOfWork)
     {
         _serviceRepository = serviceRepository;
         _categoryRepository = categoryRepository;
         _sellerRepository = sellerRepository;
+        _unitOfWork = unitOfWork;
     }
 
     [HttpGet("sitemap.xml")]
@@ -159,5 +162,52 @@ Crawl-delay: 1
 ";
 
         return Content(robotsTxt, "text/plain", Encoding.UTF8);
+    }
+
+    [HttpPost("generate-slugs")]
+    public async Task<IActionResult> GenerateSlugsForExistingServices(CancellationToken cancellationToken)
+    {
+        if (!IsAdmin())
+            return Unauthorized();
+
+        var services = await _serviceRepository
+            .GetAllQuery()
+            .Where(s => string.IsNullOrEmpty(s.Slug))
+            .ToListAsync(cancellationToken);
+
+        var updatedCount = 0;
+        foreach (var service in services)
+        {
+            var baseSlug = ApplicationService.Helpers.SlugHelper.GenerateSlug(service.Title);
+            var uniqueSlug = await ApplicationService.Helpers.SlugHelper.GenerateUniqueSlugAsync(
+                baseSlug,
+                async (slug) => await _serviceRepository
+                    .GetAllQuery()
+                    .AnyAsync(s => s.Slug == slug && s.Id != service.Id, cancellationToken)
+            );
+            
+            service.Slug = uniqueSlug;
+            
+            // Also generate meta fields if empty
+            if (string.IsNullOrEmpty(service.MetaTitle))
+            {
+                var listingTypeText = service.ListingType == Domain.Aggregate.ValueObjects.ListingType.ForSale ? "Satılık" : "Kiralık";
+                service.MetaTitle = $"{service.Title} - {listingTypeText} | MyIndustry";
+            }
+            
+            if (string.IsNullOrEmpty(service.MetaDescription))
+            {
+                service.MetaDescription = service.Description.Length > 160 
+                    ? service.Description.Substring(0, 157) + "..." 
+                    : service.Description;
+            }
+            
+            _serviceRepository.Update(service);
+            updatedCount++;
+        }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { message = $"{updatedCount} ilan için slug oluşturuldu.", updatedCount });
     }
 }

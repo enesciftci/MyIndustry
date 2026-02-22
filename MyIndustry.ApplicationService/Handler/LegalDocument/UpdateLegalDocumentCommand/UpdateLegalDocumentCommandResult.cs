@@ -1,0 +1,3 @@
+namespace MyIndustry.ApplicationService.Handler.LegalDocument.UpdateLegalDocumentCommand;
+
+public record UpdateLegalDocumentCommandResult : ResponseBase;

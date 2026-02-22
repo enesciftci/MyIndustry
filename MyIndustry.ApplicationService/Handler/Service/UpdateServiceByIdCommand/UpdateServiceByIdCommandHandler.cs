@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.Domain.ValueObjects;
+using MyIndustry.ApplicationService.Helpers;
 
 namespace MyIndustry.ApplicationService.Handler.Service.UpdateServiceByIdCommand;
 
@@ -58,6 +59,26 @@ public class UpdateServiceByIdCommandHandler : IRequestHandler<UpdateServiceById
         service.Price = new Amount(request.ServiceDto.Price).ToDecimal();
         service.EstimatedEndDay = request.ServiceDto.EstimatedEndDay;
         service.IsFeatured = request.ServiceDto.IsFeatured;
+        
+        // Update SEO fields if title changed
+        if (service.Title != request.ServiceDto.Title || string.IsNullOrEmpty(service.Slug))
+        {
+            var baseSlug = SlugHelper.GenerateSlug(request.ServiceDto.Title);
+            var uniqueSlug = await SlugHelper.GenerateUniqueSlugAsync(
+                baseSlug,
+                async (slug) => await _serviceRepository
+                    .GetAllQuery()
+                    .AnyAsync(s => s.Slug == slug && s.Id != service.Id, cancellationToken)
+            );
+            service.Slug = uniqueSlug;
+        }
+        
+        // Update meta fields
+        var listingTypeText = request.ServiceDto.ListingType == 0 ? "Satılık" : "Kiralık"; // 0=ForSale, 1=ForRent
+        service.MetaTitle = $"{request.ServiceDto.Title} - {listingTypeText} | MyIndustry";
+        service.MetaDescription = request.ServiceDto.Description.Length > 160 
+            ? request.ServiceDto.Description.Substring(0, 157) + "..." 
+            : request.ServiceDto.Description;
 
         _serviceRepository.Update(service);
         if (service.Seller != null)

@@ -1,0 +1,3 @@
+namespace MyIndustry.ApplicationService.Handler.LegalDocument.DeleteLegalDocumentCommand;
+
+public record DeleteLegalDocumentCommandResult : ResponseBase;

@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.Domain.Aggregate;
 using MyIndustry.Domain.ValueObjects;
+using MyIndustry.Domain.Aggregate.ValueObjects;
+using MyIndustry.ApplicationService.Helpers;
 
 namespace MyIndustry.ApplicationService.Handler.Service.CreateServiceCommand;
 
@@ -56,6 +58,31 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
         if (!subCategoryExists)
             throw new BusinessRuleException("Alt kategori bulunamadı.");
         
+        // Generate SEO slug from title
+        var baseSlug = SlugHelper.GenerateSlug(request.Title);
+        var uniqueSlug = await SlugHelper.GenerateUniqueSlugAsync(
+            baseSlug,
+            async (slug) => await _serviceRepository
+                .GetAllQuery()
+                .AnyAsync(s => s.Slug == slug, cancellationToken)
+        );
+
+        // Generate meta title and description
+        var listingTypeText = request.ListingType == ListingType.ForSale ? "Satılık" : "Kiralık";
+        var metaTitle = $"{request.Title} - {listingTypeText} | MyIndustry";
+        var metaDescription = request.Description.Length > 160 
+            ? request.Description.Substring(0, 157) + "..." 
+            : request.Description;
+        
+        // Generate keywords from title and category
+        var category = await _categoryRepository.GetById(request.CategoryId, cancellationToken);
+        var keywords = new List<string> { request.Title };
+        if (category != null) keywords.Add(category.Name);
+        if (request.City != null) keywords.Add(request.City);
+        keywords.Add("satılık");
+        keywords.Add("myindustry");
+        var metaKeywords = string.Join(", ", keywords);
+        
         await _serviceRepository.AddAsync(new Domain.Aggregate.Service()
         {
             Title = request.Title,
@@ -71,7 +98,12 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
             Neighborhood = request.Neighborhood,
             Condition = request.Condition,
             ListingType = request.ListingType,
-            IsFeatured = request.IsFeatured
+            IsFeatured = request.IsFeatured,
+            // SEO fields
+            Slug = uniqueSlug,
+            MetaTitle = metaTitle,
+            MetaDescription = metaDescription,
+            MetaKeywords = metaKeywords
         }, cancellationToken);
 
         seller.SellerSubscription.DecreaseRemainingPostQuota();

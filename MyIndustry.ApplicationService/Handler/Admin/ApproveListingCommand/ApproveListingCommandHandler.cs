@@ -9,19 +9,24 @@ namespace MyIndustry.ApplicationService.Handler.Admin.ApproveListingCommand;
 public class ApproveListingCommandHandler : IRequestHandler<ApproveListingCommand, ApproveListingCommandResult>
 {
     private readonly IGenericRepository<DomainService> _serviceRepository;
+    private readonly IGenericRepository<Domain.Aggregate.Seller> _sellerRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ApproveListingCommandHandler(
         IGenericRepository<DomainService> serviceRepository,
+        IGenericRepository<Domain.Aggregate.Seller> sellerRepository,
         IUnitOfWork unitOfWork)
     {
         _serviceRepository = serviceRepository;
+        _sellerRepository = sellerRepository;
         _unitOfWork = unitOfWork;
     }
 
     public async Task<ApproveListingCommandResult> Handle(ApproveListingCommand request, CancellationToken cancellationToken)
     {
         var service = await _serviceRepository.GetAllQuery()
+            .Include(s => s.Seller)
+                .ThenInclude(s => s.SellerSubscription)
             .FirstOrDefaultAsync(s => s.Id == request.ServiceId, cancellationToken);
 
         if (service == null)
@@ -37,6 +42,21 @@ public class ApproveListingCommandHandler : IRequestHandler<ApproveListingComman
         }
         else
         {
+            // İlan reddedildiğinde quota'yı geri ver
+            if (service.Seller?.SellerSubscription != null)
+            {
+                // İlan hakkını geri ver
+                service.Seller.SellerSubscription.RemainingPostQuota++;
+                
+                // Eğer ilan featured ise, featured quota'yı da geri ver
+                if (service.IsFeatured)
+                {
+                    service.Seller.SellerSubscription.RemainingFeaturedQuota++;
+                }
+                
+                _sellerRepository.Update(service.Seller);
+            }
+            
             service.IsApproved = false;
             service.IsActive = false; // Rejected listings are deactivated
             service.RejectionReasonType = request.RejectionReasonType;
@@ -47,7 +67,7 @@ public class ApproveListingCommandHandler : IRequestHandler<ApproveListingComman
         _serviceRepository.Update(service);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var message = request.Approve ? "İlan başarıyla onaylandı." : "İlan reddedildi.";
+        var message = request.Approve ? "İlan başarıyla onaylandı." : "İlan reddedildi ve ilan hakkı geri verildi.";
         return new ApproveListingCommandResult().ReturnOk(message);
     }
 }

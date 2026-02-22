@@ -246,6 +246,27 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/sellerSubscriptions/upgrade",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/sellerSubscriptions/upgrade",
+      "UpstreamHttpMethod": [
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/services/list/randomly",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -254,6 +275,20 @@
           "Port": 5016
         }
       ],
+      "DownstreamPathTemplate": "/api/v1/services/slug/{slug}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/services/slug/{slug}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/api/v1/services/list/randomly",
       "UpstreamHttpMethod": [
         "Get"
@@ -642,6 +677,51 @@
       "UpstreamPathTemplate": "/api/v1/seo/robots.txt",
       "UpstreamHttpMethod": [
         "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/legalDocument",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/legalDocument",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Post"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/legalDocument/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/legalDocument/{id}",
+      "UpstreamHttpMethod": [
+        "Get",
+        "Put",
+        "Delete"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
       ]
     }
   ],

@@ -1,0 +1,3 @@
+namespace MyIndustry.ApplicationService.Handler.LegalDocument.CreateLegalDocumentCommand;
+
+public record CreateLegalDocumentCommandResult : ResponseBase;
