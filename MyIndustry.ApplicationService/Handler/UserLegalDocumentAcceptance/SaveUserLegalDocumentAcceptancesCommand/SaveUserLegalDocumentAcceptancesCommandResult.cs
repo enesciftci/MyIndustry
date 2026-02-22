@@ -1,0 +1,3 @@
+namespace MyIndustry.ApplicationService.Handler.UserLegalDocumentAcceptance.SaveUserLegalDocumentAcceptancesCommand;
+
+public record SaveUserLegalDocumentAcceptancesCommandResult : ResponseBase;

@@ -26,13 +26,15 @@ public class ApproveListingCommandHandler : IRequestHandler<ApproveListingComman
     {
         var service = await _serviceRepository.GetAllQuery()
             .Include(s => s.Seller)
-                .ThenInclude(s => s.SellerSubscription)
+                .ThenInclude(s => s.SellerSubscriptions)
             .FirstOrDefaultAsync(s => s.Id == request.ServiceId, cancellationToken);
 
         if (service == null)
         {
             return new ApproveListingCommandResult().ReturnNotFound("İlan bulunamadı.");
         }
+
+        var activeSubscription = service.Seller?.SellerSubscriptions?.FirstOrDefault(ss => ss.IsActive);
 
         if (request.Approve)
         {
@@ -42,18 +44,11 @@ public class ApproveListingCommandHandler : IRequestHandler<ApproveListingComman
         }
         else
         {
-            // İlan reddedildiğinde quota'yı geri ver
-            if (service.Seller?.SellerSubscription != null)
+            if (activeSubscription != null)
             {
-                // İlan hakkını geri ver
-                service.Seller.SellerSubscription.RemainingPostQuota++;
-                
-                // Eğer ilan featured ise, featured quota'yı da geri ver
+                activeSubscription.RemainingPostQuota++;
                 if (service.IsFeatured)
-                {
-                    service.Seller.SellerSubscription.RemainingFeaturedQuota++;
-                }
-                
+                    activeSubscription.RemainingFeaturedQuota++;
                 _sellerRepository.Update(service.Seller);
             }
             

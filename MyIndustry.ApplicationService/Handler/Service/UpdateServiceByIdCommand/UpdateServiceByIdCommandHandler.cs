@@ -25,7 +25,7 @@ public class UpdateServiceByIdCommandHandler : IRequestHandler<UpdateServiceById
         var service = await _serviceRepository
             .GetAllQuery()
             .Include(s => s.Seller)
-                .ThenInclude(s => s.SellerSubscription)
+                .ThenInclude(s => s.SellerSubscriptions)
             .FirstOrDefaultAsync(p => p.Id == request.ServiceDto.Id && p.SellerId == request.ServiceDto.SellerId, cancellationToken);
 
         if (service is not { IsActive: true })
@@ -33,24 +33,21 @@ public class UpdateServiceByIdCommandHandler : IRequestHandler<UpdateServiceById
             throw new BusinessRuleException("Servis bulunamadı.");
         }
 
+        var activeSubscription = service.Seller?.SellerSubscriptions?.FirstOrDefault(ss => ss.IsActive);
+
         // Check if changing from non-featured to featured
         if (!service.IsFeatured && request.ServiceDto.IsFeatured)
         {
-            if (service.Seller?.SellerSubscription == null)
+            if (activeSubscription == null)
                 throw new BusinessRuleException("Abonelik planı bulunamadı.");
-            
-            if (service.Seller.SellerSubscription.RemainingFeaturedQuota <= 0)
+            if (activeSubscription.RemainingFeaturedQuota <= 0)
                 throw new BusinessRuleException("Kalan öne çıkan ilan kotası dolu. Lütfen abonelik planınızı yükseltin.");
-            
-            service.Seller.SellerSubscription.RemainingFeaturedQuota--;
+            activeSubscription.RemainingFeaturedQuota--;
         }
-        // If changing from featured to non-featured, restore quota
         else if (service.IsFeatured && !request.ServiceDto.IsFeatured)
         {
-            if (service.Seller?.SellerSubscription != null)
-            {
-                service.Seller.SellerSubscription.RemainingFeaturedQuota++;
-            }
+            if (activeSubscription != null)
+                activeSubscription.RemainingFeaturedQuota++;
         }
         
         service.Title = request.ServiceDto.Title;

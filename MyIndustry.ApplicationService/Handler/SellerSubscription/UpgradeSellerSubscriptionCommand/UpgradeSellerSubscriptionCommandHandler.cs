@@ -27,7 +27,7 @@ public class UpgradeSellerSubscriptionCommandHandler : IRequestHandler<UpgradeSe
         var seller = await _sellerRepository
             .GetAllQuery()
             .Where(p => p.Id == request.SellerId)
-            .Include(p => p.SellerSubscription)
+            .Include(p => p.SellerSubscriptions)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (seller == null)
@@ -52,18 +52,18 @@ public class UpgradeSellerSubscriptionCommandHandler : IRequestHandler<UpgradeSe
         if (currentSubscription.SubscriptionPlanId == request.SubscriptionPlanId)
             throw new BusinessRuleException("Zaten bu plana sahipsiniz.");
 
-        // Mevcut aboneliği pasif yap
+        // Mevcut aboneliği pasif yap (geçmişte kalsın)
         currentSubscription.IsActive = false;
         _sellerSubscriptionRepository.Update(currentSubscription);
 
-        // Yeni abonelik oluştur
+        // Yeni abonelik kaydı ekle (hangi plandan hangi plana geçildiği geçmişte görülebilir)
         var newSubscription = new Domain.Aggregate.SellerSubscription
         {
             SellerId = request.SellerId,
             SubscriptionPlanId = request.SubscriptionPlanId,
             IsAutoRenew = request.IsAutoRenew,
             StartDate = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddDays(30),
+            ExpiryDate = DateTime.UtcNow.AddDays(subscriptionPlan.PostDurationInDays),
             RemainingFeaturedQuota = subscriptionPlan.FeaturedPostLimit,
             RemainingPostQuota = subscriptionPlan.MonthlyPostLimit,
             IsActive = true

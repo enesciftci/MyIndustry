@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using MyIndustry.Identity.Api.Requests;
+using MyIndustry.Identity.Api.Services;
 using MyIndustry.Identity.Domain.Service;
 using RedisCommunicator;
 
@@ -13,15 +14,18 @@ public class AuthController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IRedisCommunicator _redisCommunicator;
     private readonly IUserService _userService;
+    private readonly IMainApiLegalDocumentAcceptanceClient _mainApiLegalDocumentAcceptanceClient;
 
     public AuthController(
         IAuthService authService, 
         IRedisCommunicator redisCommunicator, 
-        IUserService userService)
+        IUserService userService,
+        IMainApiLegalDocumentAcceptanceClient mainApiLegalDocumentAcceptanceClient)
     {
         _authService = authService;
         _redisCommunicator = redisCommunicator;
         _userService = userService;
+        _mainApiLegalDocumentAcceptanceClient = mainApiLegalDocumentAcceptanceClient;
     }
 
     [HttpPost("login")]
@@ -100,9 +104,20 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterModel registerModel, CancellationToken cancellationToken)
     {
-         await _userService.CreateUser(registerModel, cancellationToken);
-
-         return Ok();
+        var userId = await _userService.CreateUser(registerModel, cancellationToken);
+        if (userId.HasValue && registerModel.AcceptedLegalDocumentIds?.Count > 0)
+        {
+            try
+            {
+                await _mainApiLegalDocumentAcceptanceClient.SaveUserLegalDocumentAcceptancesAsync(
+                    userId.Value, registerModel.AcceptedLegalDocumentIds, cancellationToken);
+            }
+            catch
+            {
+                // Registration succeeded; acceptances save failure is logged in client, don't fail request
+            }
+        }
+        return Ok();
     }
 
     [HttpPost("verify")]

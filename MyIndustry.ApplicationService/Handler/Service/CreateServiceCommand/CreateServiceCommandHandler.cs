@@ -33,22 +33,23 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
     {
         var seller = await _sellerRepository
             .GetAllQuery()
-            .Include(p => p.SellerSubscription)
+            .Include(p => p.SellerSubscriptions)
             .FirstOrDefaultAsync(p => p.Id == request.SellerId, cancellationToken);
 
         if (seller == null)
             throw new BusinessRuleException("Satıcı bulunamadı");
 
-        if (seller.SellerSubscription == null)
+        var activeSubscription = seller.SellerSubscriptions?.FirstOrDefault(s => s.IsActive);
+        if (activeSubscription == null)
             throw new BusinessRuleException("Abonelik planı bulunamadı. Lütfen abone olun.");
         
-        if(seller.SellerSubscription.RemainingPostQuota <= 0)
+        if (activeSubscription.RemainingPostQuota <= 0)
             throw new BusinessRuleException("Kalan ilan kotası dolu. Lütfen abonelik planınızı yükseltin.");
 
         // Check featured quota if trying to create featured listing
         if (request.IsFeatured)
         {
-            if (seller.SellerSubscription.RemainingFeaturedQuota <= 0)
+            if (activeSubscription.RemainingFeaturedQuota <= 0)
                 throw new BusinessRuleException("Kalan öne çıkan ilan kotası dolu. Lütfen abonelik planınızı yükseltin.");
         }
 
@@ -106,15 +107,11 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
             MetaKeywords = metaKeywords
         }, cancellationToken);
 
-        seller.SellerSubscription.DecreaseRemainingPostQuota();
-        
-        // Decrease featured quota if listing is featured
+        activeSubscription.DecreaseRemainingPostQuota();
         if (request.IsFeatured)
-        {
-            seller.SellerSubscription.RemainingFeaturedQuota--;
-        }
-        
-        _sellerRepository.Update(seller);
+            activeSubscription.RemainingFeaturedQuota--;
+
+        _sellerSubscriptionRepository.Update(activeSubscription);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CreateServiceCommandResult().ReturnOk();

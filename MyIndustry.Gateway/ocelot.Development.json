@@ -680,6 +680,34 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/legalDocument/public/for-registration",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/legalDocument/public/for-registration",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/legalDocument/public/by-type/{documentType}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/legalDocument/public/by-type/{documentType}",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/legalDocument",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

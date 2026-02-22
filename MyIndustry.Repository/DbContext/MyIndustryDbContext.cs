@@ -46,6 +46,7 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Message> Messages { get; set; }
     public DbSet<SupportTicket> SupportTickets { get; set; }
     public DbSet<LegalDocument> LegalDocuments { get; set; }
+    public DbSet<UserLegalDocumentAcceptance> UserLegalDocumentAcceptances { get; set; }
     
     // Location tables
     public DbSet<City> Cities { get; set; }
@@ -87,10 +88,11 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
 
     private void AddSellerSubscriptionConfig(ModelBuilder modelBuilder)
     {
+        // Bir satıcının birden fazla abonelik kaydı olabilir (geçmiş); yalnızca biri aktif olabilir
         modelBuilder.Entity<SellerSubscription>()
             .HasOne(p => p.Seller)
-            .WithOne(p => p.SellerSubscription)
-            .HasForeignKey<SellerSubscription>(p => p.SellerId)
+            .WithMany(p => p.SellerSubscriptions)
+            .HasForeignKey(p => p.SellerId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<SellerSubscription>()
@@ -98,6 +100,12 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
             .WithMany(p => p.SellerSubscriptions)
             .HasForeignKey(p => p.SubscriptionPlanId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Aynı satıcı için yalnızca bir aktif abonelik (geçmiş kayıtlar IsActive=false)
+        modelBuilder.Entity<SellerSubscription>()
+            .HasIndex(s => s.SellerId)
+            .IsUnique()
+            .HasFilter("\"IsActive\" = true");
     }
     private void AddServiceConfig(ModelBuilder modelBuilder)
     {

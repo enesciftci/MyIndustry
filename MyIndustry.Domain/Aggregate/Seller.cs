@@ -13,7 +13,8 @@ public class Seller : Entity
     public bool IsActive { get; set; }
     public SellerInfo SellerInfo { get; set; }
     // public ICollection<Contract> Contracts { get; set; }
-    public SellerSubscription? SellerSubscription { get; set; }
+    /// <summary>Geçmiş dahil tüm abonelik kayıtları. Aktif olan: FirstOrDefault(s => s.IsActive)</summary>
+    public ICollection<SellerSubscription> SellerSubscriptions { get; set; }
     public ICollection<Service> Services { get; set; }
     public ICollection<CampaignUsage> CampaignUsages { get; set; }
     public ICollection<SubscriptionRenewalHistory> SubscriptionRenewalHistories { get; set; }

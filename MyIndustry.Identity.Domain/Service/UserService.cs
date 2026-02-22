@@ -26,7 +26,7 @@ public class UserService : IUserService
         _configuration = configuration;
     }
 
-    public async Task CreateUser(RegisterModel register, CancellationToken cancellationToken)
+    public async Task<Guid?> CreateUser(RegisterModel register, CancellationToken cancellationToken)
     {
         if (!string.Equals(register.Password, register.ConfirmPassword))
             throw new Exception("Passwords do not match");
@@ -45,6 +45,7 @@ public class UserService : IUserService
         if (result.Succeeded)
         {
             await SendEmailVerificationAsync(user, cancellationToken);
+            return Guid.TryParse(user.Id, out var id) ? id : (Guid?)null;
         }
         else
         {
@@ -474,7 +475,7 @@ public class UserService : IUserService
 
 public interface IUserService
 {
-    Task CreateUser(RegisterModel register, CancellationToken cancellationToken);
+    Task<Guid?> CreateUser(RegisterModel register, CancellationToken cancellationToken);
     Task VerifyTwoFactorCode(TwoFactorVerificationModel model);
     Task<bool> ConfirmEmail(string userId, string token, CancellationToken cancellationToken);
     Task<bool> ConfirmEmailByCode(string email, string code, CancellationToken cancellationToken);

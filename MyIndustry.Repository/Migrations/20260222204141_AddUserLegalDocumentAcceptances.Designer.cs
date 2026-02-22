@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyIndustry.Repository.DbContext;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyIndustry.Repository.Migrations
 {
     [DbContext(typeof(MyIndustryDbContext))]
-    partial class MyIndustryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260222204141_AddUserLegalDocumentAcceptances")]
+    partial class AddUserLegalDocumentAcceptances
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -447,8 +450,7 @@ namespace MyIndustry.Repository.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("SellerId")
-                        .IsUnique()
-                        .HasFilter("\"IsActive\" = true");
+                        .IsUnique();
 
                     b.HasIndex("SubscriptionPlanId");
 
@@ -914,8 +916,8 @@ namespace MyIndustry.Repository.Migrations
             modelBuilder.Entity("MyIndustry.Domain.Aggregate.SellerSubscription", b =>
                 {
                     b.HasOne("MyIndustry.Domain.Aggregate.Seller", "Seller")
-                        .WithMany("SellerSubscriptions")
-                        .HasForeignKey("SellerId")
+                        .WithOne("SellerSubscription")
+                        .HasForeignKey("MyIndustry.Domain.Aggregate.SellerSubscription", "SellerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1011,7 +1013,7 @@ namespace MyIndustry.Repository.Migrations
 
                     b.Navigation("SellerInfo");
 
-                    b.Navigation("SellerSubscriptions");
+                    b.Navigation("SellerSubscription");
 
                     b.Navigation("Services");
                 });

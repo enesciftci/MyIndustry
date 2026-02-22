@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyIndustry.Identity.Domain.Aggregate;
 using MyIndustry.Identity.Domain.Aggregate.ValueObjects;
+using MyIndustry.Identity.Api.Services;
 using MyIndustry.Identity.Domain.Service;
 using MyIndustry.Identity.Repository;
 using RabbitMqCommunicator;
@@ -35,6 +36,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICustomMessagePublisher, CustomMessageMessagePublisher>();
+builder.Services.AddHttpClient<IMainApiLegalDocumentAcceptanceClient, MainApiLegalDocumentAcceptanceClient>();
 
 builder.Services.AddMassTransit(x =>
 {

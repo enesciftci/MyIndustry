@@ -19,7 +19,7 @@ public class GetSellerByIdQueryHandler : IRequestHandler<GetSellerByIdQuery, Get
     {
         var seller = await _sellerRepository
             .GetAllQuery()
-            .Include(s => s.SellerSubscription)
+            .Include(s => s.SellerSubscriptions)
                 .ThenInclude(ss => ss.SubscriptionPlan)
             .Include(s => s.SellerInfo)
             .Include(s => s.Services)
@@ -29,6 +29,8 @@ public class GetSellerByIdQueryHandler : IRequestHandler<GetSellerByIdQuery, Get
         {
             return new GetSellerByIdQueryResult().ReturnNotFound("Satıcı bulunamadı.");
         }
+
+        var activeSub = seller.SellerSubscriptions?.FirstOrDefault(ss => ss.IsActive);
 
         var sellerDto = new SellerDto
         {
@@ -41,14 +43,14 @@ public class GetSellerByIdQueryHandler : IRequestHandler<GetSellerByIdQuery, Get
             IsVerified = seller.IsActive,
             ServiceCount = seller.Services?.Count(s => s.IsActive && s.IsApproved) ?? 0,
             Logo = seller.SellerInfo?.LogoUrl,
-            SellerSubscriptionDto = seller.SellerSubscription != null ? new SellerSubscriptionDto
+            SellerSubscriptionDto = activeSub != null ? new SellerSubscriptionDto
             {
-                Id = seller.SellerSubscription.Id,
-                StartDate = seller.SellerSubscription.StartDate,
-                ExpiryDate = seller.SellerSubscription.ExpiryDate,
-                EndDate = seller.SellerSubscription.ExpiryDate,
-                SubscriptionPlanName = seller.SellerSubscription.SubscriptionPlan?.Name,
-                Name = seller.SellerSubscription.SubscriptionPlan?.Name
+                Id = activeSub.Id,
+                StartDate = activeSub.StartDate,
+                ExpiryDate = activeSub.ExpiryDate,
+                EndDate = activeSub.ExpiryDate,
+                SubscriptionPlanName = activeSub.SubscriptionPlan?.Name,
+                Name = activeSub.SubscriptionPlan?.Name
             } : null,
             SellerInfo = seller.SellerInfo != null ? new SellerInfoDto
             {

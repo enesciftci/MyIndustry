@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MyIndustry.Domain.Aggregate;
+using MyIndustry.Domain.Aggregate.ValueObjects;
 using MyIndustry.Domain.ValueObjects;
 using MyIndustry.Repository.DbContext;
 
@@ -18,6 +19,8 @@ public static class DataSeeder
             
             // Seed locations first (if not exists)
             await SeedLocationsAsync(context);
+            // Sözleşmeleri seed et (yoksa varsayılan içeriklerle oluştur)
+            await SeedLegalDocumentsAsync(context);
             
             // Eğer zaten veri varsa eksik kategorileri ekle ve düzeltmeleri yap
             if (context.Categories.Any())
@@ -1059,6 +1062,199 @@ public static class DataSeeder
         };
     }
     
+    /// <summary>
+    /// Varsayılan hukuki sözleşmeleri seed eder (içerik boş veya yoksa).
+    /// </summary>
+    private static async Task SeedLegalDocumentsAsync(MyIndustryDbContext context)
+    {
+        if (context.LegalDocuments.Any())
+        {
+            Console.WriteLine("Legal documents already exist. Skipping legal document seeding.");
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        var documents = new List<LegalDocument>
+        {
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.KVKK,
+                Title = "Kişisel Verilerin Korunması ve İşlenmesi Politikası (KVKK Aydınlatma Metni)",
+                Content = GetKvkkContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 1,
+                CreatedDate = now
+            },
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.MembershipAgreement,
+                Title = "Üyelik Sözleşmesi",
+                Content = GetMembershipAgreementContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 2,
+                CreatedDate = now
+            },
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.TermsOfService,
+                Title = "Kullanım Şartları",
+                Content = GetTermsOfServiceContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 3,
+                CreatedDate = now
+            },
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.PrivacyPolicy,
+                Title = "Gizlilik Politikası",
+                Content = GetPrivacyPolicyContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 4,
+                CreatedDate = now
+            },
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.CookiePolicy,
+                Title = "Çerez Politikası",
+                Content = GetCookiePolicyContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 5,
+                CreatedDate = now
+            },
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.RefundPolicy,
+                Title = "İade ve İptal Politikası",
+                Content = GetRefundPolicyContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 6,
+                CreatedDate = now
+            },
+            new LegalDocument
+            {
+                Id = Guid.NewGuid(),
+                DocumentType = LegalDocumentType.SellerAgreement,
+                Title = "Satıcı Sözleşmesi",
+                Content = GetSellerAgreementContent(),
+                Version = "1.0",
+                IsActive = true,
+                EffectiveDate = now,
+                DisplayOrder = 7,
+                CreatedDate = now
+            }
+        };
+
+        await context.LegalDocuments.AddRangeAsync(documents);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"Created {documents.Count} legal documents.");
+    }
+
+    private static string GetKvkkContent() => @"<h1>KVKK Aydınlatma Metni</h1>
+<p><strong>Veri Sorumlusu:</strong> MyIndustry platformu olarak 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu sıfatıyla kişisel verilerinizi işlemekteyiz.</p>
+<h2>1. İşlenen Kişisel Veriler</h2>
+<p>Kimlik bilgileriniz (ad, soyad, T.C. kimlik numarası), iletişim bilgileriniz (e-posta, telefon, adres), işlem güvenliği bilgileri (IP adresi, çerez kayıtları) ve müşteri işlem geçmişiniz platformumuzda işlenebilmektedir.</p>
+<h2>2. İşleme Amaçları</h2>
+<p>Üyelik işlemleri, sözleşmelerin ifası, pazarlama faaliyetleri (açık rıza ile), müşteri hizmetleri, hukuki yükümlülüklerin yerine getirilmesi ve meşru menfaat kapsamında hizmet kalitesinin artırılması amaçlarıyla işlenmektedir.</p>
+<h2>3. Aktarım</h2>
+<p>Yasal zorunluluklar ve hizmet sağlayıcılarımız (hosting, ödeme kuruluşu) ile sınırlı olarak yurt içi ve yurt dışına aktarım yapılabilir.</p>
+<h2>4. Haklarınız</h2>
+<p>KVKK md. 11 uyarınca kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse buna ilişkin bilgi talep etme, işlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, silinmesini veya yok edilmesini isteme ve otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme haklarına sahipsiniz.</p>
+<p>Bu metin, platformumuzu kullanmadan önce okunması ve kabul edilmesi gereken bilgilendirme metnidir.</p>";
+
+    private static string GetMembershipAgreementContent() => @"<h1>Üyelik Sözleşmesi</h1>
+<p>Bu sözleşme, MyIndustry platformuna üye olan kullanıcı ile platform işletmecisi arasında elektronik ortamda akdedilmiş sayılır.</p>
+<h2>1. Taraflar</h2>
+<p><strong>İşletme:</strong> MyIndustry platformu. <strong>Üye:</strong> Platforma kayıt olan gerçek veya tüzel kişi.</p>
+<h2>2. Sözleşmenin Konusu</h2>
+<p>Bu sözleşme, üyenin platforma kayıt olarak sunulan hizmetlerden yararlanmasına ilişkin koşul ve şartları düzenler.</p>
+<h2>3. Üyelik Koşulları</h2>
+<p>Üye, kayıt sırasında verdiği bilgilerin doğru ve güncel olacağını kabul eder. Reşit ve medeni haklarını kullanma ehliyetine sahip olmak veya yasal temsilci onayı ile işlem yapmak zorundadır.</p>
+<h2>4. Üyenin Yükümlülükleri</h2>
+<p>Üye, platformu yalnızca meşru amaçlarla kullanacak; başkalarının haklarına tecavüz etmeyecek, yanıltıcı bilgi girmeyecek ve genel ahlaka aykırı içerik paylaşmayacaktır.</p>
+<h2>5. Fesih</h2>
+<p>Üye her zaman hesabını kapatarak üyeliği sonlandırabilir. İşletme, sözleşme ihlali veya yasal zorunluluk halinde üyeliği askıya alabilir veya sonlandırabilir.</p>
+<p>Üyelik işlemi ile bu sözleşme hükümlerini okuduğunuzu ve kabul ettiğinizi beyan etmiş sayılırsınız.</p>";
+
+    private static string GetTermsOfServiceContent() => @"<h1>Kullanım Şartları</h1>
+<p>MyIndustry platformunu kullanarak aşağıdaki şartları kabul etmiş sayılırsınız.</p>
+<h2>1. Genel</h2>
+<p>Platform; endüstriyel ürün ve hizmetlerin listelenmesi, alıcı ve satıcıların buluşturulması amacıyla sunulmaktadır. Kullanım, bu şartlara ve ilgili mevzuata tabidir.</p>
+<h2>2. Kullanım Kuralları</h2>
+<p>Kullanıcılar yanıltıcı, yasadışı veya zararlı içerik paylaşamaz; başkalarının fikri mülkiyet haklarına saygı göstermek zorundadır. Spam, kötüye kullanım ve otomatik veri toplama yasaktır.</p>
+<h2>3. Fikri Mülkiyet</h2>
+<p>Platformdaki metin, tasarım ve yazılım hakları işletmeye aittir. İzinsiz kopyalama ve kullanım yasaktır.</p>
+<h2>4. Sorumluluk Sınırı</h2>
+<p>Platform, kullanıcılar arasındaki ticari ilişkilerden doğrudan sorumlu değildir. Alıcı ve satıcı kendi aralarındaki sözleşmeden sorumludur.</p>
+<h2>5. Değişiklikler</h2>
+<p>İşletme, kullanım şartlarını önceden duyurmak suretiyle güncelleyebilir. Güncellemeden sonra platformu kullanmaya devam etmeniz, yeni şartları kabul etmeniz anlamına gelir.</p>";
+
+    private static string GetPrivacyPolicyContent() => @"<h1>Gizlilik Politikası</h1>
+<p>MyIndustry olarak kişisel verilerinizin güvenliği ve gizliliği bizim için önemlidir.</p>
+<h2>1. Toplanan Bilgiler</h2>
+<p>Kayıt ve kullanım sırasında ad, soyad, e-posta, telefon, adres ve işlem bilgileriniz toplanabilir. Teknik olarak IP adresi, tarayıcı türü ve çerez verileri de işlenebilir.</p>
+<h2>2. Kullanım Amaçları</h2>
+<p>Toplanan veriler; hizmet sunumu, hesap yönetimi, destek talepleri, yasal yükümlülükler ve (açık rıza ile) bilgilendirme ve pazarlama amaçlarıyla kullanılır.</p>
+<h2>3. Paylaşım</h2>
+<p>Kişisel verileriniz, yasal zorunluluklar dışında üçüncü taraflarla paylaşılmaz. Hizmet sağlayıcılarımızla veri işleme sözleşmeleri kapsamında paylaşım yapılabilir.</p>
+<h2>4. Güvenlik</h2>
+<p>Verileriniz teknik ve idari tedbirlerle korunur. Yetkisiz erişim, kayıp veya değişikliğe karşı önlemler alınmaktadır.</p>
+<h2>5. Haklarınız</h2>
+<p>KVKK kapsamında erişim, düzeltme, silme ve itiraz haklarınızı kullanabilirsiniz. Talepleriniz için bizimle iletişime geçebilirsiniz.</p>";
+
+    private static string GetCookiePolicyContent() => @"<h1>Çerez Politikası</h1>
+<p>MyIndustry web sitesi, kullanıcı deneyimini iyileştirmek ve hizmetleri sunmak için çerezler kullanmaktadır.</p>
+<h2>1. Çerez Nedir?</h2>
+<p>Çerezler, cihazınıza kaydedilen küçük metin dosyalarıdır. Tarayıcı üzerinden siteye her girişinizde bu dosyalar okunabilir.</p>
+<h2>2. Kullanılan Çerez Türleri</h2>
+<p><strong>Zorunlu çerezler:</strong> Oturum, güvenlik ve temel işlevler için gereklidir. <strong>Analitik çerezler:</strong> Site trafiği ve kullanım istatistikleri için kullanılır. <strong>İşlevsel çerezler:</strong> Dil ve tercih ayarlarınızı hatırlamak için kullanılır.</p>
+<h2>3. Çerez Yönetimi</h2>
+<p>Tarayıcı ayarlarınızdan çerezleri silebilir veya engelleyebilirsiniz. Bazı çerezlerin kapatılması sitenin tam çalışmamasına neden olabilir.</p>
+<h2>4. Üçüncü Taraf Çerezleri</h2>
+<p>Analitik veya reklam amaçlı üçüncü taraf çerezleri kullanılıyorsa, bu politikada belirtilir ve gerekirse onay alınır.</p>";
+
+    private static string GetRefundPolicyContent() => @"<h1>İade ve İptal Politikası</h1>
+<p>MyIndustry üzerinden yapılan işlemlere ilişkin iade ve iptal koşulları aşağıda belirtilmiştir.</p>
+<h2>1. Abonelik ve Ödemeler</h2>
+<p>Satıcı abonelik planlarına ilişkin ödemeler, seçilen plana ve döneme göre tahsil edilir. Yasal cayma hakkı süresi içinde (14 gün) talep edilmesi halinde abonelik iptal edilebilir ve ödeme iade edilir.</p>
+<h2>2. Ürün/Hizmet Siparişleri</h2>
+<p>Platform üzerinden alıcı ile satıcı arasında oluşan siparişlerde iade ve iptal koşulları, satıcının kendi iade politikası ve taraflar arası sözleşmeye tabidir. Platform, aracı konumundadır.</p>
+<h2>3. İade Talebi</h2>
+<p>İade talepleri, ilgili satıcı veya destek birimimiz üzerinden iletilir. Geçerli koşullar sağlandığında iade süreci başlatılır.</p>
+<h2>4. Süre</h2>
+<p>Onaylanan iadelerde ödeme, banka veya ödeme kuruluşuna bağlı olarak 5–14 iş günü içinde yansıtılır.</p>";
+
+    private static string GetSellerAgreementContent() => @"<h1>Satıcı Sözleşmesi</h1>
+<p>MyIndustry platformunda satıcı olarak hizmet veya ürün sunmak isteyen gerçek veya tüzel kişilerin kabul etmesi gereken sözleşmedir.</p>
+<h2>1. Satıcı Olma Koşulları</h2>
+<p>Satıcı; reşit olmalı, ticari faaliyet için gerekli yasal ehliyete sahip olmalı ve platformun belirlediği kimlik/şirket bilgilerini eksiksiz vermelidir.</p>
+<h2>2. Yükümlülükler</h2>
+<p>Satıcı, listelediği ürün/hizmetlerin bilgilerinin doğru ve güncel olmasından, fiyat ve teslimat koşullarından sorumludur. Müşteri talepleri ve siparişlere zamanında yanıt vermek ve mevzuata uygun davranmak zorundadır.</p>
+<h2>3. Komisyon ve Ödemeler</h2>
+<p>Platform kullanımı ve abonelik planlarına göre belirlenen ücretler ve komisyonlar geçerlidir. Ödeme koşulları ayrıca bildirilir.</p>
+<h2>4. Fikri Mülkiyet ve İçerik</h2>
+<p>Satıcı, yüklediği metin, görsel ve diğer içeriklerin kendisine ait olduğunu veya kullanım hakkına sahip olduğunu kabul eder. İhlal halinde hesap askıya alınabilir.</p>
+<h2>5. Fesih</h2>
+<p>Satıcı, önceden bildirimde bulunarak satıcılığı sonlandırabilir. Platform, sözleşme ihlali veya politika ihlali durumunda satıcılığı askıya alabilir veya sonlandırabilir.</p>
+<p>Satıcı kaydı yapmakla bu sözleşme hükümlerini kabul etmiş sayılırsınız.</p>";
+
     /// <summary>
     /// Lokasyon verilerini (İl, İlçe, Mahalle) seed eder
     /// </summary>

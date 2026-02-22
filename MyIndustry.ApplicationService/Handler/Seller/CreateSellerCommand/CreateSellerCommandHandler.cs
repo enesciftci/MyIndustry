@@ -11,17 +11,20 @@ namespace MyIndustry.ApplicationService.Handler.Seller.CreateSellerCommand;
 public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCommand, CreateSellerCommandResult>
 {
     private readonly IGenericRepository<Domain.Aggregate.Seller> _sellerRepository;
+    private readonly IGenericRepository<DomainSellerSubscription> _sellerSubscriptionRepository;
     private readonly IGenericRepository<DomainSubscriptionPlan> _subscriptionPlanRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISecurityProvider _securityProvider;
 
     public CreateSellerCommandHandler(
         IGenericRepository<Domain.Aggregate.Seller> sellerRepository,
+        IGenericRepository<DomainSellerSubscription> sellerSubscriptionRepository,
         IGenericRepository<DomainSubscriptionPlan> subscriptionPlanRepository,
-        IUnitOfWork unitOfWork, 
+        IUnitOfWork unitOfWork,
         ISecurityProvider securityProvider)
     {
         _sellerRepository = sellerRepository;
+        _sellerSubscriptionRepository = sellerSubscriptionRepository;
         _subscriptionPlanRepository = subscriptionPlanRepository;
         _unitOfWork = unitOfWork;
         _securityProvider = securityProvider;
@@ -36,25 +39,23 @@ public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCo
             encryptedIdentityNumber = _securityProvider.EncryptAes256(request.IdentityNumber);
         }
 
-        // Check if this user already has a seller profile
         var existingSeller = await _sellerRepository
             .GetAllQuery()
-            .Include(s => s.SellerSubscription)
+            .Include(s => s.SellerSubscriptions)
             .FirstOrDefaultAsync(p => p.Id == request.UserId, cancellationToken);
 
         if (existingSeller != null)
         {
-            // User already has a seller profile - check if they need subscription
-            if (existingSeller.SellerSubscription == null)
+            var hasActiveSubscription = existingSeller.SellerSubscriptions?.Any(s => s.IsActive) == true;
+            if (!hasActiveSubscription)
             {
-                // Add subscription to existing seller
                 var freePlanForExisting = await _subscriptionPlanRepository
                     .GetAllQuery()
                     .FirstOrDefaultAsync(p => p.SubscriptionType == SubscriptionType.Free && p.IsActive, cancellationToken);
 
                 if (freePlanForExisting != null)
                 {
-                    existingSeller.SellerSubscription = new DomainSellerSubscription()
+                    await _sellerSubscriptionRepository.AddAsync(new DomainSellerSubscription
                     {
                         Id = Guid.NewGuid(),
                         SellerId = existingSeller.Id,
@@ -65,12 +66,10 @@ public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCo
                         RemainingFeaturedQuota = freePlanForExisting.FeaturedPostLimit,
                         IsAutoRenew = true,
                         IsActive = true
-                    };
-                    _sellerRepository.Update(existingSeller);
+                    }, cancellationToken);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
                 }
             }
-            // Already has seller profile with subscription - just return success
             return new CreateSellerCommandResult().ReturnOk();
         }
 
@@ -89,7 +88,7 @@ public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCo
         if (freePlan == null)
             throw new BusinessRuleException("Ücretsiz abonelik planı bulunamadı. Lütfen yönetici ile iletişime geçin.");
 
-        var seller = new Domain.Aggregate.Seller()
+        var seller = new Domain.Aggregate.Seller
         {
             Id = request.UserId,
             Description = request.Description,
@@ -98,30 +97,30 @@ public sealed record CreateSellerCommandHandler : IRequestHandler<CreateSellerCo
             IdentityNumber = encryptedIdentityNumber,
             AgreementUrl = request.AgreementUrl,
             IsActive = true,
-            SellerInfo = new SellerInfo()
+            SellerInfo = new SellerInfo
             {
                 Id = Guid.NewGuid(),
                 SellerId = request.UserId,
-                Email = request.Email, 
+                Email = request.Email,
                 PhoneNumber = request.PhoneNumber
-            },
-            // Automatically assign the free subscription plan
-            SellerSubscription = new DomainSellerSubscription()
-            {
-                Id = Guid.NewGuid(),
-                SellerId = request.UserId,
-                SubscriptionPlanId = freePlan.Id,
-                StartDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddDays(freePlan.PostDurationInDays),
-                RemainingPostQuota = freePlan.MonthlyPostLimit,
-                RemainingFeaturedQuota = freePlan.FeaturedPostLimit,
-                IsAutoRenew = true,
-                IsActive = true
             }
         };
 
         await _sellerRepository.AddAsync(seller, cancellationToken);
-        
+
+        await _sellerSubscriptionRepository.AddAsync(new DomainSellerSubscription
+        {
+            Id = Guid.NewGuid(),
+            SellerId = request.UserId,
+            SubscriptionPlanId = freePlan.Id,
+            StartDate = DateTime.UtcNow,
+            ExpiryDate = DateTime.UtcNow.AddDays(freePlan.PostDurationInDays),
+            RemainingPostQuota = freePlan.MonthlyPostLimit,
+            RemainingFeaturedQuota = freePlan.FeaturedPostLimit,
+            IsAutoRenew = true,
+            IsActive = true
+        }, cancellationToken);
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CreateSellerCommandResult().ReturnOk();

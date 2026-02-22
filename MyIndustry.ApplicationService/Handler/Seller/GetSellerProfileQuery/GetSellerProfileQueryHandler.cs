@@ -24,7 +24,7 @@ public sealed class GetSellerProfileQueryHandler : IRequestHandler<GetSellerProf
         var seller = await _sellerRepository
             .GetAllQuery()
             .Include(p => p.SellerInfo)
-            .Include(p => p.SellerSubscription)
+            .Include(p => p.SellerSubscriptions)
                 .ThenInclude(s => s.SubscriptionPlan)
             .FirstOrDefaultAsync(p => p.Id == request.UserId, cancellationToken);
 
@@ -78,16 +78,16 @@ public sealed class GetSellerProfileQueryHandler : IRequestHandler<GetSellerProf
             TotalViews = totalViews,
             TotalFavorites = totalFavorites,
             
-            // Subscription
-            Subscription = seller.SellerSubscription != null ? new SellerSubscriptionDto
+            // Subscription (aktif abonelik)
+            Subscription = (seller.SellerSubscriptions?.FirstOrDefault(s => s.IsActive)) is { } sub ? new SellerSubscriptionDto
             {
-                SubscriptionPlanId = seller.SellerSubscription.SubscriptionPlanId,
-                StartDate = seller.SellerSubscription.StartDate,
-                ExpiryDate = seller.SellerSubscription.ExpiryDate,
-                Name = seller.SellerSubscription.SubscriptionPlan?.Name,
-                RemainingPostQuota = seller.SellerSubscription.RemainingPostQuota,
-                RemainingFeaturedQuota = seller.SellerSubscription.RemainingFeaturedQuota,
-                IsAutoRenew = seller.SellerSubscription.IsAutoRenew
+                SubscriptionPlanId = sub.SubscriptionPlanId,
+                StartDate = sub.StartDate,
+                ExpiryDate = sub.ExpiryDate,
+                Name = sub.SubscriptionPlan?.Name,
+                RemainingPostQuota = sub.RemainingPostQuota,
+                RemainingFeaturedQuota = sub.RemainingFeaturedQuota,
+                IsAutoRenew = sub.IsAutoRenew
             } : null
         };
 

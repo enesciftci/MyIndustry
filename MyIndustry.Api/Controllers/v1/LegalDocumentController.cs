@@ -1,10 +1,13 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.ApplicationService.Handler.LegalDocument.CreateLegalDocumentCommand;
 using MyIndustry.ApplicationService.Handler.LegalDocument.DeleteLegalDocumentCommand;
+using MyIndustry.ApplicationService.Handler.LegalDocument.GetActiveLegalDocumentsByTypesQuery;
 using MyIndustry.ApplicationService.Handler.LegalDocument.GetAllLegalDocumentsQuery;
 using MyIndustry.ApplicationService.Handler.LegalDocument.GetLegalDocumentByIdQuery;
+using MyIndustry.ApplicationService.Handler.LegalDocument.GetLegalDocumentByTypeQuery;
 using MyIndustry.ApplicationService.Handler.LegalDocument.UpdateLegalDocumentCommand;
 
 namespace MyIndustry.Api.Controllers.v1;
@@ -18,6 +21,28 @@ public class LegalDocumentController : BaseController
     public LegalDocumentController(IMediator mediator)
     {
         _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Kayıt sayfası ve genel kullanım için aktif sözleşmeleri döner (herkese açık).
+    /// </summary>
+    [HttpGet("public/for-registration")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetActiveForRegistration([FromQuery] List<int>? types, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetActiveLegalDocumentsByTypesQuery { DocumentTypes = types }, cancellationToken);
+        return CreateResponse(result);
+    }
+
+    /// <summary>
+    /// Tipine göre tek aktif sözleşmeyi döner (örn. /terms, /privacy sayfaları için). Herkese açık.
+    /// </summary>
+    [HttpGet("public/by-type/{documentType:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetByType(int documentType, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetLegalDocumentByTypeQuery { DocumentType = documentType }, cancellationToken);
+        return CreateResponse(result);
     }
 
     [HttpGet]
