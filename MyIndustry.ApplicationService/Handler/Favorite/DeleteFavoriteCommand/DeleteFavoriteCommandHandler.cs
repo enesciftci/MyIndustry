@@ -21,6 +21,12 @@ public class DeleteFavoriteCommandHandler : IRequestHandler<DeleteFavoriteComman
             .Where(p => p.UserId == request.UserId && p.Id == request.FavoriteId)
             .FirstOrDefaultAsync(cancellationToken);
         
+        // If favorite doesn't exist, return success (idempotent delete)
+        if (favorite == null)
+        {
+            return new DeleteFavoriteCommandResult().ReturnOk();
+        }
+        
         _favoriteRepository.Delete(favorite);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
