@@ -43,6 +43,13 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
         if(seller.SellerSubscription.RemainingPostQuota <= 0)
             throw new BusinessRuleException("Kalan ilan kotası dolu. Lütfen abonelik planınızı yükseltin.");
 
+        // Check featured quota if trying to create featured listing
+        if (request.IsFeatured)
+        {
+            if (seller.SellerSubscription.RemainingFeaturedQuota <= 0)
+                throw new BusinessRuleException("Kalan öne çıkan ilan kotası dolu. Lütfen abonelik planınızı yükseltin.");
+        }
+
         var subCategoryExists = await _categoryRepository
             .AnyAsync(x => x.Id == request.CategoryId && x.IsActive, cancellationToken);
 
@@ -63,10 +70,18 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
             District = request.District,
             Neighborhood = request.Neighborhood,
             Condition = request.Condition,
-            ListingType = request.ListingType
+            ListingType = request.ListingType,
+            IsFeatured = request.IsFeatured
         }, cancellationToken);
 
         seller.SellerSubscription.DecreaseRemainingPostQuota();
+        
+        // Decrease featured quota if listing is featured
+        if (request.IsFeatured)
+        {
+            seller.SellerSubscription.RemainingFeaturedQuota--;
+        }
+        
         _sellerRepository.Update(seller);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

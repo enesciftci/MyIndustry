@@ -56,6 +56,8 @@ public class GetServicesByIdQueryHandler : IRequestHandler<GetServicesByIdQuery,
                 // Condition & ListingType
                 Condition = (int)service.Condition,
                 ListingType = (int)service.ListingType,
+                // Featured
+                IsFeatured = service.IsFeatured,
                 Seller = seller != null ? new SellerDto
                 {
                     Id = seller.Id,

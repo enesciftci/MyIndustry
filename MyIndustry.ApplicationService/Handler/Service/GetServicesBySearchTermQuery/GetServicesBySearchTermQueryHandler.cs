@@ -33,7 +33,8 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
         var totalCount = await baseQuery.CountAsync(cancellationToken);
         
         var servicesData = await baseQuery
-            .OrderByDescending(p => p.CreatedDate)
+            .OrderByDescending(p => p.IsFeatured)  // Featured listings first
+            .ThenByDescending(p => p.CreatedDate)  // Then by creation date
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
             .Select(p => new
@@ -51,7 +52,8 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
                 p.Neighborhood,
                 p.Condition,
                 p.ListingType,
-                p.CreatedDate
+                p.CreatedDate,
+                p.IsFeatured
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -70,7 +72,8 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
             Neighborhood = p.Neighborhood,
             Condition = (int)p.Condition,
             ListingType = (int)p.ListingType,
-            CreatedDate = p.CreatedDate
+            CreatedDate = p.CreatedDate,
+            IsFeatured = p.IsFeatured
         }).ToList();
 
         return new GetServicesBySearchTermQueryResult() { Services = services, TotalCount = totalCount }.ReturnOk();

@@ -40,7 +40,8 @@ public class
                 p.ViewCount,
                 p.IsActive,
                 p.IsApproved,
-                p.CreatedDate
+                p.CreatedDate,
+                p.IsFeatured
             })
             .ToListAsync(cancellationToken);
 
@@ -66,7 +67,8 @@ public class
             FavoriteCount = favoriteCounts.GetValueOrDefault(p.Id, 0),
             IsActive = p.IsActive,
             IsApproved = p.IsApproved,
-            CreatedDate = p.CreatedDate
+            CreatedDate = p.CreatedDate,
+            IsFeatured = p.IsFeatured
         }).ToList();
 
         return new GetServicesBySellerIdQueryResult() {Services = services}.ReturnOk();

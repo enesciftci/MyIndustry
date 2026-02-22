@@ -108,7 +108,8 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
         var totalCount = await query.CountAsync(cancellationToken);
 
         var servicesData = await query
-            .OrderByDescending(p => p.CreatedDate)
+            .OrderByDescending(p => p.IsFeatured)  // Featured listings first
+            .ThenByDescending(p => p.CreatedDate)  // Then by creation date
             .Skip((request.Index - 1) * request.Size)
             .Take(request.Size)
             .Select(p => new
@@ -125,7 +126,8 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
                 District = p.District,
                 Neighborhood = p.Neighborhood,
                 Condition = p.Condition,
-                ListingType = p.ListingType
+                ListingType = p.ListingType,
+                IsFeatured = p.IsFeatured
             })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -144,7 +146,8 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             District = p.District,
             Neighborhood = p.Neighborhood,
             Condition = (int)p.Condition,
-            ListingType = (int)p.ListingType
+            ListingType = (int)p.ListingType,
+            IsFeatured = p.IsFeatured
         }).ToList();
         
         return new GetServicesByFilterQueryResult() 

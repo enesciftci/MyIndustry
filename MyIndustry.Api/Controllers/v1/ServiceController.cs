@@ -44,6 +44,7 @@ public class ServiceController : BaseController
         [FromForm] string? neighborhood,
         [FromForm] int condition = 0,
         [FromForm] int listingType = 0,
+        [FromForm] bool isFeatured = false,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Creating service: Title={Title}, CategoryId={CategoryId}, SellerId={SellerId}, ImageCount={ImageCount}", 
@@ -110,7 +111,8 @@ public class ServiceController : BaseController
             District = district,
             Neighborhood = neighborhood,
             Condition = (ProductCondition)condition,
-            ListingType = (ListingType)listingType
+            ListingType = (ListingType)listingType,
+            IsFeatured = isFeatured
         };
         
         _logger.LogInformation("Sending CreateServiceCommand: SellerId={SellerId}, CategoryId={CategoryId}", command.SellerId, command.CategoryId);
@@ -166,6 +168,12 @@ public class ServiceController : BaseController
             // Burada her bir imageBytes ile işlem yapabilirsin
         }
         
+        var isFeatured = false;
+        if (Request.Form.TryGetValue("isFeatured", out var isFeaturedValue))
+        {
+            bool.TryParse(isFeaturedValue.ToString(), out isFeatured);
+        }
+
         var command = new UpdateServiceByIdCommand
         {
             ServiceDto = new ServiceDto
@@ -175,6 +183,7 @@ public class ServiceController : BaseController
                 Description = description,
                 Price = price,
                 EstimatedEndDay = estimatedDay,
+                IsFeatured = isFeatured,
                 // ImageUrls = image,
                 SellerId = GetUserId()
             }

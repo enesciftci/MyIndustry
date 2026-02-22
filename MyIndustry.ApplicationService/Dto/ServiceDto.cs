@@ -26,4 +26,7 @@ public class ServiceDto
     // Product condition and listing type
     public int Condition { get; set; }      // 0=Sıfır, 1=İkinci El
     public int ListingType { get; set; }    // 0=Satılık, 1=Kiralık
+    
+    // Featured listing
+    public bool IsFeatured { get; set; }
 }

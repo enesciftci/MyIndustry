@@ -35,6 +35,9 @@ public class Service : Entity
     public RejectionReasonType? RejectionReasonType { get; set; }
     public string? RejectionReasonDescription { get; set; }
     
+    // Featured listing
+    public bool IsFeatured { get; set; }
+    
     public Category Category { get; set; }
     public ICollection<ServiceViewLog> ServiceViewLogs { get; set; }
     public ICollection<Favorite> Favorites { get; set; }

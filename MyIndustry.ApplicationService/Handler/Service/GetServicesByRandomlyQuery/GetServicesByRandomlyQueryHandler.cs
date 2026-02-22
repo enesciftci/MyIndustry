@@ -18,7 +18,9 @@ public class GetServicesByRandomlyQueryHandler : IRequestHandler<GetServicesByRa
     {
         var servicesData = await _servicesRepository
             .GetAllQuery()
-            .Where(p => p.IsActive)
+            .Where(p => p.IsActive && p.IsApproved)
+            .OrderByDescending(p => p.IsFeatured)  // Featured listings first
+            .ThenByDescending(p => p.CreatedDate)  // Then by creation date
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
             .Select(p => new
@@ -29,7 +31,8 @@ public class GetServicesByRandomlyQueryHandler : IRequestHandler<GetServicesByRa
                 p.Description,
                 p.ImageUrls,
                 p.SellerId,
-                p.EstimatedEndDay
+                p.EstimatedEndDay,
+                p.IsFeatured
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -41,7 +44,8 @@ public class GetServicesByRandomlyQueryHandler : IRequestHandler<GetServicesByRa
             Description = p.Description,
             ImageUrls = ParseImageUrls(p.ImageUrls),
             SellerId = p.SellerId,
-            EstimatedEndDay = p.EstimatedEndDay
+            EstimatedEndDay = p.EstimatedEndDay,
+            IsFeatured = p.IsFeatured
         }).ToList();
 
         return new GetServicesByRandomlyQueryResult()

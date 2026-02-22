@@ -20,4 +20,7 @@ public record CreateServiceCommand : IRequest<CreateServiceCommandResult>
     // Product condition and listing type
     public ProductCondition Condition { get; set; } = ProductCondition.New;
     public ListingType ListingType { get; set; } = ListingType.ForSale;
+    
+    // Featured listing
+    public bool IsFeatured { get; set; }
 }
