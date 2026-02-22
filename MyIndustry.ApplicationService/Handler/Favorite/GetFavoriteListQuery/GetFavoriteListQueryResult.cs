@@ -4,5 +4,5 @@ namespace MyIndustry.ApplicationService.Handler.Favorite.GetFavoriteListQuery;
 
 public record GetFavoriteListQueryResult : ResponseBase
 {
-    public List<FavoriteDto> FavoriteList { get; set; }
+    public List<FavoriteDto> Favorites { get; set; }
 }

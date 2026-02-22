@@ -29,21 +29,27 @@ public class GetFavoriteListQueryHandler : IRequestHandler<GetFavoriteListQuery,
                 IsFavorite = true,
                 Service = new ServiceDto()
                 {
-                    Id =p.Service.Id,
+                    Id = p.Service.Id,
                     Price = new Amount(p.Service.Price).ToInt(),
                     Description = p.Service.Description,
                     Title = p.Service.Title,
-                    // ImageUrls = p.Service.ImageUrls.Split(),
+                    ImageUrls = string.IsNullOrEmpty(p.Service.ImageUrls) 
+                        ? Array.Empty<string>() 
+                        : p.Service.ImageUrls.Split(','),
                     SellerId = p.Service.SellerId,
                     EstimatedEndDay = p.Service.EstimatedEndDay,
-                    ModifiedDate = p.Service.ModifiedDate
+                    ModifiedDate = p.Service.ModifiedDate,
+                    ViewCount = p.Service.ViewCount,
+                    City = p.Service.City,
+                    District = p.Service.District,
+                    Neighborhood = p.Service.Neighborhood,
                 }
             })
             .ToList();
 
         return new GetFavoriteListQueryResult
         {
-            FavoriteList = favoriteDtos,
+            Favorites = favoriteDtos,
         }.ReturnOk();
     }
 }
