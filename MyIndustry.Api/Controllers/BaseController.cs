@@ -42,4 +42,14 @@ public class BaseController: ControllerBase
         // Fallback to email if name not available
         return GetUserEmail().Split('@').FirstOrDefault() ?? "Kullanıcı";
     }
+
+    protected bool IsAdmin()
+    {
+        var typeClaim = User.Claims.FirstOrDefault(p => p.Type == "type")?.Value;
+        if (int.TryParse(typeClaim, out int userType))
+        {
+            return userType == 99; // Admin UserType = 99
+        }
+        return false;
+    }
 }
