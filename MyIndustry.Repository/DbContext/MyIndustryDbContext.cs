@@ -44,6 +44,7 @@ public class MyIndustryDbContext : Microsoft.EntityFrameworkCore.DbContext
     public DbSet<Address> Adresses { get; set; }
     public DbSet<Favorite> Favorites { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<SupportTicket> SupportTickets { get; set; }
     
     // Location tables
     public DbSet<City> Cities { get; set; }

@@ -1141,6 +1141,41 @@
       "UpstreamHttpMethod": [
         "Get"
       ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/support-tickets",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/support-tickets",
+      "UpstreamHttpMethod": [
+        "Post",
+        "Get"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/support-tickets/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/support-tickets/{id}",
+      "UpstreamHttpMethod": [
+        "Put"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
     }
   ],
   "GlobalConfiguration": {
