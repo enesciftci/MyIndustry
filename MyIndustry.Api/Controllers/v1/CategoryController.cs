@@ -1,8 +1,10 @@
 using MediatR;
 using MyIndustry.ApplicationService.Handler.Category.CreateCategoryCommand;
 using MyIndustry.ApplicationService.Handler.Category.CreateSubCategoryCommand;
+using MyIndustry.ApplicationService.Handler.Category.DeleteCategoryCommand;
 using MyIndustry.ApplicationService.Handler.Category.GetCategoriesQuery;
 using MyIndustry.ApplicationService.Handler.Category.GetMainCategoriesQuery;
+using MyIndustry.ApplicationService.Handler.Category.UpdateCategoryCommand;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -25,10 +27,23 @@ public class CategoryController(IMediator mediator) : BaseController
         } , cancellationToken));
     }
 
-    [HttpPut]
-    public async Task<IActionResult> Update(CancellationToken cancellationToken)
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
-        return CreateResponse(null);
+        var command = new UpdateCategoryCommand
+        {
+            Id = id,
+            Name = request.Name,
+            Description = request.Description,
+            IsActive = request.IsActive
+        };
+        return CreateResponse(await mediator.Send(command, cancellationToken));
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        return CreateResponse(await mediator.Send(new DeleteCategoryCommand { Id = id }, cancellationToken));
     }
 
     [HttpPost("subcategory")]
@@ -54,4 +69,11 @@ public class CategoryController(IMediator mediator) : BaseController
     {
         return CreateResponse(await mediator.Send(new GetCategoriesQuery2(){ParentId =parentId }, cancellationToken));
     }
+}
+
+public class UpdateCategoryRequest
+{
+    public string Name { get; set; }
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
 }

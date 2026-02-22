@@ -1,18 +1,42 @@
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using MyIndustry.Repository.Repository;
+using MyIndustry.Repository.UnitOfWork;
+using DomainCategory = MyIndustry.Domain.Aggregate.Category;
+
 namespace MyIndustry.ApplicationService.Handler.Category.UpdateCategoryCommand;
 
-public sealed class UpdateCategoryCommandHandler(
-    IGenericRepository<Domain.Aggregate.Category> categoryRepository,
-    IUnitOfWork unitOfWork)
-    : IRequestHandler<UpdateCategoryCommand, UpdateCategoryCommandResult>
+public class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryCommand, UpdateCategoryCommandResult>
 {
+    private readonly IGenericRepository<DomainCategory> _categoryRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UpdateCategoryCommandHandler(
+        IGenericRepository<DomainCategory> categoryRepository,
+        IUnitOfWork unitOfWork)
+    {
+        _categoryRepository = categoryRepository;
+        _unitOfWork = unitOfWork;
+    }
+
     public async Task<UpdateCategoryCommandResult> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
     {
-        await categoryRepository.AddAsync(new Domain.Aggregate.Category()
+        var category = await _categoryRepository.GetAllQuery()
+            .FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
+
+        if (category == null)
         {
-        }, cancellationToken);
+            return new UpdateCategoryCommandResult().ReturnNotFound("Kategori bulunamadı.");
+        }
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        category.Name = request.Name;
+        category.Description = request.Description;
+        category.IsActive = request.IsActive;
+        category.ModifiedDate = DateTime.UtcNow;
 
-        return new UpdateCategoryCommandResult().ReturnOk();
+        _categoryRepository.Update(category);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new UpdateCategoryCommandResult().ReturnOk("Kategori güncellendi.");
     }
 }
