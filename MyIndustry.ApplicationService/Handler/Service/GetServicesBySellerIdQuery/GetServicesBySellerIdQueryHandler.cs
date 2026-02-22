@@ -9,10 +9,14 @@ public class
     GetServicesBySellerIdQueryHandler : IRequestHandler<GetServicesBySellerIdQuery, GetServicesBySellerIdQueryResult>
 {
     private readonly IGenericRepository<MyIndustry.Domain.Aggregate.Service> _services;
+    private readonly IGenericRepository<MyIndustry.Domain.Aggregate.Favorite> _favorites;
 
-    public GetServicesBySellerIdQueryHandler(IGenericRepository<Domain.Aggregate.Service> services)
+    public GetServicesBySellerIdQueryHandler(
+        IGenericRepository<Domain.Aggregate.Service> services,
+        IGenericRepository<Domain.Aggregate.Favorite> favorites)
     {
         _services = services;
+        _favorites = favorites;
     }
 
     public async Task<GetServicesBySellerIdQueryResult> Handle(GetServicesBySellerIdQuery request,
@@ -40,6 +44,15 @@ public class
             })
             .ToListAsync(cancellationToken);
 
+        // Get favorite counts for these services
+        var serviceIds = servicesData.Select(s => s.Id).ToList();
+        var favoriteCounts = await _favorites
+            .GetAllQuery()
+            .Where(f => serviceIds.Contains(f.ServiceId))
+            .GroupBy(f => f.ServiceId)
+            .Select(g => new { ServiceId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.ServiceId, x => x.Count, cancellationToken);
+
         var services = servicesData.Select(p => new ServiceDto
         {
             Id = p.Id,
@@ -50,6 +63,7 @@ public class
             SellerId = p.SellerId,
             EstimatedEndDay = p.EstimatedEndDay,
             ViewCount = p.ViewCount,
+            FavoriteCount = favoriteCounts.GetValueOrDefault(p.Id, 0),
             IsActive = p.IsActive,
             IsApproved = p.IsApproved,
             CreatedDate = p.CreatedDate
