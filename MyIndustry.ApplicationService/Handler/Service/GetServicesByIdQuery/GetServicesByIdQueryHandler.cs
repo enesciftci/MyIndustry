@@ -49,6 +49,13 @@ public class GetServicesByIdQueryHandler : IRequestHandler<GetServicesByIdQuery,
                 CreatedDate = service.CreatedDate,
                 ViewCount = service.ViewCount,
                 CategoryBreadcrumbs = categoryBreadcrumbs,
+                // Location
+                City = service.City,
+                District = service.District,
+                Neighborhood = service.Neighborhood,
+                // Condition & ListingType
+                Condition = (int)service.Condition,
+                ListingType = (int)service.ListingType,
                 Seller = seller != null ? new SellerDto
                 {
                     Id = seller.Id,
