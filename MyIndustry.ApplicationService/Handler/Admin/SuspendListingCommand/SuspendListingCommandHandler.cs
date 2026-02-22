@@ -32,6 +32,18 @@ public class SuspendListingCommandHandler : IRequestHandler<SuspendListingComman
         service.IsActive = !request.Suspend; // Suspend = inactive
         service.ModifiedDate = DateTime.UtcNow;
 
+        if (request.Suspend)
+        {
+            service.SuspensionReasonType = request.SuspensionReasonType;
+            service.SuspensionReasonDescription = request.SuspensionReasonDescription;
+        }
+        else
+        {
+            // Clear suspension reasons when unsuspending
+            service.SuspensionReasonType = null;
+            service.SuspensionReasonDescription = null;
+        }
+
         _serviceRepository.Update(service);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

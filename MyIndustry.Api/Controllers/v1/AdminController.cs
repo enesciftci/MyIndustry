@@ -87,7 +87,10 @@ public class AdminController : BaseController
         {
             ServiceId = id,
             Suspend = request.Suspend,
-            Reason = request.Reason
+            SuspensionReasonType = request.SuspensionReasonType.HasValue 
+                ? (SuspensionReasonType?)request.SuspensionReasonType.Value 
+                : null,
+            SuspensionReasonDescription = request.SuspensionReasonDescription
         };
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
@@ -105,7 +108,7 @@ public class AdminController : BaseController
         {
             SellerId = id,
             Suspend = request.Suspend,
-            Reason = request.Reason
+            Reason = request.SuspensionReasonDescription // Map to Reason for backward compatibility
         };
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
@@ -121,5 +124,6 @@ public class ApproveListingRequest
 public class SuspendRequest
 {
     public bool Suspend { get; set; }
-    public string? Reason { get; set; }
+    public int? SuspensionReasonType { get; set; }
+    public string? SuspensionReasonDescription { get; set; }
 }

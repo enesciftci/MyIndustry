@@ -27,7 +27,9 @@ public class Service : Entity
     public ListingType ListingType { get; set; } = ListingType.ForSale;      // Satılık/Kiralık
     
     // Suspension
-    public string? SuspensionReason { get; set; }
+    public SuspensionReasonType? SuspensionReasonType { get; set; }
+    public string? SuspensionReason { get; set; } // Kept for backward compatibility
+    public string? SuspensionReasonDescription { get; set; }
     
     // Rejection
     public RejectionReasonType? RejectionReasonType { get; set; }
