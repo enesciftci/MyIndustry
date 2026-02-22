@@ -9,19 +9,26 @@ public static class DataSeeder
 {
     public static async Task SeedAsync(MyIndustryDbContext context)
     {
-        // Seed locations first (if not exists)
-        await SeedLocationsAsync(context);
-        
-        // Eğer zaten veri varsa sadece kategori ve servis düzeltmelerini yap
-        if (context.Categories.Any())
+        try
         {
-            Console.WriteLine("Database already has data. Checking and fixing data...");
-            await FixServiceCategories(context);
-            await FixServiceImages(context);
-            return;
-        }
+            Console.WriteLine("=== Starting Data Seeding ===");
+            Console.WriteLine($"Categories count: {context.Categories.Count()}");
+            Console.WriteLine($"Cities count: {context.Cities.Count()}");
+            Console.WriteLine($"Services count: {context.Services.Count()}");
+            
+            // Seed locations first (if not exists)
+            await SeedLocationsAsync(context);
+            
+            // Eğer zaten veri varsa sadece kategori ve servis düzeltmelerini yap
+            if (context.Categories.Any())
+            {
+                Console.WriteLine("Database already has category data. Checking and fixing data...");
+                await FixServiceCategories(context);
+                await FixServiceImages(context);
+                return;
+            }
 
-        Console.WriteLine("Seeding database with dummy data...");
+            Console.WriteLine("No categories found. Seeding database with dummy data...");
 
         // 1. Ana Kategoriler (Level 1)
         var categories = CreateMainCategories();
@@ -66,7 +73,15 @@ public static class DataSeeder
         await context.SaveChangesAsync();
         Console.WriteLine($"Created {services.Count} services.");
 
-        Console.WriteLine("Database seeding completed!");
+        Console.WriteLine("=== Database seeding completed! ===");
+        Console.WriteLine($"Final counts - Categories: {context.Categories.Count()}, Services: {context.Services.Count()}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"=== ERROR during seeding: {ex.Message} ===");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            throw; // Re-throw to ensure the error is visible
+        }
     }
 
     private static List<Category> CreateMainCategories()
