@@ -522,6 +522,27 @@
       ],
       "UpstreamPathTemplate": "/api/v1/favorites/{serviceId}",
       "UpstreamHttpMethod": [
+        "Get"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/favorites/{serviceId}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/favorites/{serviceId}",
+      "UpstreamHttpMethod": [
         "Delete"
       ],
       "AuthenticationOptions": {
