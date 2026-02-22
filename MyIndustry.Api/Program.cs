@@ -22,6 +22,19 @@ builder.Services
             options.EnableSensitiveDataLogging();
     });
 
+// Add Identity DbContext for accessing user information
+builder.Services
+    .AddDbContextPool<MyIndustry.Identity.Repository.MyIndustryIdentityDbContext>(options =>
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString("MyIndustryIdentityDb"), npgsqlDbContextOptionsBuilder =>
+                npgsqlDbContextOptionsBuilder.EnableRetryOnFailure(2, TimeSpan.FromSeconds(10), null)
+                    .CommandTimeout(60))
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        
+        if (builder.Environment.IsDevelopment())
+            options.EnableSensitiveDataLogging();
+    });
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<ISecurityProvider, SecurityProvider>();

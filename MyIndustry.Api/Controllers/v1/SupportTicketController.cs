@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Handler.SupportTicket.CreateSupportTicketCommand;
 using MyIndustry.ApplicationService.Handler.SupportTicket.GetSupportTicketsQuery;
 using MyIndustry.ApplicationService.Handler.SupportTicket.UpdateSupportTicketCommand;
 using MyIndustry.Domain.Aggregate;
+using MyIndustry.Identity.Repository;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -13,10 +15,12 @@ namespace MyIndustry.Api.Controllers.v1;
 public class SupportTicketController : BaseController
 {
     private readonly IMediator _mediator;
+    private readonly MyIndustryIdentityDbContext _identityDbContext;
 
-    public SupportTicketController(IMediator mediator)
+    public SupportTicketController(IMediator mediator, MyIndustryIdentityDbContext identityDbContext)
     {
         _mediator = mediator;
+        _identityDbContext = identityDbContext;
     }
 
     /// <summary>
@@ -29,14 +33,31 @@ public class SupportTicketController : BaseController
         // Get user info if authenticated
         Guid? userId = null;
         int userType = 0; // Anonymous
+        string name = request.Name;
+        string email = request.Email;
+        string? phone = request.Phone;
         
         if (User.Identity?.IsAuthenticated == true)
         {
             userId = GetUserId();
-            // Determine user type from claims if available
-            var typeClaim = User.FindFirst("type")?.Value;
-            if (typeClaim != null && int.TryParse(typeClaim, out int parsedUserType))
+            
+            // Get user information from Identity database
+            var user = await _identityDbContext.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == userId.ToString(), cancellationToken);
+            
+            if (user != null)
             {
+                // Use database values instead of request values for logged-in users
+                name = $"{user.FirstName} {user.LastName}".Trim();
+                if (string.IsNullOrWhiteSpace(name))
+                    name = user.Email ?? request.Name;
+                
+                email = user.Email ?? request.Email;
+                phone = user.PhoneNumber ?? request.Phone;
+                
+                // Determine user type from database
+                var parsedUserType = (int)user.Type;
                 // UserType enum: 0=User, 1=Purchaser, 2=Seller, 99=Admin
                 // For support tickets, we map: 0=User (Alıcı), 1=Purchaser (Alıcı), 2=Seller (Satıcı)
                 if (parsedUserType == 0 || parsedUserType == 1)
@@ -51,9 +72,9 @@ public class SupportTicketController : BaseController
         {
             UserId = userId,
             UserType = userType,
-            Name = request.Name,
-            Email = request.Email,
-            Phone = request.Phone,
+            Name = name,
+            Email = email,
+            Phone = phone,
             Subject = request.Subject,
             Message = request.Message,
             Category = request.Category

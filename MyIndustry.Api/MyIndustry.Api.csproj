@@ -11,6 +11,7 @@
         <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
         <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.10" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
           <PrivateAssets>all</PrivateAssets>
@@ -23,6 +24,7 @@
     <ItemGroup>
       <ProjectReference Include="..\MyIndustry.ApplicationService\MyIndustry.ApplicationService.csproj" />
       <ProjectReference Include="..\MyIndustry.Repository\MyIndustry.Repository.csproj" />
+      <ProjectReference Include="..\MyIndustry.Identity.Repository\MyIndustry.Identity.Repository.csproj" />
     </ItemGroup>
 
     <ItemGroup>
