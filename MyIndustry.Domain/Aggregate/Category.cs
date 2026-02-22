@@ -9,4 +9,10 @@ public class Category : Entity
     public Category? Parent { get; set; }
     public List<Category> Children { get; set; } = new();
     public ICollection<Service> Services { get; set; }
+    
+    // SEO fields
+    public string? Slug { get; set; }
+    public string? MetaTitle { get; set; }
+    public string? MetaDescription { get; set; }
+    public string? MetaKeywords { get; set; }
 }
