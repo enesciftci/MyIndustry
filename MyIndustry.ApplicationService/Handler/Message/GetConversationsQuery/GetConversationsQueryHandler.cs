@@ -28,6 +28,7 @@ public class GetConversationsQueryHandler : IRequestHandler<GetConversationsQuer
     public async Task<GetConversationsQueryResult> Handle(GetConversationsQuery request, CancellationToken cancellationToken)
     {
         // Get all messages where user is sender or receiver
+        // Only select needed columns to avoid loading ReceiverName/ReceiverEmail which don't exist
         var messages = await _messageRepository
             .GetAllQuery()
             .Include(m => m.Service)
@@ -35,6 +36,24 @@ public class GetConversationsQueryHandler : IRequestHandler<GetConversationsQuer
                     .ThenInclude(seller => seller.SellerInfo)
             .Where(m => m.SenderId == request.UserId || m.ReceiverId == request.UserId)
             .OrderByDescending(m => m.CreatedDate)
+            .Select(m => new 
+            {
+                m.Id,
+                m.ServiceId,
+                m.SenderId,
+                m.ReceiverId,
+                m.Content,
+                m.IsRead,
+                m.SenderName,
+                m.SenderEmail,
+                m.CreatedDate,
+                ServiceTitle = m.Service != null ? m.Service.Title : null,
+                ServiceImageUrls = m.Service != null ? m.Service.ImageUrls : null,
+                ServiceSellerId = m.Service != null ? m.Service.SellerId : (Guid?)null,
+                SellerTitle = m.Service != null && m.Service.Seller != null ? m.Service.Seller.Title : null,
+                SellerEmail = m.Service != null && m.Service.Seller != null && m.Service.Seller.SellerInfo != null 
+                    ? m.Service.Seller.SellerInfo.Email : null
+            })
             .ToListAsync(cancellationToken);
 
         // Group by ServiceId + other user to create conversations
@@ -52,41 +71,31 @@ public class GetConversationsQueryHandler : IRequestHandler<GetConversationsQuer
                 // Try to get other user's name from messages they sent
                 var otherUserMessage = g.FirstOrDefault(m => m.SenderId == otherUserId);
                 
-                // Try to get other user's name from messages where they are receiver
-                var messageToOther = g.FirstOrDefault(m => m.ReceiverId == otherUserId);
-                
                 // Determine the other user's name:
                 // 1. If other user sent a message, use their SenderName
-                // 2. If we sent them a message and ReceiverName is stored, use that
-                // 3. If other user is the seller, use seller title
-                // 4. Default to "Kullanıcı"
+                // 2. If other user is the seller, use seller title
+                // 3. Default to "Kullanıcı"
                 string otherUserName = "Kullanıcı";
                 string otherUserEmail = "";
                 
-                if (otherUserMessage != null)
+                if (otherUserMessage != null && !string.IsNullOrEmpty(otherUserMessage.SenderName))
                 {
                     // Other user sent us a message - use their sender info
-                    otherUserName = otherUserMessage.SenderName ?? "Kullanıcı";
+                    otherUserName = otherUserMessage.SenderName;
                     otherUserEmail = otherUserMessage.SenderEmail ?? "";
                 }
-                else if (messageToOther?.ReceiverName != null)
-                {
-                    // We have receiver info stored
-                    otherUserName = messageToOther.ReceiverName;
-                    otherUserEmail = messageToOther.ReceiverEmail ?? "";
-                }
-                else if (lastMessage.Service?.Seller != null && lastMessage.Service.SellerId == otherUserId)
+                else if (lastMessage.ServiceSellerId == otherUserId && !string.IsNullOrEmpty(lastMessage.SellerTitle))
                 {
                     // Other user is the seller - use seller title
-                    otherUserName = lastMessage.Service.Seller.Title ?? "Satıcı";
-                    otherUserEmail = lastMessage.Service.Seller.SellerInfo?.Email ?? "";
+                    otherUserName = lastMessage.SellerTitle;
+                    otherUserEmail = lastMessage.SellerEmail ?? "";
                 }
                 
                 return new ConversationDto
                 {
                     ServiceId = g.Key.ServiceId,
-                    ServiceTitle = lastMessage.Service?.Title ?? "İlan",
-                    ServiceImageUrl = ParseImageUrls(lastMessage.Service?.ImageUrls).FirstOrDefault(),
+                    ServiceTitle = lastMessage.ServiceTitle ?? "İlan",
+                    ServiceImageUrl = ParseImageUrls(lastMessage.ServiceImageUrls).FirstOrDefault(),
                     OtherUserId = otherUserId,
                     OtherUserName = otherUserName,
                     OtherUserEmail = otherUserEmail,
