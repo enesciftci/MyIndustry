@@ -7,5 +7,5 @@ public record GetCategoriesQuery :  IRequest<GetCategoriesQueryResult>
 
 public record GetCategoriesQuery2 :  IRequest<GetCategoriesQueryResult>
 {
-    public Guid ParentId { get; set; }
+    public Guid? ParentId { get; set; }
 }

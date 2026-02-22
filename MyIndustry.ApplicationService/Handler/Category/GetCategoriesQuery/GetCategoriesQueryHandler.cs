@@ -15,36 +15,6 @@ public class GetCategoriesQueryHandler(IGenericRepository<Domain.Aggregate.Categ
             Categories = categories
         }.ReturnOk();
     }
-
-
-    public class GetCategoriesQuery2Handler(IGenericRepository<Domain.Aggregate.Category> categoryRepository)
-        : IRequestHandler<GetCategoriesQuery2, GetCategoriesQueryResult>
-    {
-        public async Task<GetCategoriesQueryResult> Handle(GetCategoriesQuery2 request,
-            CancellationToken cancellationToken)
-        {
-            var categories = categoryRepository.GetAllQuery().Where(p=>p.ParentId == request.ParentId && p.IsActive);
-
-            var lookup = categories.ToLookup(c => c.ParentId);
-
-
-            var categoryDtos = categories.Select(c => new CategoryDto
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-
-                })
-                .ToList();
-            
-
-           
-            return new GetCategoriesQueryResult()
-            {
-                Categories = categoryDtos
-            }.ReturnOk();
-        }
-        
-    }
     
     public async Task<List<CategoryDto>> GetCategoryTreeAsync()
     {
