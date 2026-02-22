@@ -37,4 +37,14 @@ public class Message : Entity
     /// Sender's email (cached for display)
     /// </summary>
     public string SenderEmail { get; set; }
+    
+    /// <summary>
+    /// Receiver's name (cached for display)
+    /// </summary>
+    public string? ReceiverName { get; set; }
+    
+    /// <summary>
+    /// Receiver's email (cached for display)
+    /// </summary>
+    public string? ReceiverEmail { get; set; }
 }
