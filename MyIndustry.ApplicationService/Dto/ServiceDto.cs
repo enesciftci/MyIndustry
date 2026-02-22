@@ -9,6 +9,7 @@ public class ServiceDto
     public string[] ImageUrls { get; set; }
     public Guid SellerId { get; set; }
     public bool IsActive { get; set; }
+    public bool IsApproved { get; set; }
     public int ViewCount { get; set; }
     public string Title { get; set; }
     public DateTime? ModifiedDate { get; set; }

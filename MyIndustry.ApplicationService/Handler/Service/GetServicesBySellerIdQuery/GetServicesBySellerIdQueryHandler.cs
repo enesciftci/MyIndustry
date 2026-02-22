@@ -20,7 +20,8 @@ public class
     {
         var servicesData = await _services
             .GetAllQuery()
-            .Where(p => p.SellerId == request.SellerId && p.IsActive)
+            .Where(p => p.SellerId == request.SellerId) // Show all seller's services including inactive
+            .OrderByDescending(p => p.CreatedDate)
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
             .Select(p => new
@@ -33,7 +34,9 @@ public class
                 p.SellerId,
                 p.EstimatedEndDay,
                 p.ViewCount,
-                p.IsActive
+                p.IsActive,
+                p.IsApproved,
+                p.CreatedDate
             })
             .ToListAsync(cancellationToken);
 
@@ -47,7 +50,9 @@ public class
             SellerId = p.SellerId,
             EstimatedEndDay = p.EstimatedEndDay,
             ViewCount = p.ViewCount,
-            IsActive = p.IsActive
+            IsActive = p.IsActive,
+            IsApproved = p.IsApproved,
+            CreatedDate = p.CreatedDate
         }).ToList();
 
         return new GetServicesBySellerIdQueryResult() {Services = services}.ReturnOk();
