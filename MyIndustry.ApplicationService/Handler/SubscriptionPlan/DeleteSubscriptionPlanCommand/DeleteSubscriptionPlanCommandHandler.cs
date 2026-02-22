@@ -28,14 +28,14 @@ public class DeleteSubscriptionPlanCommandHandler : IRequestHandler<DeleteSubscr
             throw new BusinessRuleException("Abonelik planı bulunamadı.");
         }
 
-        // Check if plan is being used by any seller
-        var hasActiveSubscriptions = await _sellerSubscriptionRepository
+        // Check if plan is being used by any seller (active or inactive)
+        var hasSubscriptions = await _sellerSubscriptionRepository
             .GetAllQuery()
-            .AnyAsync(s => s.SubscriptionPlanId == request.Id && s.IsActive, cancellationToken);
+            .AnyAsync(s => s.SubscriptionPlanId == request.Id, cancellationToken);
 
-        if (hasActiveSubscriptions)
+        if (hasSubscriptions)
         {
-            throw new BusinessRuleException("Bu abonelik planı aktif satıcılar tarafından kullanılıyor. Önce planı pasif hale getirin.");
+            throw new BusinessRuleException("Bu abonelik planına bağlı satıcı abonelikleri bulunmaktadır. Planı silemezsiniz.");
         }
 
         _subscriptionPlanRepository.Delete(plan);

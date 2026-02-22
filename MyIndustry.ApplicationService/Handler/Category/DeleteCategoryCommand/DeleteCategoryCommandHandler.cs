@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using MyIndustry.Domain.ExceptionHandling;
 using MyIndustry.Repository.Repository;
 using MyIndustry.Repository.UnitOfWork;
 using DomainCategory = MyIndustry.Domain.Aggregate.Category;
@@ -9,13 +10,16 @@ namespace MyIndustry.ApplicationService.Handler.Category.DeleteCategoryCommand;
 public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryCommand, DeleteCategoryCommandResult>
 {
     private readonly IGenericRepository<DomainCategory> _categoryRepository;
+    private readonly IGenericRepository<Domain.Aggregate.Service> _serviceRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public DeleteCategoryCommandHandler(
         IGenericRepository<DomainCategory> categoryRepository,
+        IGenericRepository<Domain.Aggregate.Service> serviceRepository,
         IUnitOfWork unitOfWork)
     {
         _categoryRepository = categoryRepository;
+        _serviceRepository = serviceRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -30,12 +34,46 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
             return new DeleteCategoryCommandResult().ReturnNotFound("Kategori bulunamadı.");
         }
 
+        // Check if category or any of its children has services (listings)
+        var categoryIds = await GetAllCategoryIdsIncludingChildren(category, cancellationToken);
+        var hasServices = await _serviceRepository
+            .GetAllQuery()
+            .AnyAsync(s => categoryIds.Contains(s.CategoryId), cancellationToken);
+
+        if (hasServices)
+        {
+            throw new BusinessRuleException("Bu kategori veya alt kategorilerinde ilan bulunmaktadır. Kategoriyi silmek için önce ilanları silin veya başka bir kategoriye taşıyın.");
+        }
+
         // Recursively delete all children
         await DeleteCategoryAndChildren(category, cancellationToken);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new DeleteCategoryCommandResult().ReturnOk("Kategori silindi.");
+    }
+
+    private async Task<List<Guid>> GetAllCategoryIdsIncludingChildren(DomainCategory category, CancellationToken cancellationToken)
+    {
+        var categoryIds = new List<Guid> { category.Id };
+
+        if (category.Children?.Count > 0)
+        {
+            foreach (var child in category.Children)
+            {
+                var childWithChildren = await _categoryRepository.GetAllQuery()
+                    .Include(c => c.Children)
+                    .FirstOrDefaultAsync(c => c.Id == child.Id, cancellationToken);
+                
+                if (childWithChildren != null)
+                {
+                    var childIds = await GetAllCategoryIdsIncludingChildren(childWithChildren, cancellationToken);
+                    categoryIds.AddRange(childIds);
+                }
+            }
+        }
+
+        return categoryIds;
     }
 
     private async Task DeleteCategoryAndChildren(DomainCategory category, CancellationToken cancellationToken)

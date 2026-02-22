@@ -120,4 +120,38 @@ public class DeleteSubscriptionPlanCommandHandlerTests
         // Act & Assert
         await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task Handle_Should_Throw_Exception_When_Plan_Has_Inactive_Subscriptions()
+    {
+        // Arrange
+        var planId = Guid.NewGuid();
+        var existingPlan = new DomainSubscriptionPlan
+        {
+            Id = planId,
+            Name = "Test Plan",
+            IsActive = true
+        };
+
+        var inactiveSubscription = new SellerSubscription
+        {
+            Id = Guid.NewGuid(),
+            SubscriptionPlanId = planId,
+            IsActive = false
+        };
+
+        var command = new DeleteSubscriptionPlanCommand { Id = planId };
+
+        _repositoryMock
+            .Setup(r => r.GetById(planId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingPlan);
+
+        var mockQueryable = new List<SellerSubscription> { inactiveSubscription }.AsQueryable().BuildMock();
+        _sellerSubscriptionRepositoryMock
+            .Setup(r => r.GetAllQuery())
+            .Returns(mockQueryable);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
+    }
 }
