@@ -31,7 +31,7 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
                 p.Seller.Title.ToLower().Contains(searchLower));
         }
 
-        // Filter by city/district
+        // Filter by seller address city/district (legacy)
         if (request.CityId.HasValue)
         {
             query = query.Where(p => p.Seller.Addresses.Any(x => x.City == request.CityId.Value));
@@ -40,6 +40,45 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             {
                 query = query.Where(p => p.Seller.Addresses.Any(x => x.District == request.DistrictId.Value));
             }
+        }
+        
+        // Filter by service location (new)
+        if (!string.IsNullOrWhiteSpace(request.City))
+        {
+            query = query.Where(p => p.City != null && p.City.ToLower() == request.City.ToLower());
+        }
+        
+        if (!string.IsNullOrWhiteSpace(request.District))
+        {
+            query = query.Where(p => p.District != null && p.District.ToLower() == request.District.ToLower());
+        }
+        
+        if (!string.IsNullOrWhiteSpace(request.Neighborhood))
+        {
+            query = query.Where(p => p.Neighborhood != null && p.Neighborhood.ToLower() == request.Neighborhood.ToLower());
+        }
+        
+        // Filter by product condition (Sıfır/İkinci El)
+        if (request.Condition.HasValue)
+        {
+            query = query.Where(p => p.Condition == request.Condition.Value);
+        }
+        
+        // Filter by listing type (Satılık/Kiralık)
+        if (request.ListingType.HasValue)
+        {
+            query = query.Where(p => p.ListingType == request.ListingType.Value);
+        }
+        
+        // Filter by price range
+        if (request.MinPrice.HasValue)
+        {
+            query = query.Where(p => p.Price >= request.MinPrice.Value);
+        }
+        
+        if (request.MaxPrice.HasValue)
+        {
+            query = query.Where(p => p.Price <= request.MaxPrice.Value);
         }
 
         // Filter by category (if provided)
@@ -61,7 +100,13 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             }
         }
 
+        // Get total count before pagination
+        var totalCount = await query.CountAsync(cancellationToken);
+
         var servicesData = await query
+            .OrderByDescending(p => p.CreatedDate)
+            .Skip((request.Index - 1) * request.Size)
+            .Take(request.Size)
             .Select(p => new
             {
                 Id = p.Id,
@@ -71,7 +116,12 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
                 Price = p.Price,
                 SellerId = p.SellerId,
                 ViewCount = p.ViewCount,
-                EstimatedEndDay = p.EstimatedEndDay
+                EstimatedEndDay = p.EstimatedEndDay,
+                City = p.City,
+                District = p.District,
+                Neighborhood = p.Neighborhood,
+                Condition = p.Condition,
+                ListingType = p.ListingType
             })
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -85,10 +135,21 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             Price = new Amount(p.Price).ToInt(),
             SellerId = p.SellerId,
             ViewCount = p.ViewCount,
-            EstimatedEndDay = p.EstimatedEndDay
+            EstimatedEndDay = p.EstimatedEndDay,
+            City = p.City,
+            District = p.District,
+            Neighborhood = p.Neighborhood,
+            Condition = (int)p.Condition,
+            ListingType = (int)p.ListingType
         }).ToList();
         
-        return new GetServicesByFilterQueryResult() { Services = services }.ReturnOk();
+        return new GetServicesByFilterQueryResult() 
+        { 
+            Services = services,
+            TotalCount = totalCount,
+            Index = request.Index,
+            Size = request.Size
+        }.ReturnOk();
     }
 
     private static string[] ParseImageUrls(string? imageUrls)

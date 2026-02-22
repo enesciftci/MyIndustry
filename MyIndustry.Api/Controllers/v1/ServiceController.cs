@@ -11,6 +11,7 @@ using MyIndustry.ApplicationService.Handler.Service.GetServicesBySearchTermQuery
 using MyIndustry.ApplicationService.Handler.Service.GetServicesBySellerIdQuery;
 using MyIndustry.ApplicationService.Handler.Service.IncreaseServiceViewCountCommand;
 using MyIndustry.ApplicationService.Handler.Service.UpdateServiceByIdCommand;
+using MyIndustry.Domain.Aggregate.ValueObjects;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -37,9 +38,13 @@ public class ServiceController : BaseController
         [FromForm] int price,
         [FromForm] int estimatedDay,
         [FromForm] Guid categoryId,
-        // [FromForm] Guid subCategoryId,
         [FromForm] List<IFormFile> images,
-        CancellationToken cancellationToken)
+        [FromForm] string? city,
+        [FromForm] string? district,
+        [FromForm] string? neighborhood,
+        [FromForm] int condition = 0,
+        [FromForm] int listingType = 0,
+        CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Creating service: Title={Title}, CategoryId={CategoryId}, SellerId={SellerId}, ImageCount={ImageCount}", 
             title, categoryId, GetUserId(), images?.Count ?? 0);
@@ -99,9 +104,13 @@ public class ServiceController : BaseController
             Price = price,
             EstimatedEndDay = estimatedDay,
             CategoryId = categoryId,
-            // SubCategoryId = subCategoryId,
             SellerId = GetUserId(),
-            ImageUrls = string.Join(',', urls)
+            ImageUrls = string.Join(',', urls),
+            City = city,
+            District = district,
+            Neighborhood = neighborhood,
+            Condition = (ProductCondition)condition,
+            ListingType = (ListingType)listingType
         };
         
         _logger.LogInformation("Sending CreateServiceCommand: SellerId={SellerId}, CategoryId={CategoryId}", command.SellerId, command.CategoryId);

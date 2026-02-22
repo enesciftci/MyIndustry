@@ -324,10 +324,19 @@ namespace MyIndustry.Repository.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<byte>("Condition")
+                        .HasColumnType("smallint");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("District")
                         .HasColumnType("text");
 
                     b.Property<int>("EstimatedEndDay")
@@ -342,14 +351,23 @@ namespace MyIndustry.Repository.Migrations
                     b.Property<bool>("IsApproved")
                         .HasColumnType("boolean");
 
+                    b.Property<byte>("ListingType")
+                        .HasColumnType("smallint");
+
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Neighborhood")
+                        .HasColumnType("text");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
                     b.Property<Guid>("SellerId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("SuspensionReason")
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");

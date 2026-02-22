@@ -1,3 +1,5 @@
+using MyIndustry.Domain.Aggregate.ValueObjects;
+
 namespace MyIndustry.Domain.Aggregate;
 
 // verilen servis ya da hizmet
@@ -14,6 +16,19 @@ public class Service : Entity
     public Guid CategoryId { get; set; }
     public bool IsApproved { get; set; }
     public Guid ApprovedBy { get; set; }
+    
+    // Location fields
+    public string? City { get; set; }          // Şehir
+    public string? District { get; set; }       // İlçe
+    public string? Neighborhood { get; set; }   // Mahalle
+    
+    // Product condition and listing type
+    public ProductCondition Condition { get; set; } = ProductCondition.New;  // Sıfır/İkinci El
+    public ListingType ListingType { get; set; } = ListingType.ForSale;      // Satılık/Kiralık
+    
+    // Suspension
+    public string? SuspensionReason { get; set; }
+    
     public Category Category { get; set; }
     public ICollection<ServiceViewLog> ServiceViewLogs { get; set; }
     public ICollection<Favorite> Favorites { get; set; }

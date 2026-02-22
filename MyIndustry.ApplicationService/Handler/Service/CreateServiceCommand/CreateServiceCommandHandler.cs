@@ -58,7 +58,12 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
             ImageUrls = request.ImageUrls,
             EstimatedEndDay = request.EstimatedEndDay,
             CategoryId = request.CategoryId,
-            IsActive = true
+            IsActive = true,
+            City = request.City,
+            District = request.District,
+            Neighborhood = request.Neighborhood,
+            Condition = request.Condition,
+            ListingType = request.ListingType
         }, cancellationToken);
 
         seller.SellerSubscription.DecreaseRemainingPostQuota();

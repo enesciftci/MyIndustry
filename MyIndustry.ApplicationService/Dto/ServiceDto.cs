@@ -15,4 +15,13 @@ public class ServiceDto
     public DateTime? CreatedDate { get; set; }
     public SellerDto Seller { get; set; }
     public List<CategoryBreadcrumbDto> CategoryBreadcrumbs { get; set; }
+    
+    // Location fields
+    public string? City { get; set; }
+    public string? District { get; set; }
+    public string? Neighborhood { get; set; }
+    
+    // Product condition and listing type
+    public int Condition { get; set; }      // 0=Sıfır, 1=İkinci El
+    public int ListingType { get; set; }    // 0=Satılık, 1=Kiralık
 }
