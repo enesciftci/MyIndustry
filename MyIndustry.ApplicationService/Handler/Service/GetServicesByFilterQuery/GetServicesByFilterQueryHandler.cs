@@ -71,14 +71,18 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
         }
         
         // Filter by price range
+        // Note: Prices are stored in kuruş (cents), but filter values come in TL
+        // So we need to multiply by 100 to convert TL to kuruş
         if (request.MinPrice.HasValue)
         {
-            query = query.Where(p => p.Price >= request.MinPrice.Value);
+            var minPriceInKurus = request.MinPrice.Value * 100;
+            query = query.Where(p => p.Price >= minPriceInKurus);
         }
         
         if (request.MaxPrice.HasValue)
         {
-            query = query.Where(p => p.Price <= request.MaxPrice.Value);
+            var maxPriceInKurus = request.MaxPrice.Value * 100;
+            query = query.Where(p => p.Price <= maxPriceInKurus);
         }
 
         // Filter by category (if provided)
