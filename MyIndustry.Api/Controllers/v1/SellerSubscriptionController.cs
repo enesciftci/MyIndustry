@@ -1,6 +1,7 @@
 using MediatR;
 using MyIndustry.ApplicationService.Handler.SellerSubscription.CreateSellerSubscriptionCommand;
 using MyIndustry.ApplicationService.Handler.SellerSubscription.GetSellerSubscriptionQuery;
+using MyIndustry.ApplicationService.Handler.SellerSubscription.UpgradeSellerSubscriptionCommand;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -29,5 +30,12 @@ public class SellerSubscriptionController : BaseController
     {
         sellerSubscriptionCommand.SellerId = GetUserId();
         return CreateResponse(await _mediator.Send(sellerSubscriptionCommand, cancellationToken));
+    }
+
+    [HttpPost("upgrade")]
+    public async Task<IActionResult> Upgrade([FromBody] UpgradeSellerSubscriptionCommand upgradeCommand, CancellationToken cancellationToken)
+    {
+        upgradeCommand.SellerId = GetUserId();
+        return CreateResponse(await _mediator.Send(upgradeCommand, cancellationToken));
     }
 }
