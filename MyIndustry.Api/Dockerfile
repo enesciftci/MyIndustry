@@ -29,4 +29,6 @@ RUN dotnet publish "./MyIndustry.Api.csproj" -c $BUILD_CONFIGURATION -o /app/pub
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# Copy location data
+COPY --from=build /src/data/locations.json /app/data/locations.json
 ENTRYPOINT ["dotnet", "MyIndustry.Api.dll"]

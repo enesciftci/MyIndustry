@@ -430,18 +430,35 @@ public static class DataSeeder
 
         try
         {
-            // JSON dosyasını oku
-            var jsonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "locations.json");
-            
-            // Docker container'da farklı path olabilir
-            if (!File.Exists(jsonPath))
+            // JSON dosyasını oku - birden fazla olası path dene
+            var possiblePaths = new[]
             {
-                jsonPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "locations.json");
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "locations.json"),
+                Path.Combine(Directory.GetCurrentDirectory(), "data", "locations.json"),
+                "/app/data/locations.json",  // Docker container path
+                Path.Combine(AppContext.BaseDirectory, "data", "locations.json")
+            };
+            
+            string? jsonPath = null;
+            foreach (var path in possiblePaths)
+            {
+                Console.WriteLine($"Checking for location data at: {path}");
+                if (File.Exists(path))
+                {
+                    jsonPath = path;
+                    Console.WriteLine($"Found location data at: {path}");
+                    break;
+                }
             }
             
-            if (!File.Exists(jsonPath))
+            if (jsonPath == null)
             {
-                Console.WriteLine($"Location data file not found at: {jsonPath}");
+                Console.WriteLine("Location data file not found at any expected location.");
+                Console.WriteLine("Tried paths:");
+                foreach (var path in possiblePaths)
+                {
+                    Console.WriteLine($"  - {path}");
+                }
                 Console.WriteLine("Skipping location seeding.");
                 return;
             }
