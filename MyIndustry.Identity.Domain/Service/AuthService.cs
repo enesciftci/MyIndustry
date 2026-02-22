@@ -150,7 +150,7 @@ public class AuthService : IAuthService
         var roleClaims = new List<Claim>();
         foreach (var t in roles)
         {
-            roleClaims.Add(new Claim("roles", t));
+            roleClaims.Add(new Claim(ClaimTypes.Role, t));
         }
         var claims = new[]
             {

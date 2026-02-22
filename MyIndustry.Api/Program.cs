@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MyIndustry.Api.Data;
 using MyIndustry.Api.Middleware;
 
@@ -74,7 +75,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidateIssuer = false,
         ValidateAudience = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
