@@ -27,11 +27,17 @@ public class FavoriteController : BaseController
         return CreateResponse(result);
     }
 
-    [HttpDelete("{favoriteId:guid}")]
-    public async Task<IActionResult> DeleteFavorite([FromRoute] Guid favoriteId, CancellationToken cancellationToken)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteFavorite([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var userId = GetUserId();
-        var result = await _mediator.Send(new DeleteFavoriteCommand { FavoriteId = favoriteId, UserId = userId}, cancellationToken);
+        // Support both favoriteId and serviceId - try as favoriteId first, if not found, treat as serviceId
+        var result = await _mediator.Send(new DeleteFavoriteCommand 
+        { 
+            FavoriteId = id, 
+            ServiceId = id, // Also set ServiceId to support deletion by serviceId
+            UserId = userId
+        }, cancellationToken);
         return CreateResponse(result);
     }
     

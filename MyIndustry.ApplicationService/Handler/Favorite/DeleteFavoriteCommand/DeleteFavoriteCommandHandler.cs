@@ -16,9 +16,12 @@ public class DeleteFavoriteCommandHandler : IRequestHandler<DeleteFavoriteComman
 
     public async Task<DeleteFavoriteCommandResult> Handle(DeleteFavoriteCommand request, CancellationToken cancellationToken)
     {
+        // Support both FavoriteId and ServiceId for deletion
+        // If FavoriteId is provided, use it; otherwise use ServiceId
         var favorite = await _favoriteRepository
             .GetAllQuery()
-            .Where(p => p.UserId == request.UserId && p.Id == request.FavoriteId)
+            .Where(p => p.UserId == request.UserId && 
+                (request.FavoriteId != Guid.Empty ? p.Id == request.FavoriteId : p.ServiceId == request.ServiceId))
             .FirstOrDefaultAsync(cancellationToken);
         
         // If favorite doesn't exist, return success (idempotent delete)
