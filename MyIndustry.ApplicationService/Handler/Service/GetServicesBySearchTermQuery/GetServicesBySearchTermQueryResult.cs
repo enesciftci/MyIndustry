@@ -5,4 +5,5 @@ namespace MyIndustry.ApplicationService.Handler.Service.GetServicesBySearchTermQ
 public record GetServicesBySearchTermQueryResult : ResponseBase
 {
     public List<ServiceDto> Services { get; set; }
+    public int TotalCount { get; set; }
 }

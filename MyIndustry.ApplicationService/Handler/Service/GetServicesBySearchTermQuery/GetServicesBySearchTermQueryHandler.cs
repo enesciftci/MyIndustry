@@ -16,11 +16,24 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
 
     public async Task<GetServicesBySearchTermQueryResult> Handle(GetServicesBySearchTermQuery request, CancellationToken cancellationToken)
     {
-        var servicesData = await _servicesRepository
+        var searchTerm = request.Query.ToLower();
+        
+        // Base query with search criteria
+        var baseQuery = _servicesRepository
             .GetAllQuery()
             .Where(p => 
-                (p.Title.Contains(request.Query) || p.Description.Contains(request.Query)) && 
-                p.IsActive)
+                p.IsActive && p.IsApproved &&
+                (p.Title.ToLower().Contains(searchTerm) || 
+                 p.Description.ToLower().Contains(searchTerm) ||
+                 (p.City != null && p.City.ToLower().Contains(searchTerm)) ||
+                 (p.District != null && p.District.ToLower().Contains(searchTerm)) ||
+                 (p.Neighborhood != null && p.Neighborhood.ToLower().Contains(searchTerm))));
+        
+        // Get total count
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        
+        var servicesData = await baseQuery
+            .OrderByDescending(p => p.CreatedDate)
             .Skip((request.Pager.Index - 1) * request.Pager.Size)
             .Take(request.Pager.Size)
             .Select(p => new
@@ -31,7 +44,14 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
                 p.Description,
                 p.ImageUrls,
                 p.SellerId,
-                p.EstimatedEndDay
+                p.EstimatedEndDay,
+                p.ViewCount,
+                p.City,
+                p.District,
+                p.Neighborhood,
+                p.Condition,
+                p.ListingType,
+                p.CreatedDate
             })
             .ToListAsync(cancellationToken: cancellationToken);
 
@@ -43,10 +63,17 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
             Description = p.Description,
             ImageUrls = ParseImageUrls(p.ImageUrls),
             SellerId = p.SellerId,
-            EstimatedEndDay = p.EstimatedEndDay
+            EstimatedEndDay = p.EstimatedEndDay,
+            ViewCount = p.ViewCount,
+            City = p.City,
+            District = p.District,
+            Neighborhood = p.Neighborhood,
+            Condition = (int)p.Condition,
+            ListingType = (int)p.ListingType,
+            CreatedDate = p.CreatedDate
         }).ToList();
 
-        return new GetServicesBySearchTermQueryResult() {Services = services}.ReturnOk();
+        return new GetServicesBySearchTermQueryResult() { Services = services, TotalCount = totalCount }.ReturnOk();
     }
 
     private static string[] ParseImageUrls(string? imageUrls)
