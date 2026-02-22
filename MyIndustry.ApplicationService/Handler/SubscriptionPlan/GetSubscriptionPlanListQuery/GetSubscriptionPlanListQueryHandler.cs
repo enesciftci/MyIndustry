@@ -36,6 +36,8 @@ public class GetSubscriptionPlanListQueryHandler : IRequestHandler<GetSubscripti
         }
 
         var subscriptionPlans = await subscriptionPlansQuery
+            .OrderBy(p => p.MonthlyPrice) // Fiyata göre sırala (Free -> Standard -> Premium -> Corporate)
+            .ThenBy(p => (int)p.SubscriptionType) // Aynı fiyat varsa enum sırasına göre
             .Select(p => new SubscriptionPlanDto
             {
                 Id = p.Id,
