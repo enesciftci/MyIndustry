@@ -108,7 +108,12 @@ public static class DataSeeder
             ("Hortum ve Bağlantı", "Endüstriyel hortumlar ve bağlantı elemanları"),
             ("Tarım ve Gıda", "Tarım makineleri ve gıda ekipmanları"),
             ("Yapı ve İnşaat", "Yapı malzemeleri ve inşaat ekipmanları"),
-            ("Ölçü ve Kontrol", "Ölçüm aletleri ve kontrol sistemleri")
+            ("Ölçü ve Kontrol", "Ölçüm aletleri ve kontrol sistemleri"),
+            ("Endüstriyel Mutfak", "Endüstriyel mutfak ekipmanları"),
+            ("Tekstil Makineleri", "Tekstil ve konfeksiyon makineleri"),
+            ("Matbaa ve Baskı", "Matbaa ve baskı makineleri"),
+            ("Plastik ve Kauçuk", "Plastik ve kauçuk işleme makineleri"),
+            ("Ahşap İşleme", "Ahşap işleme makineleri")
         };
 
         foreach (var (name, desc) in mainCategoryNames)
@@ -253,7 +258,24 @@ public static class DataSeeder
             
             ("Yapı ve İnşaat", new[] { "İnşaat Makineleri", "İskele ve Kalıp", "Beton Ekipmanları", "Yapı Malzemeleri" }),
             
-            ("Ölçü ve Kontrol", new[] { "Ölçüm Aletleri", "Kalibrasyon Cihazları", "Test ve Muayene", "Tartı Sistemleri" })
+            ("Ölçü ve Kontrol", new[] { "Ölçüm Aletleri", "Kalibrasyon Cihazları", "Test ve Muayene", "Tartı Sistemleri" }),
+            
+            // Sahibinden.com kategorileri
+            ("Endüstriyel Mutfak", new[] { "Fırınlar", "Bulaşık Makineleri", "Soğutucular ve Buzluklar", "Kızartma Makineleri", 
+                "Izgara ve Tost Makineleri", "Çay ve Kahve Makineleri", "Et İşleme Makineleri", "Hamur İşleme Makineleri", 
+                "Servis Ekipmanları", "Bain-Marie ve Reşolar" }),
+            
+            ("Tekstil Makineleri", new[] { "Dokuma Makineleri", "Örme Makineleri", "Dikiş Makineleri", "Kesim Makineleri",
+                "Nakış Makineleri", "Baskı Makineleri", "Ütü ve Pres Makineleri", "Yıkama Makineleri" }),
+            
+            ("Matbaa ve Baskı", new[] { "Ofset Baskı Makineleri", "Dijital Baskı Makineleri", "Flekso Baskı Makineleri",
+                "Serigrafi Makineleri", "Cilt Makineleri", "Kesim ve Katlama Makineleri", "Laminasyon Makineleri" }),
+            
+            ("Plastik ve Kauçuk", new[] { "Plastik Enjeksiyon Makineleri", "Şişirme Makineleri", "Ekstrüzyon Makineleri",
+                "Termoform Makineleri", "Kauçuk Presleri", "Granül Makineleri", "Karıştırıcı ve Kırıcılar" }),
+            
+            ("Ahşap İşleme", new[] { "Ahşap Torna", "Ahşap Freze", "Planya Makineleri", "Zımpara Makineleri",
+                "Panel Ebatlama", "Kenar Bantlama", "CNC Router", "Testere Makineleri" })
         };
     }
 
@@ -308,7 +330,27 @@ public static class DataSeeder
                 "Zamanlama Kayışları", "Gates", "Optibelt", "Continental" }),
             
             // Redüktör Markaları
-            ("Redüktörler", new[] { "SEW", "Nord", "Bonfiglioli", "Rossi", "Siti", "Yılmaz Redüktör" })
+            ("Redüktörler", new[] { "SEW", "Nord", "Bonfiglioli", "Rossi", "Siti", "Yılmaz Redüktör" }),
+            
+            // İş Makineleri Alt Kategorileri (Sahibinden.com tarzı)
+            ("Forklift", new[] { "Dizel Forklift", "Elektrikli Forklift", "LPG Forklift", "Reach Truck", "Stacker", "Sipariş Toplama" }),
+            
+            ("Vinç ve Kaldırma", new[] { "Mobil Vinç", "Kule Vinç", "Köprü Vinç", "Portal Vinç", "Caraskal", "Platform", "Ceraskal" }),
+            
+            ("Ekskavatör", new[] { "Paletli Ekskavatör", "Lastik Tekerlekli Ekskavatör", "Mini Ekskavatör", "Uzun Bom Ekskavatör" }),
+            
+            ("Yükleyici", new[] { "Beko Loder", "Lastik Tekerlekli Yükleyici", "Mini Yükleyici", "Skid Steer", "Teleskopik Yükleyici" }),
+            
+            // Tarım Makineleri Alt Kategorileri
+            ("Tarım Makineleri", new[] { "Traktör", "Biçerdöver", "Pulluk", "Ekim Makinesi", "Gübre Makinesi", "İlaçlama Makinesi",
+                "Römork", "Balya Makinesi", "Sulama Sistemleri" }),
+            
+            // Jeneratör Markaları
+            ("Jeneratör", new[] { "Dizel Jeneratör", "Benzinli Jeneratör", "Doğalgaz Jeneratör", "Portatif Jeneratör",
+                "Caterpillar", "Cummins", "Perkins", "FG Wilson", "Aksa", "Teksan" }),
+            
+            // Kompresör Markaları
+            ("Kompresör", new[] { "Atlas Copco", "Kaeser", "Ingersoll Rand", "Gardner Denver", "Boge", "Fini" })
         };
     }
 
@@ -360,6 +402,11 @@ public static class DataSeeder
         var tarim = mainCategories.First(c => c.Name == "Tarım ve Gıda");
         var yapi = mainCategories.First(c => c.Name == "Yapı ve İnşaat");
         var olcu = mainCategories.First(c => c.Name == "Ölçü ve Kontrol");
+        var endustriyelMutfak = mainCategories.FirstOrDefault(c => c.Name == "Endüstriyel Mutfak");
+        var tekstil = mainCategories.FirstOrDefault(c => c.Name == "Tekstil Makineleri");
+        var matbaa = mainCategories.FirstOrDefault(c => c.Name == "Matbaa ve Baskı");
+        var plastik = mainCategories.FirstOrDefault(c => c.Name == "Plastik ve Kauçuk");
+        var ahsap = mainCategories.FirstOrDefault(c => c.Name == "Ahşap İşleme");
 
         // ===== MAKİNA ALT KATEGORİLERİ =====
         subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "CNC Makinaları", ParentId = makina.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
@@ -462,6 +509,71 @@ public static class DataSeeder
         subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kalibrasyon Cihazları", ParentId = olcu.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
         subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Test ve Muayene", ParentId = olcu.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
         subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Tartı Sistemleri", ParentId = olcu.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+
+        // ===== ENDÜSTRİYEL MUTFAK ALT KATEGORİLERİ (Sahibinden.com) =====
+        if (endustriyelMutfak != null)
+        {
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Fırınlar", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Bulaşık Makineleri", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Soğutucular ve Buzluklar", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kızartma Makineleri", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Izgara ve Tost Makineleri", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Çay ve Kahve Makineleri", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Et İşleme Makineleri", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Hamur İşleme Makineleri", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Servis Ekipmanları", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Bain-Marie ve Reşolar", ParentId = endustriyelMutfak.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        }
+
+        // ===== TEKSTİL MAKİNELERİ ALT KATEGORİLERİ =====
+        if (tekstil != null)
+        {
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Dokuma Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Örme Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Dikiş Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kesim Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Nakış Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Tekstil Baskı Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ütü ve Pres Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Yıkama Makineleri", ParentId = tekstil.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        }
+
+        // ===== MATBAA VE BASKI ALT KATEGORİLERİ =====
+        if (matbaa != null)
+        {
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ofset Baskı Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Dijital Baskı Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Flekso Baskı Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Serigrafi Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Cilt Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kesim ve Katlama Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Laminasyon Makineleri", ParentId = matbaa.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        }
+
+        // ===== PLASTİK VE KAUÇUK ALT KATEGORİLERİ =====
+        if (plastik != null)
+        {
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Plastik Enjeksiyon Makineleri", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Şişirme Makineleri", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ekstrüzyon Makineleri", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Termoform Makineleri", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kauçuk Presleri", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Granül Makineleri", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Karıştırıcı ve Kırıcılar", ParentId = plastik.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        }
+
+        // ===== AHŞAP İŞLEME ALT KATEGORİLERİ =====
+        if (ahsap != null)
+        {
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ahşap Torna", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ahşap Freze", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Planya Makineleri", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Zımpara Makineleri", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Panel Ebatlama", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Kenar Bantlama", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ahşap CNC Router", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+            subCategories.Add(new Category { Id = Guid.NewGuid(), Name = "Ahşap Testere Makineleri", ParentId = ahsap.Id, IsActive = true, CreatedDate = DateTime.UtcNow });
+        }
 
         return subCategories;
     }
