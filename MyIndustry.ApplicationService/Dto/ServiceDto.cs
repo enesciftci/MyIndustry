@@ -30,4 +30,7 @@ public class ServiceDto
     
     // Featured listing
     public bool IsFeatured { get; set; }
+
+    /// <summary>İlanın yayından kalkacağı tarih. Paketteki PostDurationInDays ile belirlenir.</summary>
+    public DateTime? ExpiryDate { get; set; }
 }

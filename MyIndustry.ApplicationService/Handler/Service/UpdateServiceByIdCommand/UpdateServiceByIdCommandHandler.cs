@@ -8,15 +8,18 @@ public class UpdateServiceByIdCommandHandler : IRequestHandler<UpdateServiceById
 {
     private readonly IGenericRepository<Domain.Aggregate.Service> _serviceRepository;
     private readonly IGenericRepository<Domain.Aggregate.Seller> _sellerRepository;
+    private readonly IGenericRepository<Domain.Aggregate.Category> _categoryRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public UpdateServiceByIdCommandHandler(
         IGenericRepository<Domain.Aggregate.Service> serviceRepository, 
         IGenericRepository<Domain.Aggregate.Seller> sellerRepository,
+        IGenericRepository<Domain.Aggregate.Category> categoryRepository,
         IUnitOfWork unitOfWork)
     {
         _serviceRepository = serviceRepository;
         _sellerRepository = sellerRepository;
+        _categoryRepository = categoryRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -52,11 +55,25 @@ public class UpdateServiceByIdCommandHandler : IRequestHandler<UpdateServiceById
         
         service.Title = request.ServiceDto.Title;
         service.Description = request.ServiceDto.Description;
-        service.ImageUrls = request.ServiceDto.ImageUrls.ToString();
+        if (request.ServiceDto.ImageUrls != null)
+        {
+            service.ImageUrls = request.ServiceDto.ImageUrls.Length > 0
+                ? System.Text.Json.JsonSerializer.Serialize(request.ServiceDto.ImageUrls)
+                : string.Empty;
+        }
         service.Price = new Amount(request.ServiceDto.Price).ToDecimal();
         service.EstimatedEndDay = request.ServiceDto.EstimatedEndDay;
         service.IsFeatured = request.ServiceDto.IsFeatured;
-        
+
+        if (request.ServiceDto.CategoryId != Guid.Empty)
+        {
+            var categoryExists = await _categoryRepository.GetAllQuery()
+                .AnyAsync(c => c.Id == request.ServiceDto.CategoryId && c.IsActive, cancellationToken);
+            if (!categoryExists)
+                throw new BusinessRuleException("Geçersiz kategori.");
+            service.CategoryId = request.ServiceDto.CategoryId;
+        }
+
         // Update SEO fields if title changed
         if (service.Title != request.ServiceDto.Title || string.IsNullOrEmpty(service.Slug))
         {
@@ -73,9 +90,8 @@ public class UpdateServiceByIdCommandHandler : IRequestHandler<UpdateServiceById
         // Update meta fields
         var listingTypeText = request.ServiceDto.ListingType == 0 ? "Satılık" : "Kiralık"; // 0=ForSale, 1=ForRent
         service.MetaTitle = $"{request.ServiceDto.Title} - {listingTypeText} | MyIndustry";
-        service.MetaDescription = request.ServiceDto.Description.Length > 160 
-            ? request.ServiceDto.Description.Substring(0, 157) + "..." 
-            : request.ServiceDto.Description;
+        var desc = request.ServiceDto.Description ?? "";
+        service.MetaDescription = desc.Length > 160 ? desc.Substring(0, 157) + "..." : desc;
 
         _serviceRepository.Update(service);
         if (service.Seller != null)

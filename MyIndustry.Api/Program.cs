@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using MyIndustry.Api.Data;
 using MyIndustry.Api.Middleware;
+using MyIndustry.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,24 @@ builder.Services
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddSingleton<ISecurityProvider, SecurityProvider>();
+
+// Image storage: R2 (S3) veya local fallback
+var r2Options = new R2Options();
+builder.Configuration.GetSection(R2Options.SectionName).Bind(r2Options);
+var useR2 = !string.IsNullOrWhiteSpace(r2Options.AccountId)
+    && !string.IsNullOrWhiteSpace(r2Options.AccessKeyId)
+    && !string.IsNullOrWhiteSpace(r2Options.SecretAccessKey)
+    && !string.IsNullOrWhiteSpace(r2Options.PublicBaseUrl);
+if (useR2)
+{
+    builder.Services.AddSingleton(r2Options);
+    builder.Services.AddSingleton<IImageStorageService, R2ImageStorageService>();
+}
+else
+{
+    builder.Services.AddSingleton<IImageStorageService, LocalImageStorageService>();
+}
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
@@ -99,6 +118,10 @@ builder.Services.AddMediatR(configuration =>
 {
     configuration.RegisterServicesFromAssembly(typeof(MyIndustry.ApplicationService.Handler.Seller.CreateSellerCommand.CreateSellerCommandHandler).Assembly);
 });
+
+// Süresi dolan ilanları pasif yapan arka plan servisi (paketteki ilan süresi / PostDurationInDays)
+builder.Services.AddHostedService<MyIndustry.Api.BackgroundServices.ExpiredListingsDeactivationService>();
+
 var app = builder.Build();
 
 // Auto-create database tables and run migrations

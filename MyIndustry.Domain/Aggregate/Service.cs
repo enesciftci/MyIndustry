@@ -38,6 +38,9 @@ public class Service : Entity
     // Featured listing
     public bool IsFeatured { get; set; }
     
+    /// <summary>İlanın yayından kalkacağı tarih. Paketteki PostDurationInDays ile ilan oluşturulurken set edilir. Null = eski ilanlar (süresiz kabul).</summary>
+    public DateTime? ExpiryDate { get; set; }
+    
     // SEO fields
     public string? Slug { get; set; }
     public string? MetaTitle { get; set; }

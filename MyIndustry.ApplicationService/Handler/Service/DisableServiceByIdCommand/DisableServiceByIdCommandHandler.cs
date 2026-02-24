@@ -21,19 +21,14 @@ public class DisableServiceByIdCommandHandler : IRequestHandler<DisableServiceBy
 
     public async Task<DisableServiceByIdCommandResult> Handle(DisableServiceByIdCommand request, CancellationToken cancellationToken)
     {
-        var seller = await _sellerRepository.GetById(request.SellerId, cancellationToken);
-        if (seller == null)
-            throw new BusinessRuleException("Satıcı bulunamadı");
-
         var service = await _serviceRepository.GetById(request.ServiceId, cancellationToken);
 
-        if (service is not { IsActive: true })
-        {
-            throw new BusinessRuleException("Servis bulunamadı ya da zaten pasif");
-        }
-        
-        seller.IsActive = false;
-        
+        if (service == null || service.SellerId != request.SellerId)
+            throw new BusinessRuleException("Servis bulunamadı.");
+        if (!service.IsActive)
+            throw new BusinessRuleException("İlan zaten pasif.");
+
+        service.IsActive = false;
         _serviceRepository.Update(service);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

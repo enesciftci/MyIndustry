@@ -17,12 +17,13 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
     public async Task<GetServicesBySearchTermQueryResult> Handle(GetServicesBySearchTermQuery request, CancellationToken cancellationToken)
     {
         var searchTerm = request.Query.ToLower();
+        var now = DateTime.UtcNow;
         
-        // Base query with search criteria
+        // Base query with search criteria (süresi dolmamış ilanlar)
         var baseQuery = _servicesRepository
             .GetAllQuery()
             .Where(p => 
-                p.IsActive && p.IsApproved &&
+                p.IsActive && p.IsApproved && (p.ExpiryDate == null || p.ExpiryDate > now) &&
                 (p.Title.ToLower().Contains(searchTerm) || 
                  p.Description.ToLower().Contains(searchTerm) ||
                  (p.City != null && p.City.ToLower().Contains(searchTerm)) ||

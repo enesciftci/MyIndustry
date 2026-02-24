@@ -41,7 +41,8 @@ public class
                 p.IsActive,
                 p.IsApproved,
                 p.CreatedDate,
-                p.IsFeatured
+                p.IsFeatured,
+                p.ExpiryDate
             })
             .ToListAsync(cancellationToken);
 
@@ -68,7 +69,8 @@ public class
             IsActive = p.IsActive,
             IsApproved = p.IsApproved,
             CreatedDate = p.CreatedDate,
-            IsFeatured = p.IsFeatured
+            IsFeatured = p.IsFeatured,
+            ExpiryDate = p.ExpiryDate
         }).ToList();
 
         return new GetServicesBySellerIdQueryResult() {Services = services}.ReturnOk();

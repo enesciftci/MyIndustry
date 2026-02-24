@@ -18,8 +18,9 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
 
     public async Task<GetServicesByFilterQueryResult> Handle(GetServicesByFilterQuery request, CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
         var query = _serviceRepository.GetAllQuery()
-            .Where(p => p.IsApproved && p.IsActive);
+            .Where(p => p.IsApproved && p.IsActive && (p.ExpiryDate == null || p.ExpiryDate > now));
 
         // Search by service title, description, or seller/company name
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))

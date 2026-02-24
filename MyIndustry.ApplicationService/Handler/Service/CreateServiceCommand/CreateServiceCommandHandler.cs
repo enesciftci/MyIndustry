@@ -33,7 +33,8 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
     {
         var seller = await _sellerRepository
             .GetAllQuery()
-            .Include(p => p.SellerSubscriptions)
+            .Include(p => p.SellerSubscriptions!)
+                .ThenInclude(ss => ss.SubscriptionPlan)
             .FirstOrDefaultAsync(p => p.Id == request.SellerId, cancellationToken);
 
         if (seller == null)
@@ -45,6 +46,10 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
         
         if (activeSubscription.RemainingPostQuota <= 0)
             throw new BusinessRuleException("Kalan ilan kotası dolu. Lütfen abonelik planınızı yükseltin.");
+
+        var plan = activeSubscription.SubscriptionPlan;
+        var postDurationDays = plan?.PostDurationInDays ?? 365; // Varsayılan 1 yıl
+        var expiryDate = DateTime.UtcNow.AddDays(postDurationDays);
 
         // Check featured quota if trying to create featured listing
         if (request.IsFeatured)
@@ -94,6 +99,7 @@ public class CreateServiceCommandHandler : IRequestHandler<CreateServiceCommand,
             EstimatedEndDay = request.EstimatedEndDay,
             CategoryId = request.CategoryId,
             IsActive = true,
+            ExpiryDate = expiryDate, // İlan süresi paketteki PostDurationInDays ile belirlenir
             City = request.City,
             District = request.District,
             Neighborhood = request.Neighborhood,

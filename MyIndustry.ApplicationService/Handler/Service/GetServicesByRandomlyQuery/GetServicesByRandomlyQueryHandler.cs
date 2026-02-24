@@ -16,9 +16,10 @@ public class GetServicesByRandomlyQueryHandler : IRequestHandler<GetServicesByRa
 
     public async Task<GetServicesByRandomlyQueryResult> Handle(GetServicesByRandomlyQuery request, CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
         var servicesData = await _servicesRepository
             .GetAllQuery()
-            .Where(p => p.IsActive && p.IsApproved)
+            .Where(p => p.IsActive && p.IsApproved && (p.ExpiryDate == null || p.ExpiryDate > now))
             .OrderByDescending(p => p.IsFeatured)  // Featured listings first
             .ThenByDescending(p => p.CreatedDate)  // Then by creation date
             .Skip((request.Pager.Index - 1) * request.Pager.Size)

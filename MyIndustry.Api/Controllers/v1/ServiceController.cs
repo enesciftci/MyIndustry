@@ -4,6 +4,7 @@ using MyIndustry.ApplicationService.Handler;
 using MyIndustry.ApplicationService.Handler.Service.CreateServiceCommand;
 using MyIndustry.ApplicationService.Handler.Service.DeleteServiceByIdCommand;
 using MyIndustry.ApplicationService.Handler.Service.DisableServiceByIdCommand;
+using MyIndustry.ApplicationService.Handler.Service.ReactivateOrExtendExpiryCommand;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByFilterQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServicesByIdQuery;
 using MyIndustry.ApplicationService.Handler.Service.GetServiceBySlugQuery;
@@ -12,6 +13,7 @@ using MyIndustry.ApplicationService.Handler.Service.GetServicesBySearchTermQuery
 using MyIndustry.ApplicationService.Handler.Service.GetServicesBySellerIdQuery;
 using MyIndustry.ApplicationService.Handler.Service.IncreaseServiceViewCountCommand;
 using MyIndustry.ApplicationService.Handler.Service.UpdateServiceByIdCommand;
+using MyIndustry.Api.Services;
 using MyIndustry.Domain.Aggregate.ValueObjects;
 
 namespace MyIndustry.Api.Controllers.v1;
@@ -21,14 +23,13 @@ namespace MyIndustry.Api.Controllers.v1;
 public class ServiceController : BaseController
 {
     private readonly IMediator _mediator;
-    private readonly IWebHostEnvironment _env;
+    private readonly IImageStorageService _imageStorage;
     private readonly ILogger<ServiceController> _logger;
 
-
-    public ServiceController(IMediator mediator, IWebHostEnvironment env, ILogger<ServiceController> logger)
+    public ServiceController(IMediator mediator, IImageStorageService imageStorage, ILogger<ServiceController> logger)
     {
         _mediator = mediator;
-        _env = env;
+        _imageStorage = imageStorage;
         _logger = logger;
     }
 
@@ -48,53 +49,18 @@ public class ServiceController : BaseController
         [FromForm] bool isFeatured = false,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating service: Title={Title}, CategoryId={CategoryId}, SellerId={SellerId}, ImageCount={ImageCount}", 
+        _logger.LogInformation("Creating service: Title={Title}, CategoryId={CategoryId}, SellerId={SellerId}, ImageCount={ImageCount}",
             title, categoryId, GetUserId(), images?.Count ?? 0);
-        
+
         var urls = new List<string>();
-
-        // Determine the uploads directory - use /app/wwwroot/uploads in production
-        var uploadsPath = _env.WebRootPath != null 
-            ? Path.Combine(_env.WebRootPath, "uploads")
-            : Path.Combine(_env.ContentRootPath, "wwwroot", "uploads");
-        
-        _logger.LogInformation("WebRootPath={WebRootPath}, ContentRootPath={ContentRootPath}, UploadsPath={UploadsPath}", 
-            _env.WebRootPath ?? "null", _env.ContentRootPath, uploadsPath);
-        
-        // Fallback to /tmp/uploads if the standard path doesn't exist or isn't writable
-        if (!Directory.Exists(uploadsPath))
-        {
-            _logger.LogWarning("Uploads path does not exist, attempting to create: {UploadsPath}", uploadsPath);
-            try
-            {
-                Directory.CreateDirectory(uploadsPath);
-                _logger.LogInformation("Created uploads directory: {UploadsPath}", uploadsPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to create uploads directory at {UploadsPath}, falling back to /tmp/uploads", uploadsPath);
-                // If we can't create in the standard location, use /tmp
-                uploadsPath = "/tmp/uploads";
-                Directory.CreateDirectory(uploadsPath);
-                _logger.LogInformation("Using fallback uploads directory: {UploadsPath}", uploadsPath);
-            }
-        }
-
         if (images != null && images.Count > 0)
         {
             foreach (var file in images)
             {
-                _logger.LogInformation("Processing file: {FileName}, Size={Size}", file.FileName, file.Length);
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                var filePath = Path.Combine(uploadsPath, fileName);
-
-                await using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream, cancellationToken);
-                }
-                _logger.LogInformation("File saved: {FilePath}", filePath);
-
-                var url = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
+                _logger.LogInformation("Uploading file: {FileName}, Size={Size}", file.FileName, file.Length);
+                var contentType = file.ContentType ?? "image/jpeg";
+                await using var stream = file.OpenReadStream();
+                var url = await _imageStorage.UploadAsync(stream, file.FileName, contentType, cancellationToken);
                 urls.Add(url);
             }
         }
@@ -158,9 +124,10 @@ public class ServiceController : BaseController
         [FromForm] int price,
         [FromForm] int estimatedDay,
         [FromForm] List<IFormFile> images,
+        [FromForm] Guid? categoryId,
         CancellationToken cancellationToken)
     {
-        foreach (var image in images)
+        foreach (var image in images ?? [])
         {
             using var ms = new MemoryStream();
             await image.CopyToAsync(ms, cancellationToken);
@@ -185,7 +152,7 @@ public class ServiceController : BaseController
                 Price = price,
                 EstimatedEndDay = estimatedDay,
                 IsFeatured = isFeatured,
-                // ImageUrls = image,
+                CategoryId = categoryId ?? Guid.Empty,
                 SellerId = GetUserId()
             }
         };
@@ -211,14 +178,31 @@ public class ServiceController : BaseController
         return CreateResponse(await _mediator.Send(command, cancellationToken));
     }
 
+    /// <summary>
+    /// İlanı pasif yap (body yok veya reactivateOrExtendExpiry: false) veya ilanı tekrar aktif yapıp bitiş tarihini güncelle (reactivateOrExtendExpiry: true, kotadan düşer).
+    /// </summary>
     [HttpPatch("{id:guid}")]
-    public async Task<IActionResult> DisableServiceById(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> PatchService(Guid id, [FromBody] PatchServiceRequest? body, CancellationToken cancellationToken)
     {
-        return CreateResponse(await _mediator.Send(new DisableServiceByIdCommand()
+        var sellerId = GetUserId();
+        if (body?.ReactivateOrExtendExpiry == true)
         {
-            SellerId = GetUserId(),
-            ServiceId = id
+            return CreateResponse(await _mediator.Send(new ReactivateOrExtendExpiryCommand
+            {
+                ServiceId = id,
+                SellerId = sellerId
+            }, cancellationToken));
+        }
+        return CreateResponse(await _mediator.Send(new DisableServiceByIdCommand
+        {
+            ServiceId = id,
+            SellerId = sellerId
         }, cancellationToken));
+    }
+
+    public class PatchServiceRequest
+    {
+        public bool ReactivateOrExtendExpiry { get; set; }
     }
     
     [HttpDelete("{id:guid}")]
