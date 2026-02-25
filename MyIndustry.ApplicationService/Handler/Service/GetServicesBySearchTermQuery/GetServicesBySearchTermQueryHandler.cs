@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
+using MyIndustry.ApplicationService.Helpers;
 using MyIndustry.Domain.ValueObjects;
 using System.Text.Json;
 
@@ -16,19 +17,20 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
 
     public async Task<GetServicesBySearchTermQueryResult> Handle(GetServicesBySearchTermQuery request, CancellationToken cancellationToken)
     {
-        var searchTerm = request.Query.ToLower();
+        var variants = SearchTermHelper.GetSearchVariants(request.Query);
+        if (variants.Count == 0)
+            return new GetServicesBySearchTermQueryResult() { Services = [], TotalCount = 0 }.ReturnOk();
+
         var now = DateTime.UtcNow;
-        
-        // Base query with search criteria (süresi dolmamış ilanlar)
         var baseQuery = _servicesRepository
             .GetAllQuery()
-            .Where(p => 
+            .Where(p =>
                 p.IsActive && p.IsApproved && (p.ExpiryDate == null || p.ExpiryDate > now) &&
-                (p.Title.ToLower().Contains(searchTerm) || 
-                 p.Description.ToLower().Contains(searchTerm) ||
-                 (p.City != null && p.City.ToLower().Contains(searchTerm)) ||
-                 (p.District != null && p.District.ToLower().Contains(searchTerm)) ||
-                 (p.Neighborhood != null && p.Neighborhood.ToLower().Contains(searchTerm))));
+                (variants.Any(v => p.Title.ToLower().Contains(v)) ||
+                 variants.Any(v => p.Description.ToLower().Contains(v)) ||
+                 (p.City != null && variants.Any(v => p.City.ToLower().Contains(v))) ||
+                 (p.District != null && variants.Any(v => p.District.ToLower().Contains(v))) ||
+                 (p.Neighborhood != null && variants.Any(v => p.Neighborhood.ToLower().Contains(v)))));
         
         // Get total count
         var totalCount = await baseQuery.CountAsync(cancellationToken);

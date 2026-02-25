@@ -24,6 +24,9 @@ public sealed record GetServicesByFilterQuery : IRequest<GetServicesByFilterQuer
     // Price range filters
     public decimal? MinPrice { get; set; }
     public decimal? MaxPrice { get; set; }
+
+    /// <summary>Belirli bir satıcının ilanlarını filtreler.</summary>
+    public Guid? SellerId { get; set; }
     
     // Pagination
     public int Index { get; set; } = 1;

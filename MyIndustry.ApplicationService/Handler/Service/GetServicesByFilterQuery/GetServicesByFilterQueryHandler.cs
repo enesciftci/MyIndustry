@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Dto;
+using MyIndustry.ApplicationService.Helpers;
 using MyIndustry.Domain.ValueObjects;
 using System.Text.Json;
 
@@ -22,14 +23,17 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
         var query = _serviceRepository.GetAllQuery()
             .Where(p => p.IsApproved && p.IsActive && (p.ExpiryDate == null || p.ExpiryDate > now));
 
-        // Search by service title, description, or seller/company name
+        // Search by service title, description, or seller/company name (with Turkish + spelling variants)
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            var searchLower = request.SearchTerm.ToLower();
-            query = query.Where(p => 
-                p.Title.ToLower().Contains(searchLower) || 
-                p.Description.ToLower().Contains(searchLower) ||
-                p.Seller.Title.ToLower().Contains(searchLower));
+            var variants = SearchTermHelper.GetSearchVariants(request.SearchTerm);
+            if (variants.Count > 0)
+            {
+                query = query.Where(p =>
+                    variants.Any(v => p.Title.ToLower().Contains(v)) ||
+                    variants.Any(v => p.Description.ToLower().Contains(v)) ||
+                    variants.Any(v => p.Seller.Title.ToLower().Contains(v)));
+            }
         }
 
         // Filter by seller address city/district (legacy)
@@ -86,6 +90,9 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             query = query.Where(p => p.Price <= maxPriceInKurus);
         }
 
+        if (request.SellerId.HasValue && request.SellerId.Value != Guid.Empty)
+            query = query.Where(p => p.SellerId == request.SellerId.Value);
+
         // Filter by category (if provided)
         if (request.CategoryId.HasValue && request.CategoryId.Value != Guid.Empty)
         {
@@ -121,6 +128,7 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
                 ImageUrls = p.ImageUrls,
                 Price = p.Price,
                 SellerId = p.SellerId,
+                SellerTitle = p.Seller.Title,
                 ViewCount = p.ViewCount,
                 EstimatedEndDay = p.EstimatedEndDay,
                 City = p.City,
@@ -141,6 +149,7 @@ public class GetServicesByFilterQueryHandler : IRequestHandler<GetServicesByFilt
             ImageUrls = ParseImageUrls(p.ImageUrls),
             Price = new Amount(p.Price).ToInt(),
             SellerId = p.SellerId,
+            Seller = new SellerDto { Id = p.SellerId, Title = p.SellerTitle ?? "" },
             ViewCount = p.ViewCount,
             EstimatedEndDay = p.EstimatedEndDay,
             City = p.City,

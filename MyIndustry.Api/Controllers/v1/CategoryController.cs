@@ -1,4 +1,5 @@
 using MediatR;
+using MyIndustry.ApplicationService.Dto;
 using MyIndustry.ApplicationService.Handler.Category.CreateCategoryCommand;
 using MyIndustry.ApplicationService.Handler.Category.CreateSubCategoryCommand;
 using MyIndustry.ApplicationService.Handler.Category.DeleteCategoryCommand;
@@ -47,8 +48,17 @@ public class CategoryController(IMediator mediator) : BaseController
     }
 
     [HttpPost("subcategory")]
-    public async Task<IActionResult> CreateSubCategory(CreateSubCategoryCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateSubCategory([FromBody] CreateSubCategoryRequest request, CancellationToken cancellationToken)
     {
+        if (request == null)
+            return BadRequest();
+        var parentId = request.ParentId != Guid.Empty ? request.ParentId : request.CategoryId;
+        var command = new CreateSubCategoryCommand(new SubCategoryDto
+        {
+            CategoryId = parentId,
+            Name = request.Name ?? "",
+            Description = request.Description ?? ""
+        });
         return CreateResponse(await mediator.Send(command, cancellationToken));
     }
 
@@ -76,4 +86,14 @@ public class UpdateCategoryRequest
     public string Name { get; set; }
     public string? Description { get; set; }
     public bool IsActive { get; set; }
+}
+
+/// <summary>Flat body for POST /categories/subcategory. Frontend sends parentId, name, description.</summary>
+public class CreateSubCategoryRequest
+{
+    public Guid ParentId { get; set; }
+    /// <summary>Alias for ParentId (backend previously expected subCategory.categoryId).</summary>
+    public Guid CategoryId { get; set; }
+    public string? Name { get; set; }
+    public string? Description { get; set; }
 }
