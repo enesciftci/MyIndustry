@@ -442,6 +442,28 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/categorys/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5016
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/categories/{id}",
+      "UpstreamHttpMethod": [
+        "Put",
+        "Delete"
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
+      },
+      "DelegatingHandlers": [
+        "AuthDelegatingHandler"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/auth/login",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
