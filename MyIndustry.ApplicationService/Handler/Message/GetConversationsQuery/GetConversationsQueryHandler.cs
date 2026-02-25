@@ -99,9 +99,9 @@ public class GetConversationsQueryHandler : IRequestHandler<GetConversationsQuer
                     OtherUserId = otherUserId,
                     OtherUserName = otherUserName,
                     OtherUserEmail = otherUserEmail,
-                    LastMessage = lastMessage.Content.Length > 100 
-                        ? lastMessage.Content.Substring(0, 100) + "..." 
-                        : lastMessage.Content,
+                    LastMessage = lastMessage.Content != null && lastMessage.Content.Length > 100
+                        ? lastMessage.Content.Substring(0, 100) + "..."
+                        : lastMessage.Content ?? "",
                     LastMessageDate = lastMessage.CreatedDate,
                     UnreadCount = g.Count(m => m.ReceiverId == request.UserId && !m.IsRead)
                 };

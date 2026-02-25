@@ -9,20 +9,21 @@ using MyIndustry.Repository.Repository;
 using MyIndustry.Repository.UnitOfWork;
 using MyIndustry.Tests.Helpers;
 using DomainSubscriptionPlan = MyIndustry.Domain.Aggregate.SubscriptionPlan;
+using DomainSellerSubscription = MyIndustry.Domain.Aggregate.SellerSubscription;
 
 namespace MyIndustry.Tests.Unit.SubscriptionPlan;
 
 public class DeleteSubscriptionPlanCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<DomainSubscriptionPlan>> _repositoryMock;
-    private readonly Mock<IGenericRepository<SellerSubscription>> _sellerSubscriptionRepositoryMock;
+    private readonly Mock<IGenericRepository<DomainSellerSubscription>> _sellerSubscriptionRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly DeleteSubscriptionPlanCommandHandler _handler;
 
     public DeleteSubscriptionPlanCommandHandlerTests()
     {
         _repositoryMock = new Mock<IGenericRepository<DomainSubscriptionPlan>>();
-        _sellerSubscriptionRepositoryMock = new Mock<IGenericRepository<SellerSubscription>>();
+        _sellerSubscriptionRepositoryMock = new Mock<IGenericRepository<DomainSellerSubscription>>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _handler = new DeleteSubscriptionPlanCommandHandler(
             _repositoryMock.Object,
@@ -54,7 +55,7 @@ public class DeleteSubscriptionPlanCommandHandlerTests
             .Setup(r => r.GetById(planId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPlan);
 
-        var mockQueryable = new List<SellerSubscription>().AsQueryable().BuildMock();
+        var mockQueryable = new List<DomainSellerSubscription>().AsQueryable().BuildMock();
         _sellerSubscriptionRepositoryMock
             .Setup(r => r.GetAllQuery())
             .Returns(mockQueryable);
@@ -99,7 +100,7 @@ public class DeleteSubscriptionPlanCommandHandlerTests
             IsActive = true
         };
 
-        var activeSubscription = new SellerSubscription
+        var activeSubscription = new DomainSellerSubscription
         {
             Id = Guid.NewGuid(),
             SubscriptionPlanId = planId,
@@ -112,7 +113,7 @@ public class DeleteSubscriptionPlanCommandHandlerTests
             .Setup(r => r.GetById(planId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPlan);
 
-        var mockQueryable = new List<SellerSubscription> { activeSubscription }.AsQueryable().BuildMock();
+        var mockQueryable = new List<DomainSellerSubscription> { activeSubscription }.AsQueryable().BuildMock();
         _sellerSubscriptionRepositoryMock
             .Setup(r => r.GetAllQuery())
             .Returns(mockQueryable);
@@ -133,7 +134,7 @@ public class DeleteSubscriptionPlanCommandHandlerTests
             IsActive = true
         };
 
-        var inactiveSubscription = new SellerSubscription
+        var inactiveSubscription = new DomainSellerSubscription
         {
             Id = Guid.NewGuid(),
             SubscriptionPlanId = planId,
@@ -146,7 +147,7 @@ public class DeleteSubscriptionPlanCommandHandlerTests
             .Setup(r => r.GetById(planId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingPlan);
 
-        var mockQueryable = new List<SellerSubscription> { inactiveSubscription }.AsQueryable().BuildMock();
+        var mockQueryable = new List<DomainSellerSubscription> { inactiveSubscription }.AsQueryable().BuildMock();
         _sellerSubscriptionRepositoryMock
             .Setup(r => r.GetAllQuery())
             .Returns(mockQueryable);

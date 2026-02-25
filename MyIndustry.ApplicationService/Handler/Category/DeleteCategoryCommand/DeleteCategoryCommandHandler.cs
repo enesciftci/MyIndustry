@@ -45,8 +45,9 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
             throw new BusinessRuleException("Bu kategori veya alt kategorilerinde ilan bulunmaktadır. Kategoriyi silmek için önce ilanları silin veya başka bir kategoriye taşıyın.");
         }
 
-        // Recursively delete all children
-        await DeleteCategoryAndChildren(category, cancellationToken);
+        // Recursively delete all children first (deepest first), then the category itself.
+        // Load all descendants by ID and delete in topological order so DB Restrict FK is satisfied.
+        await DeleteCategoryAndDescendantsInOrder(category, cancellationToken);
         
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -76,26 +77,32 @@ public class DeleteCategoryCommandHandler : IRequestHandler<DeleteCategoryComman
         return categoryIds;
     }
 
-    private async Task DeleteCategoryAndChildren(DomainCategory category, CancellationToken cancellationToken)
+    /// <summary>
+    /// Loads all descendant categories by ID, orders them so children are deleted before parents (deepest first),
+    /// then deletes each. This ensures when we have Ana Kategori => Alt Kategori => Marka => Model,
+    /// deleting "Marka" also deletes all "Model" rows even when Include(Children) does not populate recursively.
+    /// </summary>
+    private async Task DeleteCategoryAndDescendantsInOrder(DomainCategory category, CancellationToken cancellationToken)
     {
-        // First delete all children recursively
-        if (category.Children?.Count > 0)
+        var categoryIds = await GetAllCategoryIdsIncludingChildren(category, cancellationToken);
+        if (categoryIds.Count == 0)
+            return;
+
+        var allToDelete = await _categoryRepository
+            .GetAllQuery()
+            .Where(c => categoryIds.Contains(c.Id))
+            .ToListAsync(cancellationToken);
+
+        var byId = allToDelete.ToDictionary(c => c.Id);
+        int getDepth(DomainCategory c)
         {
-            foreach (var child in category.Children.ToList())
-            {
-                // Load children for this child
-                var childWithChildren = await _categoryRepository.GetAllQuery()
-                    .Include(c => c.Children)
-                    .FirstOrDefaultAsync(c => c.Id == child.Id, cancellationToken);
-                
-                if (childWithChildren != null)
-                {
-                    await DeleteCategoryAndChildren(childWithChildren, cancellationToken);
-                }
-            }
+            if (c.Id == category.Id) return 0;
+            if (c.ParentId == null) return 0;
+            return byId.TryGetValue(c.ParentId.Value, out var parent) ? 1 + getDepth(parent) : 0;
         }
 
-        // Then delete the category itself
-        _categoryRepository.Delete(category);
+        var ordered = allToDelete.OrderByDescending(c => getDepth(c)).ToList();
+        foreach (var c in ordered)
+            _categoryRepository.Delete(c);
     }
 }

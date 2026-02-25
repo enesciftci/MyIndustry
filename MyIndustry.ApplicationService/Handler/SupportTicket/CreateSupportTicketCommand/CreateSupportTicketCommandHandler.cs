@@ -21,6 +21,15 @@ public class CreateSupportTicketCommandHandler : IRequestHandler<CreateSupportTi
 
     public async Task<CreateSupportTicketCommandResult> Handle(CreateSupportTicketCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return new CreateSupportTicketCommandResult().ReturnBadRequest("Ad alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Email))
+            return new CreateSupportTicketCommandResult().ReturnBadRequest("E-posta alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Subject))
+            return new CreateSupportTicketCommandResult().ReturnBadRequest("Konu alanı zorunludur.");
+        if (string.IsNullOrWhiteSpace(request.Message))
+            return new CreateSupportTicketCommandResult().ReturnBadRequest("Mesaj alanı zorunludur.");
+
         var ticket = new DomainTicket
         {
             Id = Guid.NewGuid(),

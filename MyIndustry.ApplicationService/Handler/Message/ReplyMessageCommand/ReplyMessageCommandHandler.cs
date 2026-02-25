@@ -36,6 +36,11 @@ public class ReplyMessageCommandHandler : IRequestHandler<ReplyMessageCommand, R
         }
 
         // Verify there's an existing conversation
+        if (request.UserId == request.ReceiverId)
+        {
+            return new ReplyMessageCommandResult().ReturnBadRequest("Kendinize mesaj gönderemezsiniz.");
+        }
+
         var existingMessage = await _messageRepository
             .GetAllQuery()
             .AnyAsync(m => m.ServiceId == request.ServiceId &&

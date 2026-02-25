@@ -22,8 +22,10 @@ public class GetFavoriteListQueryHandler : IRequestHandler<GetFavoriteListQuery,
             .Include(p => p.Service)
             .AsNoTracking()
             .ToListAsync(cancellationToken: cancellationToken);
-            
-            var favoriteDtos = favorites.Select(p=> new FavoriteDto()
+
+        var favoriteDtos = favorites
+            .Where(p => p.Service != null)
+            .Select(p => new FavoriteDto()
             {
                 Id = p.Id,
                 IsFavorite = true,
