@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MyIndustry.Container.Logging;
 using MyIndustry.Repository.Repository;
 using System.Text;
 using System.Xml.Linq;
@@ -14,17 +16,20 @@ public class SEOController : BaseController
     private readonly IGenericRepository<Domain.Aggregate.Category> _categoryRepository;
     private readonly IGenericRepository<Domain.Aggregate.Seller> _sellerRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<SEOController> _logger;
 
     public SEOController(
         IGenericRepository<Domain.Aggregate.Service> serviceRepository,
         IGenericRepository<Domain.Aggregate.Category> categoryRepository,
         IGenericRepository<Domain.Aggregate.Seller> sellerRepository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork,
+        ILogger<SEOController> logger)
     {
         _serviceRepository = serviceRepository;
         _categoryRepository = categoryRepository;
         _sellerRepository = sellerRepository;
         _unitOfWork = unitOfWork;
+        _logger = logger;
     }
 
     [HttpGet("sitemap.xml")]
@@ -32,37 +37,24 @@ public class SEOController : BaseController
     {
         var baseUrl = $"{Request.Scheme}://{Request.Host}";
         var currentDate = DateTime.UtcNow;
+        XNamespace ns = "http://www.sitemaps.org/schemas/sitemap/0.9";
+        XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
+
+        XElement CreateUrlElement(string loc, string lastmod, string changefreq, string priority) =>
+            new(ns + "url",
+                new XElement(ns + "loc", loc),
+                new XElement(ns + "lastmod", lastmod),
+                new XElement(ns + "changefreq", changefreq),
+                new XElement(ns + "priority", priority));
 
         var sitemap = new XDocument(
             new XDeclaration("1.0", "utf-8", "yes"),
-            new XElement("urlset",
-                new XAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9"),
-                new XAttribute(XNamespace.Xmlns + "xsi", "http://www.w3.org/2001/XMLSchema-instance"),
-                new XAttribute("xsi:schemaLocation", "http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"),
-
-                // Homepage
-                new XElement("url",
-                    new XElement("loc", baseUrl),
-                    new XElement("lastmod", currentDate.ToString("yyyy-MM-dd")),
-                    new XElement("changefreq", "daily"),
-                    new XElement("priority", "1.0")
-                ),
-
-                // Services filter page
-                new XElement("url",
-                    new XElement("loc", $"{baseUrl}/services/filter"),
-                    new XElement("lastmod", currentDate.ToString("yyyy-MM-dd")),
-                    new XElement("changefreq", "daily"),
-                    new XElement("priority", "0.9")
-                ),
-
-                // Sellers page
-                new XElement("url",
-                    new XElement("loc", $"{baseUrl}/sellers"),
-                    new XElement("lastmod", currentDate.ToString("yyyy-MM-dd")),
-                    new XElement("changefreq", "daily"),
-                    new XElement("priority", "0.8")
-                )
+            new XElement(ns + "urlset",
+                new XAttribute(XNamespace.Xmlns + "xsi", xsi.NamespaceName),
+                new XAttribute(xsi + "schemaLocation", $"{ns.NamespaceName} {ns.NamespaceName}/sitemap.xsd"),
+                CreateUrlElement(baseUrl, currentDate.ToString("yyyy-MM-dd"), "daily", "1.0"),
+                CreateUrlElement($"{baseUrl}/services/filter", currentDate.ToString("yyyy-MM-dd"), "daily", "0.9"),
+                CreateUrlElement($"{baseUrl}/sellers", currentDate.ToString("yyyy-MM-dd"), "daily", "0.8")
             )
         );
 
@@ -83,12 +75,7 @@ public class SEOController : BaseController
                 : $"{baseUrl}/services/{service.Slug}";
 
             sitemap.Root?.Add(
-                new XElement("url",
-                    new XElement("loc", url),
-                    new XElement("lastmod", lastmod.ToString("yyyy-MM-dd")),
-                    new XElement("changefreq", "weekly"),
-                    new XElement("priority", "0.7")
-                )
+                CreateUrlElement(url, lastmod.ToString("yyyy-MM-dd"), "weekly", "0.7")
             );
         }
 
@@ -106,12 +93,7 @@ public class SEOController : BaseController
                 : $"{baseUrl}/kategori/{category.Slug}";
 
             sitemap.Root?.Add(
-                new XElement("url",
-                    new XElement("loc", url),
-                    new XElement("lastmod", currentDate.ToString("yyyy-MM-dd")),
-                    new XElement("changefreq", "weekly"),
-                    new XElement("priority", "0.6")
-                )
+                CreateUrlElement(url, currentDate.ToString("yyyy-MM-dd"), "weekly", "0.6")
             );
         }
 
@@ -125,12 +107,7 @@ public class SEOController : BaseController
         foreach (var seller in sellers)
         {
             sitemap.Root?.Add(
-                new XElement("url",
-                    new XElement("loc", $"{baseUrl}/seller/{seller.Id}"),
-                    new XElement("lastmod", currentDate.ToString("yyyy-MM-dd")),
-                    new XElement("changefreq", "weekly"),
-                    new XElement("priority", "0.6")
-                )
+                CreateUrlElement($"{baseUrl}/seller/{seller.Id}", currentDate.ToString("yyyy-MM-dd"), "weekly", "0.6")
             );
         }
 
@@ -165,11 +142,9 @@ Crawl-delay: 1
     }
 
     [HttpPost("generate-slugs")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GenerateSlugsForExistingServices(CancellationToken cancellationToken)
     {
-        if (!IsAdmin())
-            return Unauthorized();
-
         var services = await _serviceRepository
             .GetAllQuery()
             .Where(s => string.IsNullOrEmpty(s.Slug))
@@ -207,6 +182,9 @@ Crawl-delay: 1
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        AdminAuditLogger.LogAdminAction(_logger, "GenerateSlugs", GetUserId().ToString(), null,
+            HttpContext.Items[CorrelationIdConstants.ItemKey]?.ToString(), new { updatedCount });
 
         return Ok(new { message = $"{updatedCount} ilan için slug oluşturuldu.", updatedCount });
     }

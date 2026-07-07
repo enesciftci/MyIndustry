@@ -3,8 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using MyIndustry.ApplicationService.Handler.SubscriptionPlan.CreateSubscriptionPlanCommand;
 using MyIndustry.ApplicationService.Handler.SubscriptionPlan.DeleteSubscriptionPlanCommand;
 using MyIndustry.ApplicationService.Handler.SubscriptionPlan.GetAllSubscriptionPlansQuery;
+using MyIndustry.ApplicationService.Handler.SubscriptionPlan.GetSubscriptionPlanListQuery;
 using MyIndustry.ApplicationService.Handler.SubscriptionPlan.UpdateSubscriptionPlanCommand;
-using MyIndustry.Domain.Aggregate;
+using DomainSellerSubscription = MyIndustry.Domain.Aggregate.SellerSubscription;
 using MyIndustry.Domain.ValueObjects;
 using MyIndustry.Repository.DbContext;
 using MyIndustry.Repository.Repository;
@@ -19,14 +20,14 @@ public class SubscriptionPlanIntegrationTests : IDisposable
 {
     private readonly MyIndustryDbContext _context;
     private readonly IGenericRepository<DomainSubscriptionPlan> _repository;
-    private readonly IGenericRepository<SellerSubscription> _sellerSubscriptionRepository;
+    private readonly IGenericRepository<DomainSellerSubscription> _sellerSubscriptionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public SubscriptionPlanIntegrationTests()
     {
         _context = TestDbContextFactory.CreateInMemoryContext();
         _repository = new GenericRepository<DomainSubscriptionPlan>(_context);
-        _sellerSubscriptionRepository = new GenericRepository<SellerSubscription>(_context);
+        _sellerSubscriptionRepository = new GenericRepository<DomainSellerSubscription>(_context);
         _unitOfWork = new UnitOfWork(_context);
     }
 
@@ -196,6 +197,57 @@ public class SubscriptionPlanIntegrationTests : IDisposable
         result.Success.Should().BeTrue();
         var deletedPlan = await _context.SubscriptionPlans.FindAsync(plan.Id);
         deletedPlan.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetSubscriptionPlanList_Should_Return_Active_Plans_For_New_Seller()
+    {
+        // Arrange — seller with no subscription sees all active plans
+        var plans = new List<DomainSubscriptionPlan>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Free Plan",
+                Description = "Free",
+                SubscriptionType = SubscriptionType.Free,
+                MonthlyPrice = 0,
+                MonthlyPostLimit = 3,
+                PostDurationInDays = 30,
+                FeaturedPostLimit = 0,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Standard Plan",
+                Description = "Standard",
+                SubscriptionType = SubscriptionType.Standard,
+                MonthlyPrice = 29900,
+                MonthlyPostLimit = 15,
+                PostDurationInDays = 45,
+                FeaturedPostLimit = 2,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            }
+        };
+        await _context.SubscriptionPlans.AddRangeAsync(plans);
+        await _context.SaveChangesAsync();
+
+        var handler = new GetSubscriptionPlanListQueryHandler(_repository, _sellerSubscriptionRepository);
+        var sellerId = Guid.NewGuid();
+
+        // Act
+        var result = await handler.Handle(
+            new GetSubscriptionPlanListQuery { SellerId = sellerId },
+            CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.SubscriptionPlanList.Should().HaveCount(2);
+        result.SubscriptionPlanList.Should().Contain(p => p.Name == "Free Plan");
+        result.SubscriptionPlanList.Should().Contain(p => p.Name == "Standard Plan");
     }
 
     public void Dispose()

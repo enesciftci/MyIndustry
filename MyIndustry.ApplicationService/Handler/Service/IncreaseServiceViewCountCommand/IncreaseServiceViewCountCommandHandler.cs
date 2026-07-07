@@ -15,6 +15,9 @@ public sealed class IncreaseServiceViewCountCommandHandler : IRequestHandler<Inc
     {
        var service = await _serviceRepository.GetById(request.ServiceId, cancellationToken);
        
+       if (service == null)
+           return new IncreaseServiceViewCountCommandResult().ReturnNotFound("İlan bulunamadı.");
+       
        service.ViewCount++;
        
        _serviceRepository.Update(service);

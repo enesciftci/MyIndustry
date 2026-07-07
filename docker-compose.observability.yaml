@@ -1,0 +1,82 @@
+version: '3.8'
+
+# Observability stack for Dokploy production.
+# Dokploy Compose path: docker-compose.observability.yaml
+# Deploy as a separate Dokploy compose stack on the same node as app services.
+#
+# Required environment variables (set in Dokploy):
+# - ELASTIC_PASSWORD
+# - KIBANA_SYSTEM_PASSWORD (optional, defaults to ELASTIC_PASSWORD)
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: myindustry-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "true"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE 'green|yellow'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: myindustry-kibana
+    restart: unless-stopped
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-${ELASTIC_PASSWORD}}
+    networks:
+      - dokploy-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.myindustry-kibana.rule=Host(`kibana.${DOMAIN:-localhost}`)"
+      - "traefik.http.services.myindustry-kibana.loadbalancer.server.port=5601"
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.15.0
+    container_name: myindustry-filebeat
+    restart: unless-stopped
+    user: root
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD}
+      SERVICE_ENVIRONMENT: production
+    volumes:
+      - ./observability/filebeat/filebeat.dokploy.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./observability/elasticsearch/ilm-myindustry-logs.json:/usr/share/filebeat/ilm-policy.json:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - dokploy-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+networks:
+  dokploy-network:
+    external: true
+    name: dokploy-network
+
+volumes:
+  elasticsearch_data:
+    name: myindustry-elasticsearch-data

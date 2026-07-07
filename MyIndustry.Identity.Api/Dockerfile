@@ -7,6 +7,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["MyIndustry.Identity.Api/MyIndustry.Identity.Api.csproj", "MyIndustry.Identity.Api/"]
+COPY ["MyIndustry.Container/MyIndustry.Container.csproj", "MyIndustry.Container/"]
 COPY ["MyIndustry.Identity.Domain/MyIndustry.Identity.Domain.csproj", "MyIndustry.Identity.Domain/"]
 COPY ["MyIndustry.Identity.Repository/MyIndustry.Identity.Repository.csproj", "MyIndustry.Identity.Repository/"]
 COPY ["RabbitMqCommunicator/RabbitMqCommunicator.csproj", "RabbitMqCommunicator/"]

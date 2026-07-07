@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace MyIndustry.Api.Controllers.v1;
 
+// Stub / devre dışı: Komisyon API ileride kullanılacaksa route ve [Authorize] açılmalı (yetkisiz erişim engellenmeli).
 // [Route("api/v{version:apiVersion}/[controller]s")]
 // [ApiController]
 // [Authorize]

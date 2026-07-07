@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MyIndustry.Container\MyIndustry.Container.csproj" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
       <PackageReference Include="Ocelot" Version="23.3.4" />
       <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.9.0" />
@@ -40,6 +41,11 @@
       <None Update="ocelot.Development.json">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <Content Include="..\MyIndustry.Container\ProductionAllowedHosts.Gateway.json">
+        <Link>appsettings.Production.json</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

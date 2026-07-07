@@ -1,4 +1,12 @@
-﻿version: '3.8'
+version: '3.8'
+
+# Local development stack
+#
+# Usage:
+#   docker compose up -d                          # app + infra (API/Identity internal, gateway :5002)
+#   docker compose --profile debug up -d          # + direct API :5000 / Identity :5001 host ports
+#   docker compose --profile elk up -d            # + local ELK (Elasticsearch, Kibana, Filebeat)
+#   docker compose --profile debug --profile elk up -d
 
 services:
   # ===================
@@ -79,8 +87,6 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__MyIndustry: Host=postgres;Port=5432;Database=${POSTGRES_DB:-myindustry};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres123}
       IdentityUrl: ${IDENTITY_URL:-http://myindustry-identity:8080}
-    ports:
-      - "${API_PORT:-5000}:8080"
     networks:
       - myindustry-network
     depends_on:
@@ -104,8 +110,6 @@ services:
       RabbitMq__Port: "5672"
       RabbitMq__UserName: ${RABBITMQ_USER:-guest}
       RabbitMq__Password: ${RABBITMQ_PASSWORD:-guest}
-    ports:
-      - "${IDENTITY_PORT:-5001}:8080"
     networks:
       - myindustry-network
     depends_on:
@@ -115,6 +119,30 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+  myindustry-api-debug:
+    profiles: [debug]
+    image: alpine/socat:latest
+    container_name: myindustry-api-debug
+    command: TCP-LISTEN:8080,fork,reuseaddr TCP:myindustry-api:8080
+    ports:
+      - "${API_PORT:-5000}:8080"
+    networks:
+      - myindustry-network
+    depends_on:
+      - myindustry-api
+
+  myindustry-identity-debug:
+    profiles: [debug]
+    image: alpine/socat:latest
+    container_name: myindustry-identity-debug
+    command: TCP-LISTEN:8080,fork,reuseaddr TCP:myindustry-identity:8080
+    ports:
+      - "${IDENTITY_PORT:-5001}:8080"
+    networks:
+      - myindustry-network
+    depends_on:
+      - myindustry-identity
 
   myindustry-gateway:
     build:
@@ -156,6 +184,64 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  # ===================
+  # ELK (profile: elk)
+  # ===================
+
+  elasticsearch:
+    profiles: [elk]
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: myindustry-elasticsearch
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+    networks:
+      - myindustry-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE 'green|yellow'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  kibana:
+    profiles: [elk]
+    image: docker.elastic.co/kibana/kibana:8.15.0
+    container_name: myindustry-kibana
+    restart: unless-stopped
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "${KIBANA_PORT:-5601}:5601"
+    networks:
+      - myindustry-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  filebeat:
+    profiles: [elk]
+    image: docker.elastic.co/beats/filebeat:8.15.0
+    container_name: myindustry-filebeat
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./observability/elasticsearch/ilm-myindustry-logs.json:/usr/share/filebeat/ilm-policy.json:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - myindustry-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
 # ===================
 # Networks & Volumes
 # ===================
@@ -172,3 +258,5 @@ volumes:
     name: myindustry-redis-data
   rabbitmq_data:
     name: myindustry-rabbitmq-data
+  elasticsearch_data:
+    name: myindustry-elasticsearch-data

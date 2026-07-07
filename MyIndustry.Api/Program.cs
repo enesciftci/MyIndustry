@@ -1,9 +1,16 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.HttpOverrides;
 using MyIndustry.Api.Data;
-using MyIndustry.Api.Middleware;
 using MyIndustry.Api.Services;
+using MyIndustry.Container.Extensions;
+using MyIndustry.Container.Services;
+using RedisCommunicator;
+using Serilog;
+using StackExchange.Redis;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.ConfigureMyIndustrySerilog("MyIndustry.Api");
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -56,17 +63,23 @@ else
 {
     builder.Services.AddSingleton<IImageStorageService, LocalImageStorageService>();
 }
+builder.Services.AddSingleton<IImageUploadValidator, ImageUploadValidator>();
+builder.Services.AddHttpClient<IRecaptchaVerificationService, RecaptchaVerificationService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddCors(options =>
+
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing")
+    && string.IsNullOrWhiteSpace(redisConnectionString))
+    throw new InvalidOperationException("ConnectionStrings:Redis must be set in Production for JWT blacklist support.");
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
 {
-    options.AddDefaultPolicy(
-        corsBuilder =>
-        {
-            corsBuilder.AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
-});
+    var redis = ConnectionMultiplexer.Connect(redisConnectionString);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+    builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
+}
+
+builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);
+builder.Services.AddMyIndustryRateLimiting(builder.Configuration);
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddApiVersioning(config =>
@@ -89,6 +102,10 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
+var jwtSigningKey = JwtExtensions.ResolveSigningKey(builder.Configuration, builder.Environment);
+var jwtIssuer = JwtExtensions.ResolveIssuer(builder.Configuration);
+var tokenValidationParameters = JwtExtensions.CreateTokenValidationParameters(jwtSigningKey, jwtIssuer);
+tokenValidationParameters.RoleClaimType = ClaimTypes.Role;
 
 builder.Services.AddAuthentication(options =>
 {
@@ -98,33 +115,68 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer(options =>
 {
     options.Authority = identityUrl;
-    options.RequireHttpsMetadata = false;
-    options.Audience = "myindustry";
-    options.TokenValidationParameters = new TokenValidationParameters()
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing");
+    options.Audience = JwtExtensions.DefaultAudience;
+    options.TokenValidationParameters = tokenValidationParameters;
+    options.Events = new JwtBearerEvents
     {
-        IssuerSigningKey = new SymmetricSecurityKey("O'<wl]8K:1m!4g+h24R7X,HSDlv0W[b7z.`3'A$b~cPb[f('Oox|~vNz_g]&<:u"u8.ToArray()),
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidateIssuer = false,
-        ValidateAudience = true,
-        ClockSkew = TimeSpan.Zero,
-        RoleClaimType = ClaimTypes.Role
+        OnTokenValidated = async context =>
+        {
+            var jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+            if (string.IsNullOrEmpty(jti)) return;
+            var redis = context.HttpContext.RequestServices.GetService<IRedisCommunicator>();
+            if (redis != null)
+            {
+                var blacklisted = await redis.GetCacheValueAsync<string>("jwt_blacklist:" + jti);
+                if (blacklisted != null)
+                    context.Fail("Token has been revoked (blacklisted).");
+            }
+        }
     };
 });
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("type", "99")); // UserType.Admin
+});
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddMyIndustryMediatRLogging(builder.Configuration);
 builder.Services.AddMediatR(configuration =>
 {
     configuration.RegisterServicesFromAssembly(typeof(MyIndustry.ApplicationService.Handler.Seller.CreateSellerCommand.CreateSellerCommandHandler).Assembly);
+    configuration.AddMyIndustryLoggingBehavior();
 });
 
 // Süresi dolan ilanları pasif yapan arka plan servisi (paketteki ilan süresi / PostDurationInDays)
-builder.Services.AddHostedService<MyIndustry.Api.BackgroundServices.ExpiredListingsDeactivationService>();
+if (!builder.Environment.IsEnvironment("Testing"))
+    builder.Services.AddHostedService<MyIndustry.Api.BackgroundServices.ExpiredListingsDeactivationService>();
+
+AllowedHostsExtensions.ValidateProductionAllowedHosts(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
-// Auto-create database tables and run migrations
+// Reverse proxy (Nginx, Dokploy vb.) arkasında X-Forwarded-Proto / X-Forwarded-For kullanılıyorsa
+var forwardedProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? Array.Empty<string>();
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+foreach (var ip in forwardedProxies)
+{
+    if (System.Net.IPAddress.TryParse(ip, out var addr))
+        forwardedOptions.KnownProxies.Add(addr);
+}
+app.UseForwardedHeaders(forwardedOptions);
+
+// Production'da HTTPS yönlendirmesi (proxy HTTPS'i sonlandırıyorsa UseForwardedHeaders ile scheme doğru gelir)
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+    app.UseHttpsRedirection();
+
+// Auto-create database tables and run migrations (skipped in test environment)
+if (!app.Environment.IsEnvironment("Testing"))
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
@@ -132,6 +184,12 @@ using (var scope = app.Services.CreateScope())
     
     // Check if we should reset the database (via environment variable)
     var resetDb = Environment.GetEnvironmentVariable("RESET_DATABASE") == "true";
+    
+    if (resetDb && !app.Environment.IsDevelopment())
+    {
+        logger.LogWarning("RESET_DATABASE is set but ignored in non-Development environment.");
+        resetDb = false;
+    }
     
     if (resetDb)
     {
@@ -158,7 +216,18 @@ using (var scope = app.Services.CreateScope())
     await DataSeeder.SeedAsync(db);
 }
 
-app.UseStaticFiles();
+app.UseCorrelationId();
+app.UseSecurityHeaders();
+app.UseMyIndustryRequestLogging();
+app.UseMyIndustryExceptionHandling();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    }
+});
 
 // Also serve files from /tmp/uploads as a fallback for production environments
 var tmpUploadsPath = "/tmp/uploads";
@@ -168,14 +237,13 @@ if (Directory.Exists(tmpUploadsPath) || !app.Environment.IsDevelopment())
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(tmpUploadsPath),
-        RequestPath = "/uploads"
+        RequestPath = "/uploads",
+        OnPrepareResponse = ctx =>
+        {
+            ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        }
     });
 }
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-app.MapControllers();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -184,7 +252,23 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseMyIndustryRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
-// app.UseHttpsRedirection(); // Disabled for HTTP support
-app.Run();
+
+app.MapControllers();
+app.MapHealthChecks("/health");
+
+try
+{
+    app.Run();
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+namespace MyIndustry.Api
+{
+    public partial class Program;
+}

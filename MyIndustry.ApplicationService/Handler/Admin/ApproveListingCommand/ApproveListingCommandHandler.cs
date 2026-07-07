@@ -9,16 +9,16 @@ namespace MyIndustry.ApplicationService.Handler.Admin.ApproveListingCommand;
 public class ApproveListingCommandHandler : IRequestHandler<ApproveListingCommand, ApproveListingCommandResult>
 {
     private readonly IGenericRepository<DomainService> _serviceRepository;
-    private readonly IGenericRepository<Domain.Aggregate.Seller> _sellerRepository;
+    private readonly IGenericRepository<Domain.Aggregate.SellerSubscription> _subscriptionRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public ApproveListingCommandHandler(
         IGenericRepository<DomainService> serviceRepository,
-        IGenericRepository<Domain.Aggregate.Seller> sellerRepository,
+        IGenericRepository<Domain.Aggregate.SellerSubscription> subscriptionRepository,
         IUnitOfWork unitOfWork)
     {
         _serviceRepository = serviceRepository;
-        _sellerRepository = sellerRepository;
+        _subscriptionRepository = subscriptionRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -46,10 +46,14 @@ public class ApproveListingCommandHandler : IRequestHandler<ApproveListingComman
         {
             if (activeSubscription != null)
             {
-                activeSubscription.RemainingPostQuota++;
-                if (service.IsFeatured)
-                    activeSubscription.RemainingFeaturedQuota++;
-                _sellerRepository.Update(service.Seller);
+                var trackedSubscription = await _subscriptionRepository.GetById(activeSubscription.Id, cancellationToken);
+                if (trackedSubscription != null)
+                {
+                    trackedSubscription.RemainingPostQuota++;
+                    if (service.IsFeatured)
+                        trackedSubscription.RemainingFeaturedQuota++;
+                    _subscriptionRepository.Update(trackedSubscription);
+                }
             }
             
             service.IsApproved = false;

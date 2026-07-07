@@ -20,9 +20,18 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MyIndustry.Container\MyIndustry.Container.csproj" />
       <ProjectReference Include="..\MyIndustry.Identity.Domain\MyIndustry.Identity.Domain.csproj" />
       <ProjectReference Include="..\MyIndustry.Identity.Repository\MyIndustry.Identity.Repository.csproj" />
       <ProjectReference Include="..\RedisCommunicator\RedisCommunicator.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\MyIndustry.Container\ProductionAllowedHosts.Identity.json">
+        <Link>appsettings.Production.json</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

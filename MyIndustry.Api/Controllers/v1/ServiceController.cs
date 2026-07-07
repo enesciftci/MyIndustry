@@ -1,4 +1,6 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using MyIndustry.ApplicationService.Dto;
 using MyIndustry.ApplicationService.Handler;
 using MyIndustry.ApplicationService.Handler.Service.CreateServiceCommand;
@@ -14,7 +16,9 @@ using MyIndustry.ApplicationService.Handler.Service.GetServicesBySellerIdQuery;
 using MyIndustry.ApplicationService.Handler.Service.IncreaseServiceViewCountCommand;
 using MyIndustry.ApplicationService.Handler.Service.UpdateServiceByIdCommand;
 using MyIndustry.Api.Services;
+using MyIndustry.Container.Extensions;
 using MyIndustry.Domain.Aggregate.ValueObjects;
+using MyIndustry.Domain.ExceptionHandling;
 
 namespace MyIndustry.Api.Controllers.v1;
 
@@ -22,18 +26,26 @@ namespace MyIndustry.Api.Controllers.v1;
 [ApiController]
 public class ServiceController : BaseController
 {
+    private const int MaxTitleLength = 200;
+    private const int MaxDescriptionLength = 4000;
+    private const int MaxLocationLength = 100;
+
     private readonly IMediator _mediator;
     private readonly IImageStorageService _imageStorage;
-    private readonly ILogger<ServiceController> _logger;
+    private readonly IImageUploadValidator _imageUploadValidator;
 
-    public ServiceController(IMediator mediator, IImageStorageService imageStorage, ILogger<ServiceController> logger)
+    public ServiceController(
+        IMediator mediator,
+        IImageStorageService imageStorage,
+        IImageUploadValidator imageUploadValidator)
     {
         _mediator = mediator;
         _imageStorage = imageStorage;
-        _logger = logger;
+        _imageUploadValidator = imageUploadValidator;
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Create(
         [FromForm] string title,
         [FromForm] string description,
@@ -49,15 +61,14 @@ public class ServiceController : BaseController
         [FromForm] bool isFeatured = false,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating service: Title={Title}, CategoryId={CategoryId}, SellerId={SellerId}, ImageCount={ImageCount}",
-            title, categoryId, GetUserId(), images?.Count ?? 0);
+        ValidateServiceFields(title, description, city, district, neighborhood);
 
         var urls = new List<string>();
         if (images != null && images.Count > 0)
         {
             foreach (var file in images)
             {
-                _logger.LogInformation("Uploading file: {FileName}, Size={Size}", file.FileName, file.Length);
+                _imageUploadValidator.Validate(file);
                 var contentType = file.ContentType ?? "image/jpeg";
                 await using var stream = file.OpenReadStream();
                 var url = await _imageStorage.UploadAsync(stream, file.FileName, contentType, cancellationToken);
@@ -82,16 +93,13 @@ public class ServiceController : BaseController
             IsFeatured = isFeatured
         };
         
-        _logger.LogInformation("Sending CreateServiceCommand: SellerId={SellerId}, CategoryId={CategoryId}", command.SellerId, command.CategoryId);
-        
         var result = await _mediator.Send(command, cancellationToken);
-        
-        _logger.LogInformation("CreateServiceCommand completed: Success={Success}", result?.Success);
-        
+
         return CreateResponse(result);
     }
 
     [HttpGet("list")]
+    [Authorize]
     public async Task<IActionResult> GetServicesBySellerId([FromQuery] int index, [FromQuery] int size,
         CancellationToken cancellationToken)
     {
@@ -117,6 +125,7 @@ public class ServiceController : BaseController
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Update(
         [FromRoute] Guid id, 
         [FromForm] string title,
@@ -127,14 +136,10 @@ public class ServiceController : BaseController
         [FromForm] Guid? categoryId,
         CancellationToken cancellationToken)
     {
-        foreach (var image in images ?? [])
-        {
-            using var ms = new MemoryStream();
-            await image.CopyToAsync(ms, cancellationToken);
-            var imageBytes = ms.ToArray();
+        ValidateServiceFields(title, description, null, null, null);
 
-            // Burada her bir imageBytes ile işlem yapabilirsin
-        }
+        foreach (var image in images ?? [])
+            _imageUploadValidator.Validate(image);
         
         var isFeatured = false;
         if (Request.Form.TryGetValue("isFeatured", out var isFeaturedValue))
@@ -182,6 +187,7 @@ public class ServiceController : BaseController
     /// İlanı pasif yap (body yok veya reactivateOrExtendExpiry: false) veya ilanı tekrar aktif yapıp bitiş tarihini güncelle (reactivateOrExtendExpiry: true, kotadan düşer).
     /// </summary>
     [HttpPatch("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> PatchService(Guid id, [FromBody] PatchServiceRequest? body, CancellationToken cancellationToken)
     {
         var sellerId = GetUserId();
@@ -206,6 +212,7 @@ public class ServiceController : BaseController
     }
     
     [HttpDelete("{id:guid}")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         return CreateResponse(await _mediator.Send(new DeleteServiceByIdCommand()
@@ -216,6 +223,7 @@ public class ServiceController : BaseController
     }
     
     [HttpPost("increase-viewcount/{id:guid}")]
+    [EnableRateLimiting(RateLimitingExtensions.ViewCountPolicy)]
     public async Task<IActionResult> IncreaseViewCount(Guid id, CancellationToken cancellationToken)
     {
         return CreateResponse(await _mediator.Send(new IncreaseServiceViewCountCommand()
@@ -234,5 +242,22 @@ public class ServiceController : BaseController
         };
         
         return CreateResponse(await _mediator.Send(request, cancellationToken));
+    }
+
+    private static void ValidateServiceFields(
+        string title,
+        string description,
+        string? city,
+        string? district,
+        string? neighborhood)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Length > MaxTitleLength)
+            throw new BusinessRuleException($"Başlık zorunludur ve en fazla {MaxTitleLength} karakter olabilir.");
+
+        if (string.IsNullOrWhiteSpace(description) || description.Length > MaxDescriptionLength)
+            throw new BusinessRuleException($"Açıklama zorunludur ve en fazla {MaxDescriptionLength} karakter olabilir.");
+
+        if (city?.Length > MaxLocationLength || district?.Length > MaxLocationLength || neighborhood?.Length > MaxLocationLength)
+            throw new BusinessRuleException($"Konum alanları en fazla {MaxLocationLength} karakter olabilir.");
     }
 }

@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using MyIndustry.ApplicationService.Handler.Message.GetConversationMessagesQuery;
 using MyIndustry.ApplicationService.Handler.Message.GetConversationsQuery;
 using MyIndustry.ApplicationService.Handler.Message.GetUnreadCountQuery;
@@ -119,5 +121,5 @@ public class MessageController : BaseController
 }
 
 // Request DTOs
-public record SendMessageRequest(Guid ServiceId, string Content);
-public record ReplyMessageRequest(Guid ServiceId, Guid ReceiverId, string Content);
+public record SendMessageRequest(Guid ServiceId, [param: StringLength(2000, MinimumLength = 1)] string Content);
+public record ReplyMessageRequest(Guid ServiceId, Guid ReceiverId, [param: StringLength(2000, MinimumLength = 1)] string Content);

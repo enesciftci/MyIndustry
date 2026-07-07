@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
+using MyIndustry.Container.Logging;
 using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 namespace MyIndustry.Gateway.Handlers;
@@ -41,6 +42,18 @@ public class AuthDelegatingHandler : DelegatingHandler
             request.Headers.Add("UserId", userId ?? string.Empty);
             request.Headers.Add("Email", email ?? string.Empty);
             request.Headers.Add("UserName", userName ?? string.Empty);
+
+            if (_httpContextAccessor.HttpContext?.Items.TryGetValue(CorrelationIdConstants.ItemKey, out var correlationId) == true
+                && correlationId is string correlationIdValue
+                && !string.IsNullOrWhiteSpace(correlationIdValue))
+            {
+                request.Headers.Add(CorrelationIdConstants.HeaderName, correlationIdValue);
+            }
+            else if (_httpContextAccessor.HttpContext?.Request.Headers.TryGetValue(CorrelationIdConstants.HeaderName, out var headerValue) == true
+                     && !string.IsNullOrWhiteSpace(headerValue))
+            {
+                request.Headers.Add(CorrelationIdConstants.HeaderName, headerValue.ToString());
+            }
         }
         catch (SecurityTokenExpiredException)
         {

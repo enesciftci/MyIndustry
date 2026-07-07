@@ -14,18 +14,18 @@ namespace MyIndustry.Tests.Unit.Admin;
 public class ApproveListingCommandHandlerTests
 {
     private readonly Mock<IGenericRepository<DomainService>> _serviceRepositoryMock;
-    private readonly Mock<IGenericRepository<Domain.Aggregate.Seller>> _sellerRepositoryMock;
+    private readonly Mock<IGenericRepository<DomainSellerSubscription>> _subscriptionRepositoryMock;
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly ApproveListingCommandHandler _handler;
 
     public ApproveListingCommandHandlerTests()
     {
         _serviceRepositoryMock = new Mock<IGenericRepository<DomainService>>();
-        _sellerRepositoryMock = new Mock<IGenericRepository<Domain.Aggregate.Seller>>();
+        _subscriptionRepositoryMock = new Mock<IGenericRepository<DomainSellerSubscription>>();
         _unitOfWorkMock = new Mock<IUnitOfWork>();
         _handler = new ApproveListingCommandHandler(
             _serviceRepositoryMock.Object,
-            _sellerRepositoryMock.Object,
+            _subscriptionRepositoryMock.Object,
             _unitOfWorkMock.Object);
     }
 

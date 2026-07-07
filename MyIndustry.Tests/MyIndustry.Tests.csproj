@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.10" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
@@ -24,9 +25,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyIndustry.Api\MyIndustry.Api.csproj" />
+    <ProjectReference Include="..\MyIndustry.Identity.Api\MyIndustry.Identity.Api.csproj" />
+    <ProjectReference Include="..\MyIndustry.Gateway\MyIndustry.Gateway.csproj" />
+    <ProjectReference Include="..\MyIndustry.Queue\MyIndustry.Queue.csproj" />
+    <ProjectReference Include="..\MyIndustry.Container\MyIndustry.Container.csproj" />
     <ProjectReference Include="..\MyIndustry.ApplicationService\MyIndustry.ApplicationService.csproj" />
     <ProjectReference Include="..\MyIndustry.Domain\MyIndustry.Domain.csproj" />
     <ProjectReference Include="..\MyIndustry.Repository\MyIndustry.Repository.csproj" />
+    <ProjectReference Include="..\MyIndustry.Identity.Domain\MyIndustry.Identity.Domain.csproj" />
+    <ProjectReference Include="..\MyIndustry.Identity.Repository\MyIndustry.Identity.Repository.csproj" />
+    <ProjectReference Include="..\RedisCommunicator\RedisCommunicator.csproj" />
   </ItemGroup>
 
 </Project>

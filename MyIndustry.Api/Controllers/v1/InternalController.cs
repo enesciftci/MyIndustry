@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,7 +29,12 @@ public class InternalController : ControllerBase
         CancellationToken cancellationToken)
     {
         var expectedKey = _configuration["InternalApiKey"];
-        if (string.IsNullOrEmpty(expectedKey) || Request.Headers["X-Internal-Api-Key"] != expectedKey)
+        var providedKey = Request.Headers["X-Internal-Api-Key"].FirstOrDefault();
+        if (string.IsNullOrEmpty(expectedKey) ||
+            string.IsNullOrEmpty(providedKey) ||
+            !CryptographicOperations.FixedTimeEquals(
+                System.Text.Encoding.UTF8.GetBytes(expectedKey),
+                System.Text.Encoding.UTF8.GetBytes(providedKey)))
         {
             return Unauthorized();
         }
@@ -36,7 +42,7 @@ public class InternalController : ControllerBase
         var result = await _mediator.Send(new SaveUserLegalDocumentAcceptancesCommand
         {
             UserId = request.UserId,
-            LegalDocumentIds = request.LegalDocumentIds ?? new List<Guid>()
+            LegalDocumentIds = (request.LegalDocumentIds ?? new List<Guid>()).Take(100).ToList()
         }, cancellationToken);
 
         return Ok(result);

@@ -8,10 +8,12 @@ namespace MyIndustry.Repository.Repository;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : Entity
 {
+    private readonly MyIndustryDbContext _context;
     private readonly DbSet<T> _dbSet;
 
     public GenericRepository(MyIndustryDbContext context)
     {
+        _context = context;
         _dbSet = context.Set<T>();
     }
 
@@ -27,21 +29,29 @@ public class GenericRepository<T> : IGenericRepository<T> where T : Entity
 
     public void Delete(T entity)
     {
-        _dbSet.Remove(entity);
+        if (entity == null)
+            return;
+
+        var tracked = FindTrackedEntity(entity.Id);
+        _dbSet.Remove(tracked ?? entity);
     }
 
     public async Task Delete(Guid id, CancellationToken cancellationToken)
     {
         var entity = await GetById(id, cancellationToken);
+        if (entity == null)
+            return;
 
-        _dbSet.Remove(entity);
+        Delete(entity);
     }
 
     public async Task Delete(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken)
     {
         var entity = await GetById(predicate, cancellationToken);
+        if (entity == null)
+            return;
 
-        _dbSet.Remove(entity);
+        Delete(entity);
     }
 
     public void DeleteRange(List<T> entities)
@@ -82,6 +92,14 @@ public class GenericRepository<T> : IGenericRepository<T> where T : Entity
 
     public void Update(T entity)
     {
+        var tracked = FindTrackedEntity(entity.Id);
+        if (tracked != null && !ReferenceEquals(tracked, entity))
+        {
+            _context.Entry(tracked).CurrentValues.SetValues(entity);
+            _context.Entry(tracked).State = EntityState.Modified;
+            return;
+        }
+
         _dbSet.Update(entity);
     }
 
@@ -90,10 +108,14 @@ public class GenericRepository<T> : IGenericRepository<T> where T : Entity
         foreach (var entity in entityList)
         {
             entity.ModifiedDate = DateTime.Now;
+            Update(entity);
         }
-
-        _dbSet.UpdateRange(entityList);
     }
+
+    private T? FindTrackedEntity(Guid id) =>
+        _context.ChangeTracker.Entries<T>()
+            .FirstOrDefault(e => e.Entity.Id == id)
+            ?.Entity;
 
     public async Task<bool> AnyAsync(Expression<Func<T, bool>> expression, CancellationToken cancellationToken)
     {
@@ -105,8 +127,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : Entity
         return _dbSet.ContainsAsync(entity, cancellationToken: cancellationToken);
     }
 
+    [Obsolete("Use parameterized queries via FromSqlInterpolated. Raw SQL with user input is forbidden.")]
     public IQueryable<T> FromSqlRaw(string sql)
     {
+        // GÜVENLİK: Sadece sabit/sert kodlanmış SQL veya parametreli FromSqlInterpolated kullanın.
+        // Kullanıcı girdisini asla string birleştirmeyin (SQL injection riski).
         return _dbSet.FromSqlRaw(sql);
     }
 }

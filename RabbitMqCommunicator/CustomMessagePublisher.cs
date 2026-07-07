@@ -1,6 +1,5 @@
-﻿using MassTransit;
-using MassTransit.RabbitMqTransport;
-using MyIndustry.Queue.Message;
+using MassTransit;
+using MyIndustry.Container.Logging;
 
 namespace RabbitMqCommunicator;
 
@@ -15,6 +14,16 @@ public class CustomMessageMessagePublisher : ICustomMessagePublisher
     
     public async Task Publish(object message, CancellationToken cancellationToken)
     {
+        var correlationId = CorrelationIdContext.Current;
+        if (!string.IsNullOrWhiteSpace(correlationId))
+        {
+            await _bus.Publish(message, context =>
+            {
+                context.Headers.Set(CorrelationIdConstants.HeaderName, correlationId);
+            }, cancellationToken);
+            return;
+        }
+
         await _bus.Publish(message, cancellationToken);
     }
 }

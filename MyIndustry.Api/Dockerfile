@@ -1,4 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
@@ -12,6 +12,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["MyIndustry.Api/MyIndustry.Api.csproj", "MyIndustry.Api/"]
+COPY ["MyIndustry.Container/MyIndustry.Container.csproj", "MyIndustry.Container/"]
 COPY ["MyIndustry.ApplicationService/MyIndustry.ApplicationService.csproj", "MyIndustry.ApplicationService/"]
 COPY ["MyIndustry.Repository/MyIndustry.Repository.csproj", "MyIndustry.Repository/"]
 COPY ["MyIndustry.Domain/MyIndustry.Domain.csproj", "MyIndustry.Domain/"]

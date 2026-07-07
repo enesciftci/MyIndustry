@@ -3,6 +3,8 @@ version: '3.8'
 # ===================
 # MyIndustry Application Services for Dokploy
 # ===================
+# Dokploy Compose path: docker-compose.dokploy.yaml
+# API and Identity are internal-only (no host ports); access via gateway.
 # Infrastructure (PostgreSQL, Redis) uses Dokploy built-in services
 # RabbitMQ runs as separate Dokploy compose
 #
@@ -23,8 +25,6 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__MyIndustry: Host=${DB_HOST};Port=5432;Database=myindustry;Username=postgres;Password=${DB_PASSWORD}
       IdentityUrl: http://myindustry-identity:8080
-    ports:
-      - "5000:8080"
     networks:
       - dokploy-network
     healthcheck:
@@ -50,8 +50,6 @@ services:
       RabbitMq__Port: "5672"
       RabbitMq__UserName: ${RABBITMQ_USER}
       RabbitMq__Password: ${RABBITMQ_PASSWORD}
-    ports:
-      - "5001:8080"
     networks:
       - dokploy-network
     healthcheck:
@@ -97,6 +95,7 @@ services:
 # ===================
 # Network
 # ===================
+
 networks:
   dokploy-network:
     external: true

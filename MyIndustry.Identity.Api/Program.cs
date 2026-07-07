@@ -2,9 +2,11 @@ using System.Text;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using MyIndustry.Container.Extensions;
 using MyIndustry.Identity.Domain.Aggregate;
 using MyIndustry.Identity.Domain.Aggregate.ValueObjects;
 using MyIndustry.Identity.Api.Services;
@@ -12,47 +14,50 @@ using MyIndustry.Identity.Domain.Service;
 using MyIndustry.Identity.Repository;
 using RabbitMqCommunicator;
 using RedisCommunicator;
+using Serilog;
 using StackExchange.Redis;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.ConfigureMyIndustrySerilog("MyIndustry.Identity.Api");
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 if (builder.Environment.IsDevelopment())
     Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
 
-builder.Services.AddAuthorization();
-
-builder.Services.AddCors(options =>
+builder.Services.AddAuthorization(options =>
 {
-    options.AddDefaultPolicy(corsBuilder =>
-    {
-        corsBuilder.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-    });
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("type", "99")); // UserType.Admin
 });
+
+builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);
+builder.Services.AddMyIndustryRateLimiting(builder.Configuration);
 
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<ICustomMessagePublisher, CustomMessageMessagePublisher>();
 builder.Services.AddHttpClient<IMainApiLegalDocumentAcceptanceClient, MainApiLegalDocumentAcceptanceClient>();
 
-builder.Services.AddMassTransit(x =>
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    var rabbitMqSettings = builder.Configuration.GetSection("RabbitMq");
-    
-    x.UsingRabbitMq((context, cfg) =>
+    builder.Services.AddMassTransit(x =>
     {
-        cfg.Host(rabbitMqSettings["Host"], ushort.Parse(rabbitMqSettings["Port"]), "/", h =>
+        var rabbitMqSettings = builder.Configuration.GetSection("RabbitMq");
+
+        x.UsingRabbitMq((context, cfg) =>
         {
-            h.Username(rabbitMqSettings["UserName"]);
-            h.Password(rabbitMqSettings["Password"]);
+            cfg.Host(rabbitMqSettings["Host"], ushort.Parse(rabbitMqSettings["Port"]), "/", h =>
+            {
+                h.Username(rabbitMqSettings["UserName"]);
+                h.Password(rabbitMqSettings["Password"]);
+            });
+
+            cfg.ConfigureEndpoints(context);
         });
-       
-        cfg.ConfigureEndpoints(context);
     });
-});
+}
 
 builder.Services.AddIdentityApiEndpoints<ApplicationUser>(p =>
     {
@@ -67,6 +72,12 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 });
 
 var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
+var jwtSigningKey = JwtExtensions.ResolveSigningKey(builder.Configuration, builder.Environment);
+var jwtIssuer = JwtExtensions.ResolveIssuer(builder.Configuration);
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Jwt:SigningKey"] = jwtSigningKey });
+
+var tokenValidationParameters = JwtExtensions.CreateTokenValidationParameters(jwtSigningKey, jwtIssuer);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -76,21 +87,25 @@ builder.Services.AddAuthentication(options =>
 }).AddJwtBearer(options =>
 {
     options.Authority = identityUrl;
-    options.Audience = "myindustry";
+    options.Audience = JwtExtensions.DefaultAudience;
     options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new TokenValidationParameters()
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing");
+    options.TokenValidationParameters = tokenValidationParameters;
+    options.Events = new JwtBearerEvents
     {
-        IssuerSigningKey = new SymmetricSecurityKey("O'<wl]8K:1m!4g+h24R7X,HSDlv0W[b7z.`3'A$b~cPb[f('Oox|~vNz_g]&<:u"u8.ToArray()),
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidateIssuer = false,
-        ValidateAudience = true,
-        ClockSkew = TimeSpan.Zero
+        OnTokenValidated = async context =>
+        {
+            var jti = context.Principal?.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+            if (string.IsNullOrEmpty(jti)) return;
+            var authService = context.HttpContext.RequestServices.GetService<IAuthService>();
+            if (authService != null && await authService.IsTokenBlacklistedAsync(jti))
+                context.Fail("Token has been revoked (blacklisted).");
+        }
     };
 });
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services
@@ -105,20 +120,46 @@ builder.Services
             options.EnableSensitiveDataLogging();
     });
 
-var redisConfiguration = builder.Configuration.GetConnectionString("Redis");
-var redis = ConnectionMultiplexer.Connect(redisConfiguration);
-builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
-builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    var redisConfiguration = builder.Configuration.GetConnectionString("Redis");
+    var redis = ConnectionMultiplexer.Connect(redisConfiguration);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+    builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
 
-// Configure Data Protection to persist keys in Redis (prevents warning about container data loss)
-builder.Services.AddDataProtection()
-    .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
-    .SetApplicationName("MyIndustry-Identity");
+    builder.Services.AddDataProtection()
+        .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
+        .SetApplicationName("MyIndustry-Identity");
+}
+else
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("MyIndustry-Identity");
+    // IRedisCommunicator is registered by WebApplicationFactory in tests.
+}
 
+
+AllowedHostsExtensions.ValidateProductionAllowedHosts(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 
-// Auto-migrate database
+var forwardedProxies = builder.Configuration.GetSection("ForwardedHeaders:KnownProxies").Get<string[]>() ?? Array.Empty<string>();
+var forwardedOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+foreach (var ip in forwardedProxies)
+{
+    if (System.Net.IPAddress.TryParse(ip, out var addr))
+        forwardedOptions.KnownProxies.Add(addr);
+}
+app.UseForwardedHeaders(forwardedOptions);
+
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+    app.UseHttpsRedirection();
+
+// Auto-migrate database (skipped in test environment)
+if (!app.Environment.IsEnvironment("Testing"))
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MyIndustryIdentityDbContext>();
@@ -126,6 +167,12 @@ using (var scope = app.Services.CreateScope())
     
     // Check if we should reset the database (via environment variable)
     var resetDb = Environment.GetEnvironmentVariable("RESET_IDENTITY_DATABASE") == "true";
+    
+    if (resetDb && !app.Environment.IsDevelopment())
+    {
+        logger.LogWarning("RESET_IDENTITY_DATABASE is set but ignored in non-Development environment.");
+        resetDb = false;
+    }
     
     if (resetDb)
     {
@@ -154,6 +201,11 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
+app.UseCorrelationId();
+app.UseSecurityHeaders();
+app.UseMyIndustryRequestLogging();
+app.UseMyIndustryExceptionHandling();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -161,23 +213,38 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseMyIndustryRateLimiting();
 app.UseAuthentication();
 app.UseAuthorization();
-// app.UseHttpsRedirection(); // Disabled for HTTP support
-
 app.MapControllers();
 app.MapIdentityApi<ApplicationUser>();
+app.MapHealthChecks("/health");
 
-app.Run();
+try
+{
+    app.Run();
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
-// Admin kullanıcıyı veritabanına ekle
+// Admin kullanıcıyı veritabanına ekle (şifre ortam değişkeni veya config'ten; asla koda sabit yazmayın)
 static async Task SeedAdminUser(IServiceProvider serviceProvider)
 {
     var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
     
-    const string adminEmail = "admin@admin.com";
-    const string adminPassword = "anadolu11Aa.*!";
+    const string defaultAdminEmail = "admin@admin.com";
+    var adminEmail = configuration["SeedAdmin:Email"] ?? Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? defaultAdminEmail;
+    var adminPassword = configuration["SeedAdmin:Password"] ?? Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+    
+    if (string.IsNullOrWhiteSpace(adminPassword))
+    {
+        logger.LogWarning("SeedAdmin:Password or ADMIN_PASSWORD not set - skipping admin user seed. Set in production.");
+        return;
+    }
     
     var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
     
@@ -204,4 +271,9 @@ static async Task SeedAdminUser(IServiceProvider serviceProvider)
             logger.LogError("Failed to seed admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
         }
     }
+}
+
+namespace MyIndustry.Identity.Api
+{
+    public partial class Program;
 }

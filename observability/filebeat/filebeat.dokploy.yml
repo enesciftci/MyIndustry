@@ -1,0 +1,56 @@
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+      hints.default_config:
+        type: container
+        paths:
+          - /var/lib/docker/containers/${data.docker.container.id}/*.log
+        processors:
+          - add_docker_metadata: ~
+      templates:
+        - condition:
+            or:
+              - contains:
+                  docker.container.name: myindustry-api
+              - contains:
+                  docker.container.name: myindustry-identity
+              - contains:
+                  docker.container.name: myindustry-gateway
+              - contains:
+                  docker.container.name: myindustry-queue
+          config:
+            - type: container
+              paths:
+                - /var/lib/docker/containers/${data.docker.container.id}/*.log
+              processors:
+                - add_docker_metadata: ~
+
+processors:
+  - add_fields:
+      target: service
+      fields:
+        environment: ${SERVICE_ENVIRONMENT:production}
+  - decode_json_fields:
+      fields: ["message"]
+      target: ""
+      overwrite_keys: true
+      add_error_key: true
+      when:
+        regexp:
+          message: '^\{.*\}$'
+
+setup.template.name: "myindustry-logs"
+setup.template.pattern: "myindustry-logs-*"
+setup.ilm.enabled: true
+setup.ilm.policy_name: "myindustry-logs-policy"
+setup.ilm.policy_file: "/usr/share/filebeat/ilm-policy.json"
+
+output.elasticsearch:
+  hosts: ["${ELASTICSEARCH_HOSTS:http://elasticsearch:9200}"]
+  username: "${ELASTICSEARCH_USERNAME:elastic}"
+  password: "${ELASTICSEARCH_PASSWORD}"
+  index: "myindustry-logs-%{+yyyy.MM.dd}"
+
+logging.level: info
+logging.to_stderr: true

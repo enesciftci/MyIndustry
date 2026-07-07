@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MyIndustry.Container\MyIndustry.Container.csproj" />
       <ProjectReference Include="..\MyIndustry.Repository\MyIndustry.Repository.csproj" />
       <ProjectReference Include="..\RabbitMqCommunicator\RabbitMqCommunicator.csproj" />
     </ItemGroup>

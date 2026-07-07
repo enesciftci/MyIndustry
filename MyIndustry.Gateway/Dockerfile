@@ -7,6 +7,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["MyIndustry.Gateway/MyIndustry.Gateway.csproj", "MyIndustry.Gateway/"]
+COPY ["MyIndustry.Container/MyIndustry.Container.csproj", "MyIndustry.Container/"]
 RUN dotnet restore "MyIndustry.Gateway/MyIndustry.Gateway.csproj"
 COPY . .
 WORKDIR "/src/MyIndustry.Gateway"

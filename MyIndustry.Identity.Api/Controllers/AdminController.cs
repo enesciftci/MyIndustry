@@ -6,7 +6,7 @@ namespace MyIndustry.Identity.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/admin")]
-[Authorize]
+[Authorize(Policy = "AdminOnly")]
 public class AdminController : ControllerBase
 {
     private readonly IUserService _userService;

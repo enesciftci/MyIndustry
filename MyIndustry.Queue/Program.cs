@@ -1,4 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
+// See https://aka.ms/new-console-template for more information
 
 using CoreApiCommunicator;
 using CoreApiCommunicator.Email;
@@ -7,12 +7,13 @@ using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MyIndustry.Container.Extensions;
+using MyIndustry.Container.MassTransit;
 using MyIndustry.Queue;
+using Serilog;
 
-var builder = Host.CreateDefaultBuilder(args);
-
-// Environment.SetEnvironmentVariable("DOTNET_ENVIRONMENT", "Development");
-
+var builder = Host.CreateDefaultBuilder(args)
+    .ConfigureMyIndustrySerilog("MyIndustry.Queue");
 
 builder.ConfigureAppConfiguration((context, config) =>
 {
@@ -22,8 +23,9 @@ builder.ConfigureAppConfiguration((context, config) =>
     
     config.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
     config.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
-    config.AddEnvironmentVariables(); // Environment variables override appsettings
+    config.AddEnvironmentVariables();
 });
+
 builder.ConfigureServices((hostContext, services) =>
 {
     var configuration = hostContext.Configuration;
@@ -41,14 +43,14 @@ builder.ConfigureServices((hostContext, services) =>
     var rabbitMqSettings = configuration.GetSection("RabbitMq");
     services.AddMassTransit(x =>
     {
-        // Seller artık SellerSetup sayfasından oluşturuluyor
-        // Purchaser entity kaldırıldı - User bilgileri Identity'den alınıyor
         x.AddConsumer<IncreaseServiceViewCountConsumer>();
         x.AddConsumer<SendForgotPasswordEmailConsumer>();
         x.AddConsumer<SendConfirmationEmailConsumer>();
         x.AddConsumer<SendPhoneVerificationConsumer>();
         x.UsingRabbitMq((context, cfg) =>
         {
+            cfg.UseConsumeFilter(typeof(CorrelationIdConsumeFilter<>), context);
+
             cfg.Host(rabbitMqSettings["Host"], ushort.Parse(rabbitMqSettings["Port"]), "/", h =>
             {
                 h.Username(rabbitMqSettings["UserName"]);
@@ -64,4 +66,12 @@ builder.ConfigureServices((hostContext, services) =>
 });
 
 var app = builder.Build();
-await app.RunAsync();
+
+try
+{
+    await app.RunAsync();
+}
+finally
+{
+    Log.CloseAndFlush();
+}

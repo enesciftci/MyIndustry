@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using MyIndustry.Domain.ExceptionHandling;
 using MyIndustry.Identity.Domain.Aggregate;
+using MyIndustry.Identity.Domain.Aggregate.ValueObjects;
 using MyIndustry.Queue.Message;
 using RabbitMqCommunicator;
+using RedisCommunicator;
 
 namespace MyIndustry.Identity.Domain.Service;
 
@@ -13,29 +15,37 @@ public class UserService : IUserService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ICustomMessagePublisher _customMessagePublisher;
     private readonly IConfiguration _configuration;
+    private readonly IRedisCommunicator _redisCommunicator;
     
     private const string EmailConfirmationPurpose = "EmailConfirmation";
+    private const int MaxVerificationAttempts = 5;
+    private static readonly TimeSpan VerificationAttemptWindow = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan PendingChangeTtl = TimeSpan.FromMinutes(15);
 
     public UserService(
         UserManager<ApplicationUser> userManager, 
         ICustomMessagePublisher customMessagePublisher,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IRedisCommunicator redisCommunicator)
     {
         _userManager = userManager;
         _customMessagePublisher = customMessagePublisher;
         _configuration = configuration;
+        _redisCommunicator = redisCommunicator;
     }
 
     public async Task<Guid?> CreateUser(RegisterModel register, CancellationToken cancellationToken)
     {
         if (!string.Equals(register.Password, register.ConfirmPassword))
             throw new Exception("Passwords do not match");
+
+        var userType = ValidateRegistrationUserType(register.UserType);
         
         var user = new ApplicationUser()
         {
             Email = register.Email,
             UserName = register.Email,
-            Type = register.UserType,
+            Type = userType,
             FirstName = register.FirstName,
             LastName = register.LastName
         };
@@ -82,26 +92,26 @@ public class UserService : IUserService
         var user = await _userManager.FindByEmailAsync(model.Email);
         if (user == null)
         {
-            throw new Exception("User not found");
+            throw new BusinessRuleException("Kullanıcı bulunamadı.");
         }
 
         var result = await _userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultPhoneProvider, model.VerificationCode);
 
         if (result == false)
-            throw new Exception("Code not wrong");
+            throw new BusinessRuleException("Doğrulama kodu geçersiz.");
     }
     
     public async Task<bool> ConfirmEmail(string userId, string token, CancellationToken cancellationToken)
     {
         if (userId == null || token == null)
         {
-            throw new Exception("User id or token is invalid");
+            throw new BusinessRuleException("Kullanıcı kimliği veya token geçersiz.");
         }
 
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
         {
-            throw new Exception($"Unable to load user with ID '{userId}'.");
+            throw new BusinessRuleException($"Kullanıcı bulunamadı.");
         }
 
         var result = await _userManager.ConfirmEmailAsync(user, token);
@@ -111,14 +121,14 @@ public class UserService : IUserService
             await PublishUserCreatedMessages(user, cancellationToken);
             return true;
         }
-        else
-        {
-            throw new Exception("Error confirming your email.");
-        }
+
+        throw new BusinessRuleException("Email doğrulama başarısız.");
     }
     
     public async Task<bool> ConfirmEmailByCode(string email, string code, CancellationToken cancellationToken)
     {
+        await EnsureVerificationAttemptsAllowedAsync($"verify_attempts:email_confirm:{email}");
+
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null)
         {
@@ -139,8 +149,11 @@ public class UserService : IUserService
 
         if (!isValid)
         {
+            await IncrementVerificationAttemptsAsync($"verify_attempts:email_confirm:{email}");
             throw new BusinessRuleException("Doğrulama kodu geçersiz veya süresi dolmuş.");
         }
+
+        _redisCommunicator.DeleteValue($"verify_attempts:email_confirm:{email}");
 
         // Mark email as confirmed
         user.EmailConfirmed = true;
@@ -181,10 +194,16 @@ public class UserService : IUserService
         if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
             return true; // Güvenlik için her zaman OK döneriz
 
+        // Open redirect önlemi: ClientUrl yalnızca izin verilen base URL ile başlamalı (örn. FrontendUrl)
+        var allowedBase = (_configuration["PasswordReset:AllowedBaseUrl"] ?? _configuration["FrontendUrl"] ?? "http://localhost:3000").TrimEnd('/');
+        var baseUrl = !string.IsNullOrWhiteSpace(clientUrl) && clientUrl.Trim().StartsWith(allowedBase, StringComparison.OrdinalIgnoreCase)
+            ? clientUrl.Trim().TrimEnd('/')
+            : allowedBase;
+
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
         var encodedToken = HttpUtility.UrlEncode(token);
-        var callbackUrl = $"{clientUrl}/reset-password?userId={user.Id}&token={encodedToken}";
+        var callbackUrl = $"{baseUrl}/reset-password?userId={user.Id}&token={encodedToken}";
 
         var userName = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : null;
         var emailBody = EmailTemplateHelper.GetPasswordResetTemplate(userName, callbackUrl);
@@ -249,10 +268,8 @@ public class UserService : IUserService
     private const string PhoneChangePurpose = "PhoneChange";
     private const string EmailChangePurpose = "EmailChange";
     
-    // Pending phone/email changes stored temporarily (in production, use Redis)
-    private static readonly Dictionary<string, string> PendingPhoneChanges = new();
-    private static readonly Dictionary<string, string> PendingEmailChanges = new();
-
+    // Pending phone/email changes stored in Redis with TTL
+    
     public async Task<bool> SendPhoneVerificationCode(string userId, string newPhoneNumber, CancellationToken cancellationToken)
     {
         var user = await _userManager.FindByIdAsync(userId);
@@ -263,7 +280,7 @@ public class UserService : IUserService
         var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, PhoneChangePurpose);
         
         // Store pending phone change
-        PendingPhoneChanges[userId] = newPhoneNumber;
+        await _redisCommunicator.SetCacheValueAsync($"pending_phone:{userId}", newPhoneNumber, PendingChangeTtl);
         
         // Send SMS via RabbitMQ queue
         await _customMessagePublisher.Publish(new SendPhoneVerificationMessage 
@@ -279,16 +296,22 @@ public class UserService : IUserService
 
     public async Task<bool> VerifyPhoneCode(string userId, string code, CancellationToken cancellationToken)
     {
+        await EnsureVerificationAttemptsAllowedAsync($"verify_attempts:phone:{userId}");
+
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
             throw new BusinessRuleException("Kullanıcı bulunamadı.");
 
-        if (!PendingPhoneChanges.TryGetValue(userId, out var newPhoneNumber))
+        var newPhoneNumber = await _redisCommunicator.GetCacheValueAsync<string>($"pending_phone:{userId}");
+        if (string.IsNullOrWhiteSpace(newPhoneNumber))
             throw new BusinessRuleException("Bekleyen telefon değişikliği bulunamadı.");
 
         var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultPhoneProvider, PhoneChangePurpose, code);
         if (!isValid)
+        {
+            await IncrementVerificationAttemptsAsync($"verify_attempts:phone:{userId}");
             throw new BusinessRuleException("Doğrulama kodu geçersiz veya süresi dolmuş.");
+        }
 
         // Update phone number
         user.PhoneNumber = newPhoneNumber;
@@ -297,7 +320,8 @@ public class UserService : IUserService
         
         if (result.Succeeded)
         {
-            PendingPhoneChanges.Remove(userId);
+            _redisCommunicator.DeleteValue($"pending_phone:{userId}");
+            _redisCommunicator.DeleteValue($"verify_attempts:phone:{userId}");
             await _userManager.UpdateSecurityStampAsync(user);
             return true;
         }
@@ -322,7 +346,7 @@ public class UserService : IUserService
         var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultEmailProvider, EmailChangePurpose);
         
         // Store pending email change
-        PendingEmailChanges[userId] = newEmail;
+        await _redisCommunicator.SetCacheValueAsync($"pending_email:{userId}", newEmail, PendingChangeTtl);
         
         // Send verification email to NEW email address
         var userName = !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : null;
@@ -340,16 +364,22 @@ public class UserService : IUserService
 
     public async Task<bool> VerifyEmailChangeCode(string userId, string code, CancellationToken cancellationToken)
     {
+        await EnsureVerificationAttemptsAllowedAsync($"verify_attempts:email_change:{userId}");
+
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null)
             throw new BusinessRuleException("Kullanıcı bulunamadı.");
 
-        if (!PendingEmailChanges.TryGetValue(userId, out var newEmail))
+        var newEmail = await _redisCommunicator.GetCacheValueAsync<string>($"pending_email:{userId}");
+        if (string.IsNullOrWhiteSpace(newEmail))
             throw new BusinessRuleException("Bekleyen email değişikliği bulunamadı.");
 
         var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultEmailProvider, EmailChangePurpose, code);
         if (!isValid)
+        {
+            await IncrementVerificationAttemptsAsync($"verify_attempts:email_change:{userId}");
             throw new BusinessRuleException("Doğrulama kodu geçersiz veya süresi dolmuş.");
+        }
 
         // Update email
         user.Email = newEmail;
@@ -360,7 +390,8 @@ public class UserService : IUserService
         
         if (result.Succeeded)
         {
-            PendingEmailChanges.Remove(userId);
+            _redisCommunicator.DeleteValue($"pending_email:{userId}");
+            _redisCommunicator.DeleteValue($"verify_attempts:email_change:{userId}");
             await _userManager.UpdateSecurityStampAsync(user);
             return true;
         }
@@ -471,8 +502,28 @@ public class UserService : IUserService
 
         return true;
     }
-}
 
+    public static UserType ValidateRegistrationUserType(UserType userType)
+    {
+        if (userType is UserType.User or UserType.Seller)
+            return userType;
+
+        throw new BusinessRuleException("Geçersiz kullanıcı tipi. Yalnızca alıcı veya satıcı olarak kayıt olabilirsiniz.");
+    }
+
+    private async Task EnsureVerificationAttemptsAllowedAsync(string key)
+    {
+        var attempts = await _redisCommunicator.GetCacheValueAsync<int?>(key) ?? 0;
+        if (attempts >= MaxVerificationAttempts)
+            throw new BusinessRuleException("Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.");
+    }
+
+    private async Task IncrementVerificationAttemptsAsync(string key)
+    {
+        var attempts = await _redisCommunicator.GetCacheValueAsync<int?>(key) ?? 0;
+        await _redisCommunicator.SetCacheValueAsync(key, attempts + 1, VerificationAttemptWindow);
+    }
+}
 public interface IUserService
 {
     Task<Guid?> CreateUser(RegisterModel register, CancellationToken cancellationToken);

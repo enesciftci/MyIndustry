@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.IdentityModel.JsonWebTokens;
+using MyIndustry.Container.Extensions;
 using MyIndustry.Identity.Api.Requests;
 using MyIndustry.Identity.Api.Services;
 using MyIndustry.Identity.Domain.Service;
@@ -29,22 +33,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> Login([FromBody] LoginModel loginModel, CancellationToken cancellationToken)
     {
         var user = await _userService.GetUserByEmail(loginModel.Email);
         if (user is null)
             return Unauthorized(new { Message = "Geçersiz kullanıcı adı veya şifre." });
-        
-        var redisAuthModel =
-            await _redisCommunicator.GetCacheValueAsync<AuthenticationModel>($"auth:{loginModel.Email}");
-
-        // Return cached response only if user type matches
-        if (redisAuthModel is not null && redisAuthModel.User?.UserType == user.Type)
-            return Ok(redisAuthModel);
-        
-        // Clear old cache if exists (user type might have changed)
-        if (redisAuthModel is not null)
-            _redisCommunicator.DeleteValue($"auth:{loginModel.Email}");
         
         if (!user.EmailConfirmed)
         {
@@ -78,16 +72,28 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("logout")]
+    [Authorize]
     public async Task<IActionResult> LogOut()
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
+        var jti = User.Claims.FirstOrDefault(p => p.Type == JwtRegisteredClaimNames.Jti)?.Value;
+        var expClaim = User.Claims.FirstOrDefault(p => p.Type == JwtRegisteredClaimNames.Exp)?.Value;
 
-        await _authService.RemoveTokenAsync(userId);
+        if (!string.IsNullOrEmpty(jti) && !string.IsNullOrEmpty(expClaim)
+            && long.TryParse(expClaim, out var expUnix))
+        {
+            var expUtc = DateTimeOffset.FromUnixTimeSeconds(expUnix).UtcDateTime;
+            await _authService.AddTokenToBlacklistAsync(jti, expUtc);
+        }
+
+        if (!string.IsNullOrEmpty(userId))
+            await _authService.RemoveTokenAsync(userId);
 
         return Ok();
     }
 
     [HttpPost("refresh-token")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         if (string.IsNullOrEmpty(request?.RefreshToken))
@@ -102,6 +108,7 @@ public class AuthController : ControllerBase
     }
     
     [HttpPost("register")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> Register([FromBody] RegisterModel registerModel, CancellationToken cancellationToken)
     {
         var userId = await _userService.CreateUser(registerModel, cancellationToken);
@@ -128,6 +135,7 @@ public class AuthController : ControllerBase
     }
     
     [HttpPost("confirm-email")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> ConfirmEmail([FromBody] EmailConfirmationDto emailConfirmationDto, CancellationToken cancellationToken)
     {
         var result = await _userService.ConfirmEmail(emailConfirmationDto.UserId, emailConfirmationDto.Token, cancellationToken);
@@ -135,6 +143,7 @@ public class AuthController : ControllerBase
     }
     
     [HttpPost("confirm-email-by-code")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> ConfirmEmailByCode([FromBody] EmailConfirmationByCodeRequest request, CancellationToken cancellationToken)
     {
         var result = await _userService.ConfirmEmailByCode(request.Email, request.Code, cancellationToken);
@@ -142,6 +151,7 @@ public class AuthController : ControllerBase
     }
     
     [HttpPost("resend-verification-email")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendVerificationCodeRequest request, CancellationToken cancellationToken)
     {
         await _userService.ResendVerificationCode(request.Email, cancellationToken);
@@ -149,6 +159,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("forgot-password")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> ForgotPassword([FromBody] PasswordForgotRequest forgotPasswordRequest, CancellationToken cancellationToken)
     {
         var result = await _userService.ForgotPassword(forgotPasswordRequest.Email,forgotPasswordRequest.ClientUrl, cancellationToken);
@@ -157,6 +168,7 @@ public class AuthController : ControllerBase
     }
     
     [HttpPost("reset-password")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthPolicy)]
     public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequest request)
     {
         var result = await _userService.ResetPassword(request.UserId, request.Token, request.NewPassword);
@@ -165,6 +177,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize]
     public IActionResult Get()
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
@@ -179,6 +192,7 @@ public class AuthController : ControllerBase
     // ============ Phone Verification ============
     
     [HttpPost("send-phone-verification")]
+    [Authorize]
     public async Task<IActionResult> SendPhoneVerification([FromBody] SendPhoneVerificationRequest request, CancellationToken cancellationToken)
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
@@ -190,6 +204,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-phone")]
+    [Authorize]
     public async Task<IActionResult> VerifyPhone([FromBody] VerifyPhoneRequest request, CancellationToken cancellationToken)
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
@@ -203,6 +218,7 @@ public class AuthController : ControllerBase
     // ============ Email Change Verification ============
 
     [HttpPost("send-email-change-verification")]
+    [Authorize]
     public async Task<IActionResult> SendEmailChangeVerification([FromBody] SendEmailChangeVerificationRequest request, CancellationToken cancellationToken)
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
@@ -214,6 +230,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("verify-email-change")]
+    [Authorize]
     public async Task<IActionResult> VerifyEmailChange([FromBody] VerifyEmailChangeRequest request, CancellationToken cancellationToken)
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;
@@ -227,6 +244,7 @@ public class AuthController : ControllerBase
     // ============ Profile Update ============
 
     [HttpPut("profile")]
+    [Authorize]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken cancellationToken)
     {
         var userId = User.Claims.FirstOrDefault(p => p.Type == "uid")?.Value;

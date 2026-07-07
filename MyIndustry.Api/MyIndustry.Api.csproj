@@ -23,9 +23,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MyIndustry.Container\MyIndustry.Container.csproj" />
       <ProjectReference Include="..\MyIndustry.ApplicationService\MyIndustry.ApplicationService.csproj" />
       <ProjectReference Include="..\MyIndustry.Repository\MyIndustry.Repository.csproj" />
       <ProjectReference Include="..\MyIndustry.Identity.Repository\MyIndustry.Identity.Repository.csproj" />
+      <ProjectReference Include="..\RedisCommunicator\RedisCommunicator.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -43,6 +45,11 @@
         <Link>data\locations.json</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
+      <Content Include="..\MyIndustry.Container\ProductionAllowedHosts.Api.json">
+        <Link>appsettings.Production.json</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
     </ItemGroup>
 
 </Project>

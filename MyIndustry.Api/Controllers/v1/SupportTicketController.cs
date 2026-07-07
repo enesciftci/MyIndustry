@@ -1,10 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using MyIndustry.ApplicationService.Handler.SupportTicket.CreateSupportTicketCommand;
 using MyIndustry.ApplicationService.Handler.SupportTicket.GetSupportTicketsQuery;
 using MyIndustry.ApplicationService.Handler.SupportTicket.UpdateSupportTicketCommand;
+using MyIndustry.Container.Extensions;
+using MyIndustry.Container.Services;
 using MyIndustry.Domain.Aggregate;
 using MyIndustry.Identity.Repository;
 
@@ -16,11 +20,19 @@ public class SupportTicketController : BaseController
 {
     private readonly IMediator _mediator;
     private readonly MyIndustryIdentityDbContext _identityDbContext;
+    private readonly IRecaptchaVerificationService _recaptchaVerificationService;
+    private readonly IConfiguration _configuration;
 
-    public SupportTicketController(IMediator mediator, MyIndustryIdentityDbContext identityDbContext)
+    public SupportTicketController(
+        IMediator mediator,
+        MyIndustryIdentityDbContext identityDbContext,
+        IRecaptchaVerificationService recaptchaVerificationService,
+        IConfiguration configuration)
     {
         _mediator = mediator;
         _identityDbContext = identityDbContext;
+        _recaptchaVerificationService = recaptchaVerificationService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -28,8 +40,18 @@ public class SupportTicketController : BaseController
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitingExtensions.SupportTicketPolicy)]
     public async Task<IActionResult> Create([FromBody] CreateTicketRequest request, CancellationToken cancellationToken)
     {
+        if (request == null || !ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        if (!string.IsNullOrWhiteSpace(_configuration["Recaptcha:SecretKey"]))
+        {
+            var captchaValid = await _recaptchaVerificationService.VerifyAsync(request.CaptchaToken, cancellationToken);
+            if (!captchaValid)
+                return BadRequest(new { success = false, message = "CAPTCHA doğrulaması başarısız." });
+        }
         // Get user info if authenticated
         Guid? userId = null;
         int userType = 0; // Anonymous
@@ -87,10 +109,10 @@ public class SupportTicketController : BaseController
     /// Get all support tickets (admin only)
     /// </summary>
     [HttpGet]
-    [Authorize]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll(
-        [FromQuery] int index = 1,
-        [FromQuery] int size = 20,
+        [FromQuery] [Range(1, 1000)] int index = 1,
+        [FromQuery] [Range(1, 100)] int size = 20,
         [FromQuery] TicketStatus? status = null,
         [FromQuery] TicketCategory? category = null,
         [FromQuery] TicketPriority? priority = null,
@@ -112,7 +134,7 @@ public class SupportTicketController : BaseController
     /// Update a support ticket (admin only)
     /// </summary>
     [HttpPut("{id:guid}")]
-    [Authorize]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTicketRequest request, CancellationToken cancellationToken)
     {
         var command = new UpdateSupportTicketCommand
@@ -130,18 +152,39 @@ public class SupportTicketController : BaseController
 
 public class CreateTicketRequest
 {
-    public string Name { get; set; }
-    public string Email { get; set; }
+    [Required(ErrorMessage = "Ad zorunludur")]
+    [StringLength(200)]
+    public string Name { get; set; } = "";
+
+    [Required(ErrorMessage = "E-posta zorunludur")]
+    [EmailAddress]
+    [StringLength(256)]
+    public string Email { get; set; } = "";
+
+    [StringLength(20)]
     public string? Phone { get; set; }
-    public string Subject { get; set; }
-    public string Message { get; set; }
+
+    [Required(ErrorMessage = "Konu zorunludur")]
+    [StringLength(500)]
+    public string Subject { get; set; } = "";
+
+    [Required(ErrorMessage = "Mesaj zorunludur")]
+    [StringLength(4000)]
+    public string Message { get; set; } = "";
+
     public TicketCategory Category { get; set; }
+
+    public string? CaptchaToken { get; set; }
 }
 
 public class UpdateTicketRequest
 {
     public TicketStatus Status { get; set; }
     public TicketPriority Priority { get; set; }
+
+    [StringLength(2000)]
     public string? AdminNotes { get; set; }
+
+    [StringLength(4000)]
     public string? AdminResponse { get; set; }
 }

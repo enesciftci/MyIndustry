@@ -29,6 +29,8 @@ public interface IGenericRepository<T> where T : Entity
 
     public  Task<bool> AnyAsync(Expression<Func<T, bool>> expression, CancellationToken cancellationToken);
     Task<bool> Contains(T entity, CancellationToken cancellationToken);
+
+    [Obsolete("Use parameterized queries via FromSqlInterpolated. Raw SQL with user input is forbidden.")]
     IQueryable<T> FromSqlRaw(string sql);
     Task<T> GetSingleOrDefault(Guid id, CancellationToken cancellationToken);
 

@@ -53,10 +53,16 @@ public class SellerController : BaseController
         return CreateResponse(await _mediator.Send(query, cancellationToken));
     }
 
+    /// <summary>
+    /// Update seller (ID from body; must match current user's seller).
+    /// </summary>
     [HttpPut]
+    [Authorize]
     public async Task<IActionResult> Update([FromBody] UpdateSellerCommand command, CancellationToken cancellationToken)
     {
-        return CreateResponse(null);
+        var userId = GetUserId();
+        var result = await _mediator.Send(command with { Id = userId }, cancellationToken);
+        return CreateResponse(result);
     }
 
     /// <summary>

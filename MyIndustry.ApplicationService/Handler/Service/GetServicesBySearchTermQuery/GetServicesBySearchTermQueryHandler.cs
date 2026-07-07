@@ -25,17 +25,28 @@ public class GetServicesBySearchTermQueryHandler : IRequestHandler<GetServicesBy
         var baseQuery = _servicesRepository
             .GetAllQuery()
             .Where(p =>
-                p.IsActive && p.IsApproved && (p.ExpiryDate == null || p.ExpiryDate > now) &&
-                (variants.Any(v => p.Title.ToLower().Contains(v)) ||
-                 variants.Any(v => p.Description.ToLower().Contains(v)) ||
-                 (p.City != null && variants.Any(v => p.City.ToLower().Contains(v))) ||
-                 (p.District != null && variants.Any(v => p.District.ToLower().Contains(v))) ||
-                 (p.Neighborhood != null && variants.Any(v => p.Neighborhood.ToLower().Contains(v)))));
+                p.IsActive && p.IsApproved && (p.ExpiryDate == null || p.ExpiryDate > now));
+
+        IQueryable<Domain.Aggregate.Service>? searchQuery = null;
+        foreach (var variant in variants)
+        {
+            var term = variant;
+            var variantQuery = baseQuery.Where(p =>
+                p.Title.ToLower().Contains(term) ||
+                p.Description.ToLower().Contains(term) ||
+                (p.City != null && p.City.ToLower().Contains(term)) ||
+                (p.District != null && p.District.ToLower().Contains(term)) ||
+                (p.Neighborhood != null && p.Neighborhood.ToLower().Contains(term)));
+
+            searchQuery = searchQuery == null ? variantQuery : searchQuery.Union(variantQuery);
+        }
+
+        var query = searchQuery!;
         
         // Get total count
-        var totalCount = await baseQuery.CountAsync(cancellationToken);
+        var totalCount = await query.CountAsync(cancellationToken);
         
-        var servicesData = await baseQuery
+        var servicesData = await query
             .OrderByDescending(p => p.IsFeatured)  // Featured listings first
             .ThenByDescending(p => p.CreatedDate)  // Then by creation date
             .Skip((request.Pager.Index - 1) * request.Pager.Size)

@@ -58,6 +58,8 @@ Bu dokümanda ApplicationService içindeki command/query handler'ların unit tes
 | CreateSubscriptionPlanCommandHandler | Unit/SubscriptionPlan/CreateSubscriptionPlanCommandHandlerTests.cs | 1 |
 | UpdateSubscriptionPlanCommandHandler | Unit/SubscriptionPlan/UpdateSubscriptionPlanCommandHandlerTests.cs | 2 |
 | DeleteSubscriptionPlanCommandHandler | Unit/SubscriptionPlan/DeleteSubscriptionPlanCommandHandlerTests.cs | 4 |
+| GetSubscriptionPlanListQueryHandler | Unit/SubscriptionPlan/GetSubscriptionPlanListQueryHandlerTests.cs | 3 |
+| GetAllSubscriptionPlansQueryHandler | Unit/SubscriptionPlan/GetAllSubscriptionPlansQueryHandlerTests.cs | 2 |
 | **SellerSubscription** | | |
 | CreateSellerSubscriptionCommandHandler | Unit/SellerSubscription/CreateSellerSubscriptionCommandHandlerTests.cs | 4 |
 | UpgradeSellerSubscriptionCommandHandler | Unit/SellerSubscription/UpgradeSellerSubscriptionCommandHandlerTests.cs | 4 |
@@ -80,15 +82,13 @@ Bu dokümanda ApplicationService içindeki command/query handler'ların unit tes
 | **Contract** | | |
 | CreateContractCommandHandler | Unit/Contract/CreateContractCommandHandlerTests.cs | 1 |
 
-## Henüz Testi Olmayan Handler'lar (eklenebilir) Handler'lar (eklenebilir)
+## Henüz Testi Olmayan Handler'lar
 
-- **Service:** (tüm listelenen handler'lar için test eklendi)
-- **Category:** (tüm listelenen handler'lar için test eklendi)
-- **Seller:** (tüm listelenen handler'lar için test eklendi)
-- **Admin:** (tüm listelenen handler'lar için test eklendi)
-- **LegalDocument:** (tüm listelenen handler'lar için test eklendi)
-- **SellerSubscription:** (tüm listelenen handler'lar için test eklendi)
-- **Favorite:** (tüm listelenen handler'lar için test eklendi)
-- **Message / SupportTicket / UserLegalDocumentAcceptance / Contract:** (tüm listelenen handler'lar için test eklendi)
+Tüm ApplicationService handler'ları için unit test mevcuttur (61/61).
 
-Test çalıştırma: `dotnet test MyIndustry.Tests/MyIndustry.Tests.csproj`
+Ek katman testleri: `Smoke/`, `Integration/`, `Unit/Identity/`, `Unit/Container/`, `Unit/Queue/`, `Unit/Gateway/`, `Unit/Repository/`, `Unit/Api/`
+
+Test çalıştırma:
+- Tüm testler: `dotnet test MyIndustry.Tests/MyIndustry.Tests.csproj`
+- Smoke: `dotnet test --filter "FullyQualifiedName~Smoke"`
+- Integration: `dotnet test --filter "FullyQualifiedName~Integration"`
