@@ -45,4 +45,13 @@ docker compose --profile debug --profile elk up -d
 
 API and Identity have no public host ports in production; traffic goes through the gateway.
 
+### ELK prerequisites (observability stack)
+
+Before deploying `docker-compose.observability.yaml` on the Dokploy node:
+
+1. **Host:** `vm.max_map_count=262144` (see [`observability/README.md`](observability/README.md))
+2. **Dokploy env:** `ELASTIC_PASSWORD`, `DOMAIN` (optional: `ES_JAVA_OPTS`, `ES_MEMORY_LIMIT`)
+3. **Network:** `dokploy-network` must exist (created by Dokploy)
+4. **After password change:** remove volume `myindustry-elasticsearch-data` before redeploy
+
 See also: [`observability/README.md`](observability/README.md), [`SECURITY.md`](SECURITY.md).

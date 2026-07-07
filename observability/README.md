@@ -116,15 +116,74 @@ Sensitive fields (password, token, email, etc.) are masked automatically. Disabl
 
 ## Production (Dokploy)
 
+### Prerequisites (host)
+
+Before the first ELK deploy on a Dokploy node:
+
+```bash
+# Required for Elasticsearch on Linux
+sudo sysctl -w vm.max_map_count=262144
+echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
+```
+
+Recommended RAM: at least **2 GB free** for Elasticsearch on a shared host (8 GB total with other apps is fine with default `512m` heap).
+
+### Dokploy environment variables
+
+| Variable | Required | Notes |
+|----------|----------|-------|
+| `ELASTIC_PASSWORD` | Yes | Strong password; prefer `A-Za-z0-9` (no shell-special chars) |
+| `DOMAIN` | Yes | Used by Traefik: `kibana.${DOMAIN}` |
+| `KIBANA_SYSTEM_PASSWORD` | No | Defaults to `ELASTIC_PASSWORD` on first boot |
+| `ES_JAVA_OPTS` | No | Default `-Xms512m -Xmx512m`; raise on dedicated nodes |
+| `ES_MEMORY_LIMIT` | No | Default `1536m` container memory cap |
+
 Deploy the observability stack as a separate Dokploy compose project:
 
 ```bash
-# Set in Dokploy environment:
-# ELASTIC_PASSWORD=<strong-password>
-# KIBANA_SYSTEM_PASSWORD=<optional, defaults to ELASTIC_PASSWORD>
-# DOMAIN=yourdomain.com
-
 docker compose -f docker-compose.observability.yaml up -d
+```
+
+### First deploy / redeploy checklist
+
+1. Set `ELASTIC_PASSWORD` and `DOMAIN` in Dokploy stack env.
+2. Ensure `vm.max_map_count >= 262144` on the host (see above).
+3. Deploy from Dokploy (compose path: `docker-compose.observability.yaml`).
+4. Verify:
+
+```bash
+docker inspect myindustry-elasticsearch --format '{{.State.Health.Status}}'
+docker ps --filter name=myindustry-
+curl -u elastic:$ELASTIC_PASSWORD http://localhost:9200/_cluster/health
+```
+
+Expected: Elasticsearch **healthy**, Kibana and Filebeat **Up**.
+
+### Diagnose unhealthy Elasticsearch
+
+```bash
+docker logs myindustry-elasticsearch --tail 100
+docker inspect myindustry-elasticsearch --format '{{json .State.Health}}' | jq
+docker exec myindustry-elasticsearch printenv ELASTIC_PASSWORD
+sysctl vm.max_map_count
+free -h
+```
+
+| Log / symptom | Action |
+|---------------|--------|
+| `authentication failed` / healthcheck 401 | Fix `ELASTIC_PASSWORD` in Dokploy, or reset volume (below) |
+| `max virtual memory areas vm.max_map_count` | Run `sysctl -w vm.max_map_count=262144` |
+| `OutOfMemoryError` | Lower other services or set `ES_JAVA_OPTS=-Xms384m -Xmx384m` |
+| Password changed after first install | Reset data volume (wipes logs) |
+
+### Reset Elasticsearch data (password change)
+
+Only if you changed `ELASTIC_PASSWORD` after the first successful boot:
+
+```bash
+docker compose -p <your-dokploy-project-name> down
+docker volume rm myindustry-elasticsearch-data
+# Redeploy from Dokploy with the new ELASTIC_PASSWORD
 ```
 
 App services (`docker-compose.dokploy.yaml`) can optionally include Filebeat hint labels:
@@ -185,8 +244,10 @@ Example Serilog compact JSON line:
 
 | Problem | Solution |
 |---------|----------|
+| Elasticsearch unhealthy (Dokploy) | See [Diagnose unhealthy Elasticsearch](#diagnose-unhealthy-elasticsearch); check healthcheck uses container `$ELASTIC_PASSWORD` |
 | No logs in Elasticsearch | Check `docker logs myindustry-filebeat`; ensure containers are named `myindustry-*` |
-| Elasticsearch won't start | Allocate at least 2 GB RAM; check `docker logs myindustry-elasticsearch` |
+| Elasticsearch won't start | Set `vm.max_map_count=262144`; allocate ~2 GB RAM; check `docker logs myindustry-elasticsearch` |
+| Kibana/Filebeat not starting | Wait for ES healthy; `depends_on: service_healthy` blocks until ES passes healthcheck |
 | JSON fields not parsed | Verify apps output single-line JSON; Filebeat `decode_json_fields` handles Docker-wrapped messages |
 | CorrelationId missing in Queue logs | Ensure publisher sends `X-Correlation-Id` header via MassTransit |
 

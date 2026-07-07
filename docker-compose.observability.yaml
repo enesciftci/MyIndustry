@@ -1,12 +1,14 @@
-version: '3.8'
-
 # Observability stack for Dokploy production.
 # Dokploy Compose path: docker-compose.observability.yaml
 # Deploy as a separate Dokploy compose stack on the same node as app services.
 #
 # Required environment variables (set in Dokploy):
 # - ELASTIC_PASSWORD
-# - KIBANA_SYSTEM_PASSWORD (optional, defaults to ELASTIC_PASSWORD)
+# - DOMAIN (Kibana Traefik host)
+# Optional:
+# - KIBANA_SYSTEM_PASSWORD (defaults to ELASTIC_PASSWORD)
+# - ES_JAVA_OPTS (defaults to -Xms512m -Xmx512m)
+# - ES_MEMORY_LIMIT (defaults to 1536m)
 
 services:
   elasticsearch:
@@ -17,21 +19,28 @@ services:
       discovery.type: single-node
       xpack.security.enabled: "true"
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
-      ES_JAVA_OPTS: "-Xms1g -Xmx1g"
+      ES_JAVA_OPTS: ${ES_JAVA_OPTS:--Xms512m -Xmx512m}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
     networks:
       - dokploy-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health | grep -qE 'green|yellow'"]
+      test: ["CMD-SHELL", "curl -sf -u elastic:$$ELASTIC_PASSWORD http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 60s
+      retries: 10
+      start_period: 120s
     deploy:
       resources:
         limits:
-          memory: 2g
+          memory: ${ES_MEMORY_LIMIT:-1536m}
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.15.0
