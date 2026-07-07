@@ -45,6 +45,16 @@ docker compose --profile debug --profile elk up -d
 
 API and Identity have no public host ports in production; traffic goes through the gateway.
 
+### App stack prerequisites (Dokploy)
+
+Before deploying `docker-compose.dokploy.yaml`:
+
+1. **Environment:** copy [`env.example`](env.example) into Dokploy app stack env (JWT, CORS, AllowedHosts, DB, Redis, RabbitMQ, Identity admin).
+2. **Network:** `dokploy-network` must exist (created by Dokploy).
+3. **Deploy:** Rebuild + deploy after env changes; verify with `docker exec myindustry-api printenv`.
+
+See also: [`SECURITY.md`](SECURITY.md) production checklist.
+
 ### ELK prerequisites (observability stack)
 
 Before deploying `docker-compose.observability.yaml` on the Dokploy node:

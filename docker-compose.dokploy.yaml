@@ -12,6 +12,9 @@ version: '3.8'
 # - DB_HOST, DB_PASSWORD
 # - REDIS_HOST, REDIS_PASSWORD
 # - RABBITMQ_HOST, RABBITMQ_USER, RABBITMQ_PASSWORD
+# - JWT_SIGNING_KEY, CORS_ALLOWED_ORIGIN, ALLOWED_HOSTS, INTERNAL_API_KEY
+# - ADMIN_EMAIL, ADMIN_PASSWORD, PASSWORD_RESET_ALLOWED_BASE_URL
+# Optional: JWT_ISSUER, RECAPTCHA_SECRET_KEY
 
 services:
   myindustry-api:
@@ -23,6 +26,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__Issuer: ${JWT_ISSUER:-MyIndustry.Identity}
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
+      AllowedHosts: ${ALLOWED_HOSTS}
+      InternalApiKey: ${INTERNAL_API_KEY}
+      Recaptcha__SecretKey: ${RECAPTCHA_SECRET_KEY:-}
       ConnectionStrings__MyIndustry: Host=${DB_HOST};Port=5432;Database=myindustry;Username=postgres;Password=${DB_PASSWORD}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -46,6 +55,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__Issuer: ${JWT_ISSUER:-MyIndustry.Identity}
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
+      AllowedHosts: ${ALLOWED_HOSTS}
+      SeedAdmin__Email: ${ADMIN_EMAIL}
+      SeedAdmin__Password: ${ADMIN_PASSWORD}
+      PasswordReset__AllowedBaseUrl: ${PASSWORD_RESET_ALLOWED_BASE_URL}
       ConnectionStrings__MyIndustryIdentityDb: Host=${DB_HOST};Port=5432;Database=myindustry_identity;Username=postgres;Password=${DB_PASSWORD}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -73,6 +89,11 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
+      Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      Jwt__Issuer: ${JWT_ISSUER:-MyIndustry.Identity}
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
+      AllowedHosts: ${ALLOWED_HOSTS}
+      IdentityUrl: http://myindustry-identity:8080
     ports:
       - "5002:8080"
     networks:

@@ -147,30 +147,26 @@ Güvenlikle ilgili ek soru veya inceleme isterseniz bu belgeyi temel alarak deva
 
 ### Production checklist (güncel)
 
-| Değişken | Servis |
-|----------|--------|
-| `Jwt__SigningKey` | Api, Identity, Gateway |
-| `Jwt__Issuer` | Api, Identity, Gateway |
-| `InternalApiKey` | Api |
-| `Cors__AllowedOrigins__0` | Api, Identity, Gateway |
-| `REDIS_HOST` | Api, Identity |
-| `REDIS_PASSWORD` | Api, Identity |
-| `ConnectionStrings__Redis` | Api, Identity (compose tarafından türetilir; elle set etmeyin) |
-| `Recaptcha__SecretKey` | Api |
-| `SeedAdmin__Password` / `ADMIN_PASSWORD` | Identity |
-| `SeedAdmin__Email` / `ADMIN_EMAIL` | Identity |
-| `PasswordReset__AllowedBaseUrl` | Identity |
-| `ForwardedHeaders__KnownProxies__0` | Api, Identity, Gateway |
-| `AllowedHosts` veya `AllowedHosts__0` | Api, Identity, Gateway |
+Dokploy app stack env değişkenleri [`env.example`](env.example) dosyasında listelenir. `docker-compose.dokploy.yaml` bunları servis env'lerine map eder — `Jwt__SigningKey`, `Cors__AllowedOrigins__0` gibi değerleri Dokploy'da **elle** yazmayın; kaynak env'leri kullanın.
 
-**AllowedHosts (Production zorunlu):** Startup guard production'da `AllowedHosts=*` veya boş değerle uygulamayı başlatmaz. Deploy sırasında gerçek domain(ler)inizi ayarlayın:
+| Dokploy env (kaynak) | Compose → servis env | Servis |
+|----------------------|----------------------|--------|
+| `JWT_SIGNING_KEY` | `Jwt__SigningKey` | Api, Identity, Gateway |
+| `JWT_ISSUER` (opsiyonel) | `Jwt__Issuer` | Api, Identity, Gateway |
+| `CORS_ALLOWED_ORIGIN` | `Cors__AllowedOrigins__0` | Api, Identity, Gateway |
+| `ALLOWED_HOSTS` | `AllowedHosts` | Api, Identity, Gateway |
+| `INTERNAL_API_KEY` | `InternalApiKey` | Api |
+| `REDIS_HOST`, `REDIS_PASSWORD` | `ConnectionStrings__Redis` (+ passthrough) | Api, Identity |
+| `RECAPTCHA_SECRET_KEY` (opsiyonel) | `Recaptcha__SecretKey` | Api |
+| `ADMIN_EMAIL` | `SeedAdmin__Email` | Identity |
+| `ADMIN_PASSWORD` | `SeedAdmin__Password` | Identity |
+| `PASSWORD_RESET_ALLOWED_BASE_URL` | `PasswordReset__AllowedBaseUrl` | Identity |
+| `ForwardedHeaders__KnownProxies__0` | (Dokploy'da elle, opsiyonel) | Api, Identity, Gateway |
+
+**AllowedHosts (Production zorunlu):** Startup guard production'da `AllowedHosts=*` veya boş değerle uygulamayı başlatmaz. Dokploy'da `ALLOWED_HOSTS` env kullanın (compose inject eder):
 
 ```bash
-# Tek domain
-AllowedHosts__0=api.myindustry.com
-
-# Birden fazla domain (noktalı virgül ile)
-AllowedHosts=api.myindustry.com;gateway.myindustry.com
+ALLOWED_HOSTS=gateway.myindustry.com;api.myindustry.com
 ```
 
 Şablon dosyalar: `MyIndustry.Container/ProductionAllowedHosts.{Api,Identity,Gateway}.json` — ilgili projeye `appsettings.Production.json` olarak kopyalayın ve domain'leri güncelleyin.
@@ -178,11 +174,11 @@ AllowedHosts=api.myindustry.com;gateway.myindustry.com
 **Redis (Production zorunlu):** Api JWT blacklist için Redis gerektirir. Dokploy app stack env'de `REDIS_HOST` ve `REDIS_PASSWORD` tanımlayın (built-in Redis panelinden). Deploy sonrası doğrulama:
 
 ```bash
-docker exec myindustry-api printenv | grep -iE 'REDIS|ConnectionStrings__Redis'
+docker exec myindustry-api printenv | grep -iE 'Jwt|Cors|Allowed|REDIS|ConnectionStrings__Redis'
 docker logs myindustry-api --tail 20
 ```
 
-Beklenen: `ConnectionStrings__Redis=hostname:6379,password=...` veya en azından `REDIS_HOST` + `REDIS_PASSWORD`. Api ayrıca `REDIS_HOST`/`REDIS_PASSWORD` ile connection string oluşturabilir (compose substitution başarısız olsa bile).
+Beklenen: `Jwt__SigningKey`, `Cors__AllowedOrigins__0`, `AllowedHosts` ve Redis connection string container env'de görünür.
 
 **Not:** Main API ve Identity API production'da yalnızca internal network / Gateway üzerinden erişilebilir olmalıdır. Local `compose.yaml` bunu varsayılan olarak uygular; debug için `--profile debug` kullanın.
 
