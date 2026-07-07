@@ -49,9 +49,10 @@ API and Identity have no public host ports in production; traffic goes through t
 
 Before deploying `docker-compose.dokploy.yaml`:
 
-1. **Environment:** copy [`env.example`](env.example) into Dokploy app stack env (JWT, CORS, AllowedHosts, DB, Redis, RabbitMQ, Identity admin).
-2. **Network:** `dokploy-network` must exist (created by Dokploy).
-3. **Deploy:** Rebuild + deploy after env changes; verify with `docker exec myindustry-api printenv`.
+1. **Environment:** copy [`env.example`](env.example) into Dokploy app stack env. See [`DOKPLOY-ENV.md`](DOKPLOY-ENV.md) if migrating from legacy `ConnectionStrings__*` / `Jwt__*` vars.
+2. **R2 (optional):** add `R2__*` on **myindustry-api** service only — see [`DOKPLOY-ENV.md`](DOKPLOY-ENV.md).
+3. **Network:** `dokploy-network` must exist (created by Dokploy).
+4. **Deploy:** Rebuild + deploy after env changes; verify with `docker exec myindustry-api printenv`.
 
 See also: [`SECURITY.md`](SECURITY.md) production checklist.
 

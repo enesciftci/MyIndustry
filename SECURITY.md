@@ -147,7 +147,7 @@ Güvenlikle ilgili ek soru veya inceleme isterseniz bu belgeyi temel alarak deva
 
 ### Production checklist (güncel)
 
-Dokploy app stack env değişkenleri [`env.example`](env.example) dosyasında listelenir. `docker-compose.dokploy.yaml` bunları servis env'lerine map eder — `Jwt__SigningKey`, `Cors__AllowedOrigins__0` gibi değerleri Dokploy'da **elle** yazmayın; kaynak env'leri kullanın.
+Dokploy app stack env değişkenleri [`env.example`](env.example) dosyasında listelenir. Eski `ConnectionStrings__*` / doğrudan `Jwt__*` kullanıyorsanız [`DOKPLOY-ENV.md`](DOKPLOY-ENV.md) migration rehberine bakın.
 
 | Dokploy env (kaynak) | Compose → servis env | Servis |
 |----------------------|----------------------|--------|
