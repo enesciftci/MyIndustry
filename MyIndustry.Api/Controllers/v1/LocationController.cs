@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MyIndustry.ApplicationService.Helpers;
 using MyIndustry.Repository.DbContext;
 
 namespace MyIndustry.Api.Controllers.v1;
@@ -86,8 +87,14 @@ public class LocationController : BaseController
             return Ok(new { success = true, cities = Array.Empty<object>() });
         }
 
-        var cities = await _context.Cities
-            .Where(c => c.IsActive && c.Name.ToLower().Contains(query.ToLower()))
+        var normalizedQuery = SearchTermHelper.NormalizeForSearch(query);
+        var candidates = await _context.Cities
+            .Where(c => c.IsActive)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var cities = candidates
+            .Where(c => SearchTermHelper.NormalizeForSearch(c.Name).Contains(normalizedQuery))
             .OrderBy(c => c.Name)
             .Take(10)
             .Select(c => new
@@ -96,7 +103,7 @@ public class LocationController : BaseController
                 c.Name,
                 c.PlateCode
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return Ok(new { success = true, cities });
     }
@@ -112,15 +119,21 @@ public class LocationController : BaseController
             return Ok(new { success = true, districts = Array.Empty<object>() });
         }
 
-        var queryable = _context.Districts
-            .Where(d => d.IsActive && d.Name.ToLower().Contains(query.ToLower()));
+        var normalizedQuery = SearchTermHelper.NormalizeForSearch(query);
+        var queryable = _context.Districts.Where(d => d.IsActive);
 
         if (cityId.HasValue)
         {
             queryable = queryable.Where(d => d.CityId == cityId.Value);
         }
 
-        var districts = await queryable
+        var candidates = await queryable
+            .Include(d => d.City)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        var districts = candidates
+            .Where(d => SearchTermHelper.NormalizeForSearch(d.Name).Contains(normalizedQuery))
             .OrderBy(d => d.Name)
             .Take(20)
             .Select(d => new
@@ -130,7 +143,7 @@ public class LocationController : BaseController
                 d.CityId,
                 CityName = d.City.Name
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return Ok(new { success = true, districts });
     }
@@ -146,15 +159,29 @@ public class LocationController : BaseController
             return Ok(new { success = true, neighborhoods = Array.Empty<object>() });
         }
 
-        var queryable = _context.Neighborhoods
-            .Where(n => n.IsActive && n.Name.ToLower().Contains(query.ToLower()));
+        var normalizedQuery = SearchTermHelper.NormalizeForSearch(query);
+        var queryable = _context.Neighborhoods.Where(n => n.IsActive);
 
         if (districtId.HasValue)
         {
             queryable = queryable.Where(n => n.DistrictId == districtId.Value);
         }
+        else if (!IsInMemoryDatabase())
+        {
+            queryable = queryable.Where(n =>
+                EF.Functions.ILike(n.Name, $"%{query}%") ||
+                EF.Functions.ILike(n.Name, $"%{normalizedQuery}%"));
+        }
 
-        var neighborhoods = await queryable
+        var candidates = await queryable
+            .Include(n => n.District)
+            .ThenInclude(d => d.City)
+            .AsNoTracking()
+            .Take(districtId.HasValue ? 10_000 : 500)
+            .ToListAsync(cancellationToken);
+
+        var neighborhoods = candidates
+            .Where(n => SearchTermHelper.NormalizeForSearch(n.Name).Contains(normalizedQuery))
             .OrderBy(n => n.Name)
             .Take(30)
             .Select(n => new
@@ -165,8 +192,11 @@ public class LocationController : BaseController
                 DistrictName = n.District.Name,
                 CityName = n.District.City.Name
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return Ok(new { success = true, neighborhoods });
     }
+
+    private bool IsInMemoryDatabase() =>
+        _context.Database.ProviderName?.Contains("InMemory", StringComparison.OrdinalIgnoreCase) == true;
 }

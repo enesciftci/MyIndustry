@@ -70,4 +70,20 @@ public class SearchTermHelperTests
         result.Should().Contain("kompresor");
         result.Should().Contain("kompressor");
     }
+
+    [Fact]
+    public void NormalizeForSearch_Istanbul_Contains_Istan_Substring()
+    {
+        SearchTermHelper.NormalizeForSearch("İstanbul").Should().Be("istanbul");
+        SearchTermHelper.NormalizeForSearch("İstanbul").Should().Contain("istan");
+        SearchTermHelper.NormalizeForSearch("istan").Should().Be("istan");
+    }
+
+    [Fact]
+    public void NormalizeForSearch_When_Null_Or_WhiteSpace_Returns_Empty()
+    {
+        SearchTermHelper.NormalizeForSearch(null).Should().BeEmpty();
+        SearchTermHelper.NormalizeForSearch("").Should().BeEmpty();
+        SearchTermHelper.NormalizeForSearch("   ").Should().BeEmpty();
+    }
 }

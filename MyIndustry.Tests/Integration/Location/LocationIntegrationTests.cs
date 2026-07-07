@@ -1,7 +1,13 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using MyIndustry.ApplicationService.Helpers;
 using MyIndustry.Domain.Aggregate;
 using MyIndustry.Repository.DbContext;
+using MyIndustry.Tests.Fixtures;
 using MyIndustry.Tests.Helpers;
 
 namespace MyIndustry.Tests.Integration.Location;
@@ -73,11 +79,12 @@ public class LocationIntegrationTests : IDisposable
     {
         await TestDataBuilder.SeedLocationHierarchyAsync(_context);
 
-        var cities = await _context.Cities
-            .Where(c => c.IsActive && c.Name.ToLower().Contains("istan"))
+        var normalizedQuery = SearchTermHelper.NormalizeForSearch("istan");
+        var cities = (await _context.Cities.Where(c => c.IsActive).ToListAsync())
+            .Where(c => SearchTermHelper.NormalizeForSearch(c.Name).Contains(normalizedQuery))
             .OrderBy(c => c.Name)
             .Take(10)
-            .ToListAsync();
+            .ToList();
 
         cities.Should().HaveCount(1);
         cities[0].Name.Should().Be("İstanbul");
@@ -88,11 +95,14 @@ public class LocationIntegrationTests : IDisposable
     {
         var (city, district, _) = await TestDataBuilder.SeedLocationHierarchyAsync(_context);
 
-        var districts = await _context.Districts
-            .Where(d => d.IsActive && d.CityId == city.Id && d.Name.ToLower().Contains("kad"))
+        var normalizedQuery = SearchTermHelper.NormalizeForSearch("kad");
+        var districts = (await _context.Districts
+                .Where(d => d.IsActive && d.CityId == city.Id)
+                .ToListAsync())
+            .Where(d => SearchTermHelper.NormalizeForSearch(d.Name).Contains(normalizedQuery))
             .OrderBy(d => d.Name)
             .Take(20)
-            .ToListAsync();
+            .ToList();
 
         districts.Should().HaveCount(1);
         districts[0].Id.Should().Be(district.Id);
@@ -102,5 +112,51 @@ public class LocationIntegrationTests : IDisposable
     {
         _context.Database.EnsureDeleted();
         _context.Dispose();
+    }
+}
+
+public class LocationSearchApiIntegrationTests : IClassFixture<ApiWebApplicationFactory>
+{
+    private const string Base = "/api/v1/locations";
+    private readonly ApiWebApplicationFactory _factory;
+
+    public LocationSearchApiIntegrationTests(ApiWebApplicationFactory factory)
+    {
+        _factory = factory;
+    }
+
+    [Fact]
+    public async Task SearchCities_Via_Api_Should_Return_Istanbul_For_Istan_Query()
+    {
+        var client = _factory.CreateSeededClient();
+        var response = await client.GetAsync($"{Base}/cities/search?query=istan");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        json.GetProperty("success").GetBoolean().Should().BeTrue();
+
+        var cities = json.GetProperty("cities");
+        cities.GetArrayLength().Should().Be(1);
+        cities[0].GetProperty("name").GetString().Should().Be("İstanbul");
+    }
+
+    [Fact]
+    public async Task SearchDistricts_Via_Api_Should_Return_Kadikoy_For_Kad_Query()
+    {
+        var client = _factory.CreateSeededClient();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MyIndustryDbContext>();
+        var city = await db.Cities.FirstAsync(c => c.Name == "İstanbul");
+        var district = await db.Districts.FirstAsync(d => d.CityId == city.Id);
+
+        var response = await client.GetAsync($"{Base}/districts/search?query=kad&cityId={city.Id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var districts = json.GetProperty("districts");
+        districts.GetArrayLength().Should().BeGreaterThanOrEqualTo(1);
+        districts.EnumerateArray().Select(d => d.GetProperty("id").GetGuid())
+            .Should().Contain(district.Id);
     }
 }

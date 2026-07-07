@@ -23,6 +23,21 @@ public static class SearchTermHelper
     private static readonly HashSet<char> Vowels = new() { 'a', 'e', 'ı', 'i', 'o', 'ö', 'u', 'ü' };
 
     /// <summary>
+    /// Lowercases and maps Turkish characters to ASCII for culture-invariant substring search.
+    /// </summary>
+    public static string NormalizeForSearch(string? term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return string.Empty;
+
+        var t = term.Trim().ToLowerInvariant();
+        var normalized = new StringBuilder(t.Length);
+        foreach (var c in t)
+            normalized.Append(TurkishToAscii.TryGetValue(c, out var r) ? r : c);
+        return normalized.ToString();
+    }
+
+    /// <summary>
     /// Returns normalized and spelling variants so that "kompresör", "kompresor", "kompressor" all match.
     /// </summary>
     public static IReadOnlyList<string> GetSearchVariants(string? term)
@@ -33,10 +48,7 @@ public static class SearchTermHelper
         var t = term.Trim().ToLowerInvariant();
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { t };
 
-        var normalized = new StringBuilder();
-        foreach (var c in t)
-            normalized.Append(TurkishToAscii.TryGetValue(c, out var r) ? r : c);
-        var norm = normalized.ToString();
+        var norm = NormalizeForSearch(term);
         set.Add(norm);
 
         // "ss" -> "s" so "kompressor" matches when user types "kompresor"
