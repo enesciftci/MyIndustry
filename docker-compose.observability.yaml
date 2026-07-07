@@ -6,11 +6,38 @@
 # - ELASTIC_PASSWORD
 # - DOMAIN (Kibana Traefik host)
 # Optional:
-# - KIBANA_SYSTEM_PASSWORD (defaults to ELASTIC_PASSWORD)
+# - KIBANA_SYSTEM_PASSWORD (defaults to ELASTIC_PASSWORD; synced by es-setup)
 # - ES_JAVA_OPTS (defaults to -Xms512m -Xmx512m)
 # - ES_MEMORY_LIMIT (defaults to 1536m)
 
 services:
+  es-setup:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: myindustry-es-setup
+    restart: "no"
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-${ELASTIC_PASSWORD}}
+    networks:
+      - dokploy-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        echo "Setting kibana_system password"
+        until curl -sf -X POST -u "elastic:$$ELASTIC_PASSWORD" \
+          -H "Content-Type: application/json" \
+          "http://elasticsearch:9200/_security/user/kibana_system/_password" \
+          -d "{\"password\":\"$$KIBANA_SYSTEM_PASSWORD\"}"; do
+          echo "Retrying..."
+          sleep 5
+        done
+        echo "kibana_system password set"
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: myindustry-elasticsearch
@@ -50,11 +77,14 @@ services:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       ELASTICSEARCH_USERNAME: kibana_system
       ELASTICSEARCH_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-${ELASTIC_PASSWORD}}
+      SERVER_PUBLICBASEURL: https://kibana.${DOMAIN:-localhost}
     networks:
       - dokploy-network
     depends_on:
       elasticsearch:
         condition: service_healthy
+      es-setup:
+        condition: service_completed_successfully
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.myindustry-kibana.rule=Host(`kibana.${DOMAIN:-localhost}`)"
@@ -80,6 +110,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+      es-setup:
+        condition: service_completed_successfully
 
 networks:
   dokploy-network:

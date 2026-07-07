@@ -134,7 +134,7 @@ Recommended RAM: at least **2 GB free** for Elasticsearch on a shared host (8 GB
 |----------|----------|-------|
 | `ELASTIC_PASSWORD` | Yes | Strong password; prefer `A-Za-z0-9` (no shell-special chars) |
 | `DOMAIN` | Yes | Used by Traefik: `kibana.${DOMAIN}` |
-| `KIBANA_SYSTEM_PASSWORD` | No | Defaults to `ELASTIC_PASSWORD` on first boot |
+| `KIBANA_SYSTEM_PASSWORD` | No | Defaults to `ELASTIC_PASSWORD`; synced to ES by `es-setup` on each deploy |
 | `ES_JAVA_OPTS` | No | Default `-Xms512m -Xmx512m`; raise on dedicated nodes |
 | `ES_MEMORY_LIMIT` | No | Default `1536m` container memory cap |
 
@@ -149,15 +149,33 @@ docker compose -f docker-compose.observability.yaml up -d
 1. Set `ELASTIC_PASSWORD` and `DOMAIN` in Dokploy stack env.
 2. Ensure `vm.max_map_count >= 262144` on the host (see above).
 3. Deploy from Dokploy (compose path: `docker-compose.observability.yaml`).
-4. Verify:
+4. The `es-setup` one-shot container sets `kibana_system` password before Kibana starts.
+5. Verify:
 
 ```bash
 docker inspect myindustry-elasticsearch --format '{{.State.Health.Status}}'
+docker logs myindustry-es-setup
 docker ps --filter name=myindustry-
 curl -u elastic:$ELASTIC_PASSWORD http://localhost:9200/_cluster/health
 ```
 
-Expected: Elasticsearch **healthy**, Kibana and Filebeat **Up**.
+Expected: Elasticsearch **healthy**, `es-setup` exited 0, Kibana and Filebeat **Up**.
+
+### Fix Kibana `kibana_system` authentication (immediate)
+
+If Kibana logs show `unable to authenticate user [kibana_system]` before redeploying with `es-setup`:
+
+```bash
+docker exec myindustry-elasticsearch curl -s -X POST \
+  -u "elastic:$ELASTIC_PASSWORD" \
+  -H "Content-Type: application/json" \
+  "http://localhost:9200/_security/user/kibana_system/_password" \
+  -d "{\"password\":\"$ELASTIC_PASSWORD\"}"
+
+docker restart myindustry-kibana
+```
+
+After the compose fix is deployed, `es-setup` runs this automatically on each deploy.
 
 ### Diagnose unhealthy Elasticsearch
 
@@ -172,6 +190,7 @@ free -h
 | Log / symptom | Action |
 |---------------|--------|
 | `authentication failed` / healthcheck 401 | Fix `ELASTIC_PASSWORD` in Dokploy, or reset volume (below) |
+| `unable to authenticate user [kibana_system]` | Run [Fix Kibana authentication](#fix-kibana-kibana_system-authentication-immediate), or redeploy with `es-setup` |
 | `max virtual memory areas vm.max_map_count` | Run `sysctl -w vm.max_map_count=262144` |
 | `OutOfMemoryError` | Lower other services or set `ES_JAVA_OPTS=-Xms384m -Xmx384m` |
 | Password changed after first install | Reset data volume (wipes logs) |
@@ -247,7 +266,8 @@ Example Serilog compact JSON line:
 | Elasticsearch unhealthy (Dokploy) | See [Diagnose unhealthy Elasticsearch](#diagnose-unhealthy-elasticsearch); check healthcheck uses container `$ELASTIC_PASSWORD` |
 | No logs in Elasticsearch | Check `docker logs myindustry-filebeat`; ensure containers are named `myindustry-*` |
 | Elasticsearch won't start | Set `vm.max_map_count=262144`; allocate ~2 GB RAM; check `docker logs myindustry-elasticsearch` |
-| Kibana/Filebeat not starting | Wait for ES healthy; `depends_on: service_healthy` blocks until ES passes healthcheck |
+| Kibana/Filebeat not starting | Wait for ES healthy and `es-setup` completed; check `docker logs myindustry-es-setup` |
+| Kibana `kibana_system` auth failed | See [Fix Kibana authentication](#fix-kibana-kibana_system-authentication-immediate) |
 | JSON fields not parsed | Verify apps output single-line JSON; Filebeat `decode_json_fields` handles Docker-wrapped messages |
 | CorrelationId missing in Queue logs | Ensure publisher sends `X-Correlation-Id` header via MassTransit |
 

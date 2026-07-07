@@ -52,6 +52,7 @@ Before deploying `docker-compose.observability.yaml` on the Dokploy node:
 1. **Host:** `vm.max_map_count=262144` (see [`observability/README.md`](observability/README.md))
 2. **Dokploy env:** `ELASTIC_PASSWORD`, `DOMAIN` (optional: `ES_JAVA_OPTS`, `ES_MEMORY_LIMIT`)
 3. **Network:** `dokploy-network` must exist (created by Dokploy)
-4. **After password change:** remove volume `myindustry-elasticsearch-data` before redeploy
+4. **Bootstrap:** `es-setup` one-shot service syncs `kibana_system` password before Kibana starts
+5. **After password change:** remove volume `myindustry-elasticsearch-data` before redeploy
 
 See also: [`observability/README.md`](observability/README.md), [`SECURITY.md`](SECURITY.md).
