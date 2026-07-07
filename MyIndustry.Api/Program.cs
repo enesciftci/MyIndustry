@@ -68,6 +68,13 @@ builder.Services.AddHttpClient<IRecaptchaVerificationService, RecaptchaVerificat
 builder.Services.AddHttpContextAccessor();
 
 var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    var redisHost = builder.Configuration["REDIS_HOST"];
+    var redisPassword = builder.Configuration["REDIS_PASSWORD"];
+    if (!string.IsNullOrWhiteSpace(redisHost))
+        redisConnectionString = $"{redisHost.Trim()}:6379,password={redisPassword}";
+}
 if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing")
     && string.IsNullOrWhiteSpace(redisConnectionString))
     throw new InvalidOperationException("ConnectionStrings:Redis must be set in Production for JWT blacklist support.");

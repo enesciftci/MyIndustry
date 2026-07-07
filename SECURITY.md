@@ -153,7 +153,9 @@ Güvenlikle ilgili ek soru veya inceleme isterseniz bu belgeyi temel alarak deva
 | `Jwt__Issuer` | Api, Identity, Gateway |
 | `InternalApiKey` | Api |
 | `Cors__AllowedOrigins__0` | Api, Identity, Gateway |
-| `ConnectionStrings__Redis` | Api, Identity |
+| `REDIS_HOST` | Api, Identity |
+| `REDIS_PASSWORD` | Api, Identity |
+| `ConnectionStrings__Redis` | Api, Identity (compose tarafından türetilir; elle set etmeyin) |
 | `Recaptcha__SecretKey` | Api |
 | `SeedAdmin__Password` / `ADMIN_PASSWORD` | Identity |
 | `SeedAdmin__Email` / `ADMIN_EMAIL` | Identity |
@@ -172,6 +174,15 @@ AllowedHosts=api.myindustry.com;gateway.myindustry.com
 ```
 
 Şablon dosyalar: `MyIndustry.Container/ProductionAllowedHosts.{Api,Identity,Gateway}.json` — ilgili projeye `appsettings.Production.json` olarak kopyalayın ve domain'leri güncelleyin.
+
+**Redis (Production zorunlu):** Api JWT blacklist için Redis gerektirir. Dokploy app stack env'de `REDIS_HOST` ve `REDIS_PASSWORD` tanımlayın (built-in Redis panelinden). Deploy sonrası doğrulama:
+
+```bash
+docker exec myindustry-api printenv | grep -iE 'REDIS|ConnectionStrings__Redis'
+docker logs myindustry-api --tail 20
+```
+
+Beklenen: `ConnectionStrings__Redis=hostname:6379,password=...` veya en azından `REDIS_HOST` + `REDIS_PASSWORD`. Api ayrıca `REDIS_HOST`/`REDIS_PASSWORD` ile connection string oluşturabilir (compose substitution başarısız olsa bile).
 
 **Not:** Main API ve Identity API production'da yalnızca internal network / Gateway üzerinden erişilebilir olmalıdır. Local `compose.yaml` bunu varsayılan olarak uygular; debug için `--profile debug` kullanın.
 

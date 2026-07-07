@@ -24,6 +24,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__MyIndustry: Host=${DB_HOST};Port=5432;Database=myindustry;Username=postgres;Password=${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       ConnectionStrings__Redis: ${REDIS_HOST}:6379,password=${REDIS_PASSWORD}
       IdentityUrl: http://myindustry-identity:8080
     networks:
@@ -45,6 +47,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__MyIndustryIdentityDb: Host=${DB_HOST};Port=5432;Database=myindustry_identity;Username=postgres;Password=${DB_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       ConnectionStrings__Redis: ${REDIS_HOST}:6379,password=${REDIS_PASSWORD}
       IdentityUrl: http://myindustry-identity:8080
       RabbitMq__Host: ${RABBITMQ_HOST}
