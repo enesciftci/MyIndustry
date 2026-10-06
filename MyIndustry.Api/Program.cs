@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
 using MyIndustry.Api.Data;
 using MyIndustry.Api.Services;
@@ -264,7 +266,16 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = static async (context, report) =>
+    {
+        // Identifies which host answered the probe (used by AI loop smoke tests).
+        context.Response.Headers["X-MyIndustry-Service"] = "MyIndustry.Api";
+        context.Response.ContentType = "text/plain";
+        await context.Response.WriteAsync(report.Status == HealthStatus.Healthy ? "Healthy" : "Unhealthy");
+    }
+});
 
 try
 {
