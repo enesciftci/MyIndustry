@@ -25,15 +25,18 @@ import {
 } from "./git.mjs";
 import {
   commentIssue,
+  ensurePrCi,
   fetchIssue,
   replaceLabels,
   triggerSiblingWorkflow,
 } from "./github.mjs";
 import { buildFixPrompt, buildInitialPrompt } from "./prompt.mjs";
 import {
+  buildIterationDetailsFromState,
   buildPrBody,
   createPullRequest,
   isPrPermissionError,
+  updatePullRequestBody,
 } from "./pr.mjs";
 import { resolveScope, shouldRunInThisRepo } from "./scope.mjs";
 import {
@@ -45,7 +48,11 @@ import {
   recordState,
   taskIdForIssue,
 } from "./state.mjs";
-import { excerptOutput, runVerify } from "./verify.mjs";
+import {
+  CONTROLLED_FAILURE_STAGE,
+  excerptOutput,
+  runVerify,
+} from "./verify.mjs";
 
 function log(...args) {
   console.log("[ai-loop]", ...args);
@@ -57,42 +64,13 @@ function parseIssueNumber() {
   return Number(n);
 }
 
-const SMOKE_MARKER_REL = path.join("docs", "ai-loop-smoke-marker.md");
-const CONTROLLED_SELF_CORRECTION_TEST = "CONTROLLED_SELF_CORRECTION_TEST";
-
-function smokeMarkerPath() {
-  return path.join(REPO_ROOT, SMOKE_MARKER_REL);
+function labelNames(labels) {
+  return (labels || []).map((l) => (typeof l === "string" ? l : l.name));
 }
 
-function selfCorrectionHarnessEnabled(issue) {
-  if (env("AI_LOOP_SELF_CORRECTION_HARNESS") === "1") return true;
-  const title = issue?.title || "";
-  return /self-correction infrastructure test/i.test(title);
-}
-
-function shouldInjectControlledSelfCorrection({
-  harnessEnabled,
-  mock,
-  iteration,
-  markerExists,
-}) {
-  if (iteration !== 1 || markerExists) return false;
-  return mock || harnessEnabled;
-}
-
-function controlledSelfCorrectionVerifyResult() {
-  return {
-    ok: false,
-    exitCode: 1,
-    command: CONTROLLED_SELF_CORRECTION_TEST,
-    failedStage: "Self-Correction Harness",
-    output: [
-      `[FAIL] Self-Correction Harness (${CONTROLLED_SELF_CORRECTION_TEST})`,
-      `       ${SMOKE_MARKER_REL} missing — iteration 1 injected failure (harness enabled)`,
-      "       Next iteration must run real ./scripts/verify after the fix lands.",
-      "RESULT: FAILED",
-    ].join("\n"),
-  };
+function resolveSelfCorrectionTest(issue) {
+  if (env("AI_LOOP_SELF_CORRECTION_TEST") === "1") return true;
+  return labelNames(issue.labels).includes("ai-self-correction-test");
 }
 
 async function main() {
@@ -107,7 +85,6 @@ async function main() {
   const mock = env("AI_LOOP_MOCK_AGENT") === "1";
   const dryGit = mock || env("AI_LOOP_DRY_GIT") === "1";
   const skipGhIssue = mock || env("AI_LOOP_SKIP_GH") === "1";
-  let harnessEnabled = false;
 
   assertApiKeyPresent();
 
@@ -136,9 +113,10 @@ async function main() {
     issue = fetchIssue(issueNumber);
   }
 
-  harnessEnabled = selfCorrectionHarnessEnabled(issue);
-  if (harnessEnabled) {
-    log("self-correction harness enabled for issue", issueNumber);
+  const selfCorrectionTest = resolveSelfCorrectionTest(issue);
+  if (selfCorrectionTest) {
+    process.env.AI_LOOP_SELF_CORRECTION_TEST = "1";
+    log("self-correction harness ENABLED (AI_LOOP_SELF_CORRECTION_TEST=1)");
   }
 
   const scope = resolveScope({
@@ -178,6 +156,7 @@ async function main() {
     repo_kind: repoKind,
     scope: scope.mode,
     status: "in_progress",
+    self_correction_test: selfCorrectionTest,
   });
 
   let activeBranch = null;
@@ -216,6 +195,10 @@ async function main() {
               exitCode: lastVerify?.exitCode,
               failedStage: lastVerify?.failedStage,
               excerpt: excerptOutput(lastVerify?.output || "", 200),
+              previousAction:
+                i === 2
+                  ? "iteration 1 implement + verify"
+                  : `iteration ${i - 1} fix + verify`,
               previousAttempts: JSON.stringify(state?.attempts || [], null, 2),
               changedFiles: activeBranch
                 ? changedFilesVsBase(baseBranch)
@@ -227,7 +210,7 @@ async function main() {
                 fingerprintCounts.get(state?.last_fingerprint) || 0,
             });
 
-      log(`agent send iteration=${i} kind=${driver.kind}`);
+      log(`agent send iteration=${i} kind=${driver.kind} agent_id=${driver.agentId}`);
       const sendResult = await driver.send(prompt);
       if (sendResult.status === "error") {
         recordState(taskId, {
@@ -242,6 +225,9 @@ async function main() {
           output: `agent run error ${sendResult.runId}`,
           failedStage: "Agent Run",
         };
+        // Avoid immediate re-send while Cloud Agent may still be winding down.
+        log("agent run error; waiting 20s before next iteration");
+        await new Promise((r) => setTimeout(r, 20000));
         continue;
       }
 
@@ -286,25 +272,32 @@ async function main() {
         break;
       }
 
-      const markerExists = fs.existsSync(smokeMarkerPath());
-      if (
-        shouldInjectControlledSelfCorrection({
-          harnessEnabled,
-          mock,
-          iteration: i,
-          markerExists,
-        })
-      ) {
-        log(
-          "injecting controlled first-verify failure",
-          CONTROLLED_SELF_CORRECTION_TEST,
-        );
-        lastVerify = controlledSelfCorrectionVerifyResult();
-        patchState(taskId, { controlled_self_correction_injected: true });
+      const smokeMarker = path.join(
+        REPO_ROOT,
+        "docs",
+        "ai-loop-smoke-marker.md",
+      );
+      // Prefer controlled harness over mock marker when enabled.
+      if (selfCorrectionTest) {
+        log("running verify (self-correction harness may inject first fail)");
+        lastVerify = await runVerify({
+          timeoutSeconds: cfg.COMMAND_TIMEOUT_SECONDS,
+          taskId,
+        });
+      } else if (mock && !fs.existsSync(smokeMarker)) {
+        lastVerify = {
+          ok: false,
+          exitCode: 1,
+          command: "smoke-marker-check",
+          failedStage: "Smoke Marker",
+          output:
+            "[FAIL] Smoke Marker\n       docs/ai-loop-smoke-marker.md missing (mock self-correction path)\nRESULT: FAILED",
+        };
       } else {
         log("running ./scripts/verify");
         lastVerify = await runVerify({
           timeoutSeconds: cfg.COMMAND_TIMEOUT_SECONDS,
+          taskId,
         });
       }
 
@@ -327,34 +320,37 @@ async function main() {
           verification_summary: summaryLines,
           branch: activeBranch,
           iteration: i,
+          agent_id: driver.agentId,
         });
         log("verify PASSED", rec.stdout);
 
-        const stateAfterPass = readState(taskId);
-        const loopResult = [
-          `- **Status:** passed`,
-          `- **Iterations:** ${i}`,
-          `- **Branch:** \`${activeBranch}\``,
-          `- **Agent ID:** \`${driver.agentId || "n/a"}\``,
-          stateAfterPass?.controlled_self_correction_injected
-            ? `- **First verify:** ${CONTROLLED_SELF_CORRECTION_TEST} (harness; real verify skipped on iteration 1)`
-            : "- **First verify:** ./scripts/verify",
-          `- **Final verify:** ./scripts/verify PASS`,
-        ].join("\n");
+        const stateAfter = readState(taskId);
+        const iterationDetails = buildIterationDetailsFromState(
+          stateAfter,
+          i,
+          selfCorrectionTest || stateAfter?.controlled_failure_injected,
+        );
+
+        let prCi = {
+          mode: dryGit || mock ? "skipped_dry_run" : "pending",
+          url: null,
+          note: dryGit || mock ? "Dry-run / mock — PR CI not started." : null,
+        };
 
         const body = buildPrBody({
           title: issue.title,
           issueNumber,
           implementation: `Autonomous loop completed in ${i} iteration(s) on \`${activeBranch}\`.`,
           verification: summaryLines,
-          iterations: String(i),
+          iterationDetails,
           failedAttempts: JSON.stringify(
-            (stateAfterPass?.failures || []).slice(0, 10),
+            (stateAfter?.failures || []).slice(0, 10),
             null,
             2,
           ),
           agentId: driver.agentId,
-          loopResult,
+          branch: activeBranch,
+          prCi,
         });
 
         let pr;
@@ -367,8 +363,6 @@ async function main() {
             dryRun: dryGit || mock,
           });
         } catch (prErr) {
-          // Verify already passed — do not discard agent work if GITHUB_TOKEN
-          // cannot open PRs (repo Actions setting / missing PAT).
           const permission = isPrPermissionError(prErr.message);
           log(
             permission
@@ -379,6 +373,7 @@ async function main() {
             pr_url: null,
             pr_error: String(prErr.message || prErr).slice(0, 500),
             pr_body_preview: body.slice(0, 500),
+            pr_ci_mode: "unavailable",
           });
           if (!skipGhIssue) {
             commentIssue(
@@ -417,10 +412,47 @@ async function main() {
           break;
         }
 
-        patchState(taskId, {
-          pr_url: pr.url,
-          pr_body_preview: pr.dryRun ? body.slice(0, 500) : undefined,
-        });
+        if (pr.url && !pr.dryRun) {
+          prCi = ensurePrCi({
+            prUrl: pr.url,
+            headBranch: activeBranch,
+            repoKind,
+          });
+          const bodyWithCi = buildPrBody({
+            title: issue.title,
+            issueNumber,
+            implementation: `Autonomous loop completed in ${i} iteration(s) on \`${activeBranch}\`.`,
+            verification: summaryLines,
+            iterationDetails,
+            failedAttempts: JSON.stringify(
+              (readState(taskId)?.failures || []).slice(0, 10),
+              null,
+              2,
+            ),
+            agentId: driver.agentId,
+            branch: activeBranch,
+            prCi: {
+              mode: prCi.mode,
+              url: prCi.url,
+              note: prCi.note,
+            },
+          });
+          updatePullRequestBody(pr.url, bodyWithCi);
+          patchState(taskId, {
+            pr_url: pr.url,
+            pr_ci_triggered: prCi.triggered,
+            pr_ci_mode: prCi.mode,
+            pr_ci_url: prCi.url,
+            pr_ci_note: prCi.note,
+          });
+          log("PR CI", prCi.mode, prCi.url || prCi.note);
+        } else {
+          patchState(taskId, {
+            pr_url: pr.url,
+            pr_body_preview: pr.dryRun ? body.slice(0, 500) : undefined,
+            pr_ci_mode: prCi.mode,
+          });
+        }
 
         if (!skipGhIssue) {
           commentIssue(
@@ -433,9 +465,17 @@ async function main() {
               `- Iterations: ${i}`,
               `- Agent: \`${driver.agentId || "n/a"}\``,
               pr.url ? `- PR: ${pr.url}` : "- PR: dry-run / skipped",
+              prCi?.mode
+                ? `- Independent GitHub CI: \`${prCi.mode}\`${prCi.url ? ` (${prCi.url})` : ""}`
+                : null,
+              selfCorrectionTest
+                ? `- Self-correction harness: used (\`${CONTROLLED_FAILURE_STAGE}\`)`
+                : null,
               "",
-              "Human review required before merge to `main`.",
-            ].join("\n"),
+              "Human review required before merge to `main`. Agent verify PASS ≠ GitHub CI.",
+            ]
+              .filter(Boolean)
+              .join("\n"),
           );
           replaceLabels(issueNumber, {
             remove: ["ai-task-running"],
@@ -475,7 +515,11 @@ async function main() {
       });
       const count = (fingerprintCounts.get(fp) || 0) + 1;
       fingerprintCounts.set(fp, count);
-      patchState(taskId, { last_fingerprint: fp, branch: activeBranch });
+      patchState(taskId, {
+        last_fingerprint: fp,
+        branch: activeBranch,
+        agent_id: driver.agentId,
+      });
 
       const rec = recordState(taskId, {
         status: "failed",
@@ -484,11 +528,20 @@ async function main() {
           count >= cfg.MAX_RETRIES_PER_TEST
             ? "HUMAN_INTERVENTION_REQUIRED"
             : "fix",
-        command: lastVerify.command || "./scripts/verify",
+        command: "./scripts/verify",
         files: files.join(","),
       });
 
-      log("verify FAILED", "fp", fp, "count", count, "record", rec.code);
+      log(
+        "verify FAILED",
+        "fp",
+        fp,
+        "count",
+        count,
+        "record",
+        rec.code,
+        lastVerify.controlled ? "(controlled harness)" : "",
+      );
 
       if (count >= cfg.MAX_RETRIES_PER_TEST) {
         terminal = "HUMAN_INTERVENTION_REQUIRED";

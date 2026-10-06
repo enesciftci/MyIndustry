@@ -6,7 +6,8 @@
   "description": "GitHub Action outer loop: Cursor Cloud Agent + ./scripts/verify",
   "scripts": {
     "start": "node src/run-loop.mjs",
-    "smoke": "AI_LOOP_MOCK_AGENT=1 node src/run-loop.mjs"
+    "smoke": "AI_LOOP_MOCK_AGENT=1 node src/run-loop.mjs",
+    "test:harness": "node --test src/verify-harness.test.mjs"
   },
   "engines": {
     "node": ">=20"
