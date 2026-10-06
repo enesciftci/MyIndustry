@@ -1,0 +1,15 @@
+{
+  "task": "",
+  "task_id": "",
+  "iteration": 0,
+  "status": "pending",
+  "started_at": "",
+  "ended_at": "",
+  "changes": [],
+  "tests": [],
+  "failures": [],
+  "attempts": [],
+  "commands": [],
+  "next_action": "",
+  "final_status": ""
+}

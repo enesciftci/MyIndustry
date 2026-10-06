@@ -1,0 +1,17 @@
+{
+  "name": "myindustry-ai-loop-orchestrator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "GitHub Action outer loop: Cursor Cloud Agent + ./scripts/verify",
+  "scripts": {
+    "start": "node src/run-loop.mjs",
+    "smoke": "AI_LOOP_MOCK_AGENT=1 node src/run-loop.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.0"
+  }
+}

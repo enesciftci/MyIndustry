@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/report.sh
+source "$ROOT/scripts/lib/report.sh"
+cd "$ROOT"
+
+if [[ -f "$ROOT/.ai-loop/config.env" ]]; then
+  # shellcheck disable=SC1091
+  set -a
+  source "$ROOT/.ai-loop/config.env"
+  set +a
+fi
+
+LOG_DIR="$ROOT/.ai-loop/logs"
+mkdir -p "$LOG_DIR"
+RUN_LOG="$LOG_DIR/verify-$(date +%Y%m%d-%H%M%S).log"
+REPORT_LOG="$RUN_LOG"
+
+log() {
+  echo "$@"
+  echo "$@" >> "$RUN_LOG"
+}
+
+log "AI Loop verify — MyIndustry backend"
+log "Log: $RUN_LOG"
+log ""
+
+# Select a .NET install that actually has Microsoft.NETCore.App 8.x.
+# Prefer an explicit DOTNET_ROOT, then common system paths, then $HOME/.dotnet.
+pick_dotnet_root() {
+  local candidate
+  for candidate in \
+    "${DOTNET_ROOT:-}" \
+    "/usr/local/share/dotnet" \
+    "/opt/homebrew/share/dotnet" \
+    "$HOME/.dotnet"
+  do
+    [[ -z "$candidate" ]] && continue
+    if [[ -x "${candidate}/dotnet" ]] && ls "${candidate}/shared/Microsoft.NETCore.App" 2>/dev/null | grep -q '^8\.'; then
+      echo "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+SELECTED_DOTNET_ROOT="$(pick_dotnet_root || true)"
+if [[ -z "$SELECTED_DOTNET_ROOT" ]]; then
+  report_fail "Backend Runtime" "Microsoft.NETCore.App 8.x not found. Install .NET 8 SDK/runtime (CI uses 8.0.x)."
+  print_summary
+  exit 1
+fi
+export DOTNET_ROOT="$SELECTED_DOTNET_ROOT"
+export PATH="${DOTNET_ROOT}:${PATH}"
+hash -r 2>/dev/null || true
+report_pass "Backend Runtime"
+log "       using DOTNET_ROOT=${DOTNET_ROOT}"
+
+run_step "Backend Restore" dotnet restore MyIndustry.sln
+run_step "Backend Build" dotnet build MyIndustry.sln --no-restore
+
+TEST_ARGS=(dotnet test MyIndustry.Tests/MyIndustry.Tests.csproj --no-build --verbosity normal)
+if [[ -n "${TEST_FILTER:-}" ]]; then
+  TEST_ARGS+=(--filter "$TEST_FILTER")
+fi
+if [[ "${COLLECT_COVERAGE:-0}" == "1" ]]; then
+  TEST_ARGS+=(--collect:"XPlat Code Coverage")
+fi
+run_step "Backend Tests" "${TEST_ARGS[@]}"
+
+set +e
+vuln_out="$(dotnet list MyIndustry.sln package --vulnerable --include-transitive 2>&1)"
+vuln_rc=$?
+set -e
+if [[ $vuln_rc -ne 0 ]]; then
+  report_skip "Backend Security Packages" "dotnet list --vulnerable unavailable (exit ${vuln_rc})"
+else
+  if echo "$vuln_out" | grep -qiE 'has the following vulnerable packages|Vulnerable'; then
+    echo "$vuln_out"
+    echo "$vuln_out" >> "$RUN_LOG"
+    if [[ "${VERIFY_AUDIT_STRICT:-0}" == "1" ]]; then
+      report_fail "Backend Security Packages" "vulnerable packages reported"
+    else
+      report_pass "Backend Security Packages"
+      log "       note: vulnerable packages listed above (VERIFY_AUDIT_STRICT=0)"
+    fi
+  else
+    report_pass "Backend Security Packages"
+  fi
+fi
+
+scan_paths=()
+while IFS= read -r f; do
+  scan_paths+=("$f")
+done < <(git -C "$ROOT" ls-files '*.cs' '*.json' '*.yml' '*.yaml' '*.md' '*.sh' '*.env.example' 'env.example' 2>/dev/null | head -n 5000)
+
+SECRET_HITS=0
+if [[ ${#scan_paths[@]} -gt 0 ]]; then
+  set +e
+  hits="$(grep -nIE '(BEGIN (RSA |OPENSSH )?PRIVATE KEY|AWS_SECRET_ACCESS_KEY\s*=\s*[^ ]+|SecretKey\"?\s*:\s*\"[^\"]{16,}|Password\"?\s*:\s*\"[^\"]{8,}|SigningKey\"?\s*:\s*\"[A-Za-z0-9+/=]{32,})' "${scan_paths[@]}" 2>/dev/null | grep -vE '(env\.example|DOKPLOY-ENV|SECURITY\.md|ai-loop|AGENTS\.md|docs/)' || true)"
+  set -e
+  if [[ -n "$hits" ]]; then
+    echo "$hits"
+    echo "$hits" >> "$RUN_LOG"
+    SECRET_HITS=1
+  fi
+fi
+if [[ "$SECRET_HITS" -eq 0 ]]; then
+  report_pass "Secret Scan"
+else
+  report_fail "Secret Scan" "potential secrets matched; review hits above"
+fi
+
+set +e
+print_summary
+exit_code=$?
+set -e
+log "Full log: $RUN_LOG"
+exit "$exit_code"

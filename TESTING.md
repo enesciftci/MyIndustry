@@ -57,9 +57,19 @@ Configure test users via environment variables:
 - `E2E_SELLER_EMAIL` / `E2E_SELLER_PASSWORD`
 - `E2E_ADMIN_EMAIL` / `E2E_ADMIN_PASSWORD`
 
+## Unified verification (AI Loop)
+
+```bash
+cd MyIndustry
+./scripts/verify    # restore, build, tests, security (best-effort), secret scan
+./scripts/ci        # same with coverage (CI parity)
+```
+
+See `docs/testing.md` and `docs/ai-loop.md`.
+
 ## CI
 
-- Backend: `.github/workflows/tests.yml` in `MyIndustry` repo
+- Backend: `.github/workflows/tests.yml` in `MyIndustry` repo (runs `./scripts/ci`)
 - Frontend + E2E: `.github/workflows/tests.yml` in `MyIndustry.UI` repo
 
 ## Adding new tests

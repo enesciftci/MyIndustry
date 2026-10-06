@@ -1,0 +1,81 @@
+name: AI Task
+description: Structured task for autonomous AI development loop
+title: "[Task] "
+labels: ["ai-task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Fill every section. **Acceptance Criteria** are required.
+
+        Applying the `ai-task` label (included by this template) starts the autonomous GitHub Action loop when `CURSOR_API_KEY` is configured.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Repository scope
+      description: Also add matching labels repo:backend / repo:frontend / repo:both when possible.
+      options:
+        - backend
+        - frontend
+        - both
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What should be achieved?
+      placeholder: Add filtering by city to seller search API.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Background, related issues, links to docs or code paths.
+    validations:
+      required: false
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: Functional and non-functional requirements.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Measurable Done checklist. Required.
+      placeholder: |
+        - [ ] Behavior matches requirements
+        - [ ] ./scripts/verify passes
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      placeholder: |
+        - No unnecessary dependencies
+        - Do not change production deploy config
+    validations:
+      required: false
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests
+    validations:
+      required: false
+  - type: textarea
+    id: definition_of_done
+    attributes:
+      label: Definition of Done
+      value: |
+        - [ ] Acceptance Criteria satisfied
+        - [ ] ./scripts/verify (or CI) green
+        - [ ] PR opened by AI loop (or equivalent)
+        - [ ] Human review approved (no auto-merge)
+    validations:
+      required: true

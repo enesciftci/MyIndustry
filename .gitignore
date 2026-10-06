@@ -422,3 +422,7 @@ TestResults/
 ../../ui
 ../MyIndustry.UI
 ../../ui/MyIndustry.UI
+
+# AI Loop live state (templates and config.env remain tracked)
+.ai-loop/state/*.json
+.ai-loop/logs/

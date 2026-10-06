@@ -5,19 +5,45 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 jobs:
   backend-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Run tests
-      run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
+        cache: true
+        cache-dependency-path: '**/*.csproj'
+
+    - name: Make scripts executable
+      run: chmod +x scripts/build scripts/test scripts/validate scripts/verify scripts/ci scripts/ai-loop-init scripts/ai-loop-record
+
+    - name: Run CI verification
+      run: ./scripts/ci
+
+    - name: Upload coverage / test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-test-results
+        path: |
+          TestResults/
+          **/TestResults/
+          **/coverage.cobertura.xml
+        if-no-files-found: ignore
+        retention-days: 14
+
+    - name: Upload verify logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-verify-logs
+        path: .ai-loop/logs/
+        if-no-files-found: ignore
+        retention-days: 14

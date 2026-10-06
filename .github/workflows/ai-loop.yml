@@ -1,0 +1,86 @@
+name: AI Loop
+
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: GitHub issue number to process
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ai-loop-${{ github.repository }}-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  autonomous-loop:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'ai-task'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      REPO_KIND: backend
+      BASE_BRANCH: main
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AI_LOOP_UI_REPO: ${{ vars.AI_LOOP_UI_REPO }}
+      AI_LOOP_GH_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN }}
+      ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+      AI_LOOP_MODEL: ${{ vars.AI_LOOP_MODEL || 'composer-2.5' }}
+    steps:
+      - name: Fail if CURSOR_API_KEY missing
+        run: |
+          if [ -z "$CURSOR_API_KEY" ]; then
+            echo "CURSOR_API_KEY secret is not configured."
+            echo "Add it in repository Settings → Secrets (never commit the value)."
+            exit 1
+          fi
+          # Confirm presence without revealing the secret
+          echo "CURSOR_API_KEY is set (length=${#CURSOR_API_KEY})"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: .ai-loop/orchestrator/package-lock.json
+
+      - name: Make scripts executable
+        run: chmod +x scripts/verify scripts/ci scripts/ai-loop-init scripts/ai-loop-record scripts/build scripts/test scripts/validate
+
+      - name: Install orchestrator deps
+        working-directory: .ai-loop/orchestrator
+        run: npm ci
+
+      - name: Run autonomous loop
+        working-directory: .ai-loop/orchestrator
+        run: node src/run-loop.mjs
+
+      - name: Upload loop artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-loop-artifacts-${{ env.ISSUE_NUMBER }}
+          path: |
+            .ai-loop/logs/
+            .ai-loop/state/
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+TASK_ID=""
+STATUS=""
+FAILURE=""
+NEXT=""
+COMMAND=""
+FILES=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --task-id) TASK_ID="$2"; shift 2 ;;
+    --status) STATUS="$2"; shift 2 ;;
+    --failure) FAILURE="$2"; shift 2 ;;
+    --next-action) NEXT="$2"; shift 2 ;;
+    --command) COMMAND="$2"; shift 2 ;;
+    --files) FILES="$2"; shift 2 ;;
+    *) echo "Unknown arg: $1" >&2; exit 2 ;;
+  esac
+done
+
+if [[ -z "$TASK_ID" || -z "$STATUS" ]]; then
+  echo "Usage: $0 --task-id <id> --status <status> [--failure ...] [--next-action ...] [--command ...] [--files \"a,b\"]" >&2
+  exit 2
+fi
+
+STATE_FILE="$ROOT/.ai-loop/state/${TASK_ID}.json"
+if [[ ! -f "$STATE_FILE" ]]; then
+  echo "State file missing. Run ai-loop-init first: $STATE_FILE" >&2
+  exit 1
+fi
+
+# Guardrail: max iterations
+MAX_ITERATIONS=5
+if [[ -f "$ROOT/.ai-loop/config.env" ]]; then
+  # shellcheck disable=SC1091
+  set -a
+  source "$ROOT/.ai-loop/config.env"
+  set +a
+fi
+
+python3 - "$STATE_FILE" "$STATUS" "$FAILURE" "$NEXT" "$COMMAND" "$FILES" "$MAX_ITERATIONS" <<'PY'
+import json, sys
+from datetime import datetime, timezone
+
+path, status, failure, nxt, command, files, max_iter = sys.argv[1:8]
+max_iter = int(max_iter)
+with open(path, encoding="utf-8") as f:
+    data = json.load(f)
+
+data["iteration"] = int(data.get("iteration") or 0) + 1
+data["status"] = status
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+attempt = {"at": now, "status": status}
+if failure:
+    attempt["failure"] = failure
+    data.setdefault("failures", []).append({"at": now, "message": failure})
+if nxt:
+    data["next_action"] = nxt
+    attempt["next_action"] = nxt
+if command:
+    data.setdefault("commands", []).append(command)
+    attempt["command"] = command
+if files:
+    for p in files.split(","):
+        p = p.strip()
+        if p and p not in data.setdefault("changes", []):
+            data["changes"].append(p)
+
+data.setdefault("attempts", []).append(attempt)
+
+if status in ("passed", "failed_final", "aborted"):
+    data["ended_at"] = now
+    data["final_status"] = status
+
+if data["iteration"] > max_iter and status not in ("passed",):
+    data["status"] = "aborted"
+    data["final_status"] = "aborted"
+    data["ended_at"] = now
+    data["next_action"] = f"stop: MAX_ITERATIONS={max_iter} exceeded"
+
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+
+print(json.dumps({"task_id": data["task_id"], "iteration": data["iteration"], "status": data["status"]}, indent=2))
+if data.get("final_status") == "aborted":
+    sys.exit(3)
+PY

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/report.sh
+source "$ROOT/scripts/lib/report.sh"
+cd "$ROOT"
+
+run_step "Backend Build" "$ROOT/scripts/build"
+run_step "Backend Tests" "$ROOT/scripts/test"
+
+# Best-effort vulnerable package listing (needs network; may SKIP)
+set +e
+vuln_out="$(dotnet list MyIndustry.sln package --vulnerable --include-transitive 2>&1)"
+vuln_rc=$?
+set -e
+if [[ $vuln_rc -ne 0 ]]; then
+  report_skip "Backend Security Packages" "dotnet list --vulnerable unavailable (exit ${vuln_rc})"
+else
+  if echo "$vuln_out" | grep -qiE 'has the following vulnerable packages|Vulnerable'; then
+    echo "$vuln_out"
+    if [[ "${VERIFY_AUDIT_STRICT:-0}" == "1" ]]; then
+      report_fail "Backend Security Packages" "vulnerable packages reported"
+    else
+      report_skip "Backend Security Packages" "vulnerabilities reported (non-strict mode); see log above"
+    fi
+  else
+    report_pass "Backend Security Packages"
+  fi
+fi
+
+print_summary

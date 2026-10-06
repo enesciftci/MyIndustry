@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+ARGS=(dotnet test MyIndustry.Tests/MyIndustry.Tests.csproj --verbosity normal)
+if [[ -n "${TEST_FILTER:-}" ]]; then
+  ARGS+=(--filter "$TEST_FILTER")
+fi
+if [[ "${COLLECT_COVERAGE:-0}" == "1" ]]; then
+  ARGS+=(--collect:"XPlat Code Coverage")
+fi
+
+echo "==> Backend Tests: ${ARGS[*]}"
+"${ARGS[@]}"
