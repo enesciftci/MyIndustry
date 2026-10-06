@@ -225,6 +225,9 @@ async function main() {
           output: `agent run error ${sendResult.runId}`,
           failedStage: "Agent Run",
         };
+        // Avoid immediate re-send while Cloud Agent may still be winding down.
+        log("agent run error; waiting 20s before next iteration");
+        await new Promise((r) => setTimeout(r, 20000));
         continue;
       }
 

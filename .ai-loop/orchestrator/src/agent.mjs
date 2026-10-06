@@ -53,15 +53,37 @@ export async function createAgentDriver({
     agentId: agent.agentId || agent.agent_id || null,
     CursorAgentError,
     async send(prompt) {
-      const run = await agent.send(prompt);
-      const result = await run.wait();
-      const branch = extractBranchFromResult(result, repoUrl);
-      return {
-        runId: result.id,
-        status: result.status,
-        result,
-        branch,
-      };
+      const maxAttempts = 5;
+      let lastErr;
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const run = await agent.send(prompt);
+          const result = await run.wait();
+          const branch = extractBranchFromResult(result, repoUrl);
+          return {
+            runId: result.id,
+            status: result.status,
+            result,
+            branch,
+          };
+        } catch (err) {
+          lastErr = err;
+          const msg = String(err?.message || err);
+          if (
+            /agent_busy|already has an active run/i.test(msg) &&
+            attempt < maxAttempts
+          ) {
+            const waitMs = 15000 * attempt;
+            console.log(
+              `[ai-loop] agent busy; retry send ${attempt}/${maxAttempts} after ${waitMs}ms`,
+            );
+            await new Promise((r) => setTimeout(r, waitMs));
+            continue;
+          }
+          throw err;
+        }
+      }
+      throw lastErr;
     },
     async dispose() {
       if (typeof agent[Symbol.asyncDispose] === "function") {
