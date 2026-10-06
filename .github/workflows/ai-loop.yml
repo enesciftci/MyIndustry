@@ -39,6 +39,7 @@ jobs:
       ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
       REPO_URL: ${{ github.server_url }}/${{ github.repository }}
       AI_LOOP_MODEL: ${{ vars.AI_LOOP_MODEL || 'composer-2.5' }}
+      AI_LOOP_SELF_CORRECTION_HARNESS: ${{ (github.event.issue.number == 7 || inputs.issue_number == '7') && '1' || '' }}
     steps:
       - name: Fail if CURSOR_API_KEY missing
         run: |

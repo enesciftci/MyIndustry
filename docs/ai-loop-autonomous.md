@@ -52,6 +52,10 @@ Outer loop code: [`.ai-loop/orchestrator/`](../.ai-loop/orchestrator/).
 | `frontend` / `repo:frontend` | Skipped here; run in UI repo |
 | `both` / `repo:both` | Backend loop first; then dispatch UI `ai-loop.yml` if PAT configured |
 
+## Self-correction harness (issue #7)
+
+When `AI_LOOP_SELF_CORRECTION_HARNESS=1` (or `AI_LOOP_SELF_CORRECTION_ISSUE=<n>`), iteration **1** skips real verify and injects `[FAIL] CONTROLLED_SELF_CORRECTION_TEST`. Iteration **2+** runs `./scripts/verify` on the same Cloud Agent and branch. The agent fix is typically `docs/ai-loop-smoke-marker.md`. The opened PR includes a **Loop Result** section.
+
 ## Local mock (no API key)
 
 ```bash

@@ -57,6 +57,27 @@ function parseIssueNumber() {
   return Number(n);
 }
 
+function selfCorrectionHarnessEnabled(issueNumber) {
+  if (env("AI_LOOP_SELF_CORRECTION_HARNESS") === "1") return true;
+  const target = env("AI_LOOP_SELF_CORRECTION_ISSUE");
+  return target !== undefined && String(issueNumber) === String(target);
+}
+
+function controlledSelfCorrectionVerifyFailure() {
+  return {
+    ok: false,
+    exitCode: 1,
+    command: "CONTROLLED_SELF_CORRECTION_TEST",
+    failedStage: "CONTROLLED_SELF_CORRECTION_TEST",
+    output: [
+      "[FAIL] CONTROLLED_SELF_CORRECTION_TEST",
+      "       Controlled first-verify failure (AI_LOOP_SELF_CORRECTION_HARNESS).",
+      "       Add docs/ai-loop-smoke-marker.md on the agent branch, then re-verify.",
+      "RESULT: FAILED",
+    ].join("\n"),
+  };
+}
+
 async function main() {
   const startedAt = Date.now();
   const cfg = loadConfigEnv();
@@ -69,6 +90,7 @@ async function main() {
   const mock = env("AI_LOOP_MOCK_AGENT") === "1";
   const dryGit = mock || env("AI_LOOP_DRY_GIT") === "1";
   const skipGhIssue = mock || env("AI_LOOP_SKIP_GH") === "1";
+  const selfCorrectionHarness = selfCorrectionHarnessEnabled(issueNumber);
 
   assertApiKeyPresent();
 
@@ -247,7 +269,10 @@ async function main() {
         "docs",
         "ai-loop-smoke-marker.md",
       );
-      if (mock && !fs.existsSync(smokeMarker)) {
+      if (selfCorrectionHarness && i === 1) {
+        log("injecting CONTROLLED_SELF_CORRECTION_TEST (harness, iteration 1)");
+        lastVerify = controlledSelfCorrectionVerifyFailure();
+      } else if (mock && !fs.existsSync(smokeMarker)) {
         lastVerify = {
           ok: false,
           exitCode: 1,
@@ -297,6 +322,14 @@ async function main() {
             2,
           ),
           agentId: driver.agentId,
+          loopResult: {
+            status: "passed",
+            branch: activeBranch,
+            iterations: i,
+            harness: selfCorrectionHarness
+              ? "CONTROLLED_SELF_CORRECTION_TEST"
+              : null,
+          },
         });
 
         let pr;
