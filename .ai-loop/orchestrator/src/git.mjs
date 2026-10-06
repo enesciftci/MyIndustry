@@ -24,10 +24,15 @@ export function slugify(title, max = 40) {
   return s || "task";
 }
 
+/** @deprecated Cloud path no longer pre-creates ai/* branches. Kept for tools/debug. */
 export function branchName(issueNumber, title) {
   return `ai/${issueNumber}-${slugify(title)}`;
 }
 
+/**
+ * Local helper only. Cloud Agent path must NOT call this.
+ * Mock agent creates cursor/mock-* branches itself in agent.mjs.
+ */
 export function ensureBranch({ baseBranch, branch, dryRun = false }) {
   run("git", ["fetch", "origin", baseBranch]);
   const remoteBranch = run("git", ["rev-parse", "--verify", `origin/${branch}`]);
