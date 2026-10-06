@@ -9,11 +9,17 @@ on:
         description: GitHub issue number to process
         required: true
         type: string
+      self_correction_test:
+        description: Inject controlled first verify failure (self-correction harness)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   issues: write
   pull-requests: write
+  actions: write
 
 concurrency:
   group: ai-loop-${{ github.repository }}-${{ github.event.issue.number || inputs.issue_number }}
@@ -23,15 +29,15 @@ jobs:
   autonomous-loop:
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.label.name == 'ai-task'
+      github.event.label.name == 'ai-task' ||
+      github.event.label.name == 'ai-self-correction-test'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       REPO_KIND: backend
       BASE_BRANCH: main
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-      # Prefer PAT when set — default GITHUB_TOKEN cannot create PRs unless
-      # Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests" is enabled.
+      # Prefer PAT — default GITHUB_TOKEN creates PRs that do not trigger pull_request CI.
       GITHUB_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN || secrets.GITHUB_TOKEN }}
       GH_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN || secrets.GITHUB_TOKEN }}
       AI_LOOP_UI_REPO: ${{ vars.AI_LOOP_UI_REPO }}
@@ -39,6 +45,7 @@ jobs:
       ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
       REPO_URL: ${{ github.server_url }}/${{ github.repository }}
       AI_LOOP_MODEL: ${{ vars.AI_LOOP_MODEL || 'composer-2.5' }}
+      AI_LOOP_SELF_CORRECTION_TEST: ${{ (inputs.self_correction_test || github.event.label.name == 'ai-self-correction-test') && '1' || '' }}
     steps:
       - name: Fail if CURSOR_API_KEY missing
         run: |
@@ -49,6 +56,14 @@ jobs:
           fi
           # Confirm presence without revealing the secret
           echo "CURSOR_API_KEY is set (length=${#CURSOR_API_KEY})"
+          if [ -z "$AI_LOOP_GH_TOKEN" ]; then
+            echo "WARNING: AI_LOOP_GH_TOKEN unset — PR CI via pull_request may not start (GITHUB_TOKEN suppression)."
+          else
+            echo "AI_LOOP_GH_TOKEN is set (length=${#AI_LOOP_GH_TOKEN})"
+          fi
+          if [ "$AI_LOOP_SELF_CORRECTION_TEST" = "1" ]; then
+            echo "Self-correction harness ENABLED"
+          fi
 
       - uses: actions/checkout@v4
         with:

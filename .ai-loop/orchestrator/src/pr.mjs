@@ -1,24 +1,80 @@
 import { spawnSync } from "node:child_process";
 import { REPO_ROOT } from "./config.mjs";
+import { CONTROLLED_FAILURE_STAGE } from "./verify.mjs";
 
 export function buildPrBody({
   title,
   issueNumber,
   implementation,
   verification,
-  iterations,
+  iterationDetails = [],
   failedAttempts,
   risks = "See review",
   databaseChanges = "None",
   breakingChanges = "None",
   agentId,
+  branch,
   siblingPrUrl,
+  prCi,
 }) {
+  const detailBlocks =
+    iterationDetails.length > 0
+      ? iterationDetails
+          .map((it) => {
+            const lines = [
+              `### Iteration ${it.iteration}`,
+              `Status: ${it.status}`,
+            ];
+            if (it.reason) lines.push(`Reason: ${it.reason}`);
+            return lines.join("\n");
+          })
+          .join("\n\n")
+      : "(see attempts in state)";
+
+  const ciMode = prCi?.mode || "unavailable";
+  const ciLines = [
+    `Mode: \`${ciMode}\``,
+    prCi?.url ? `URL: ${prCi.url}` : null,
+    prCi?.note || null,
+    ciMode === "unavailable"
+      ? "GitHub PR CI unavailable — do not treat agent verify PASS as merge approval. Enable required status checks on `main` and set `AI_LOOP_GH_TOKEN` so `pull_request` CI can run."
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return `## Summary
 
 ${title}
 
 Closes #${issueNumber}
+
+## Loop Result
+
+Iterations: ${iterationDetails.length || "(see below)"}
+
+${detailBlocks}
+
+### Agent
+Agent ID: \`${agentId || "n/a"}\`
+
+### Branch
+\`${branch || "n/a"}\`
+
+### Verification
+(Agent / pre-PR quality gate — not a substitute for GitHub CI)
+
+\`\`\`text
+${verification || "(see workflow logs)"}
+\`\`\`
+
+### Independent GitHub CI
+(Merge gate — independent of agent verify)
+
+${ciLines}
+
+### Human Review
+Required
 
 ## Implementation
 
@@ -27,16 +83,7 @@ ${implementation || "(see commits)"}
 ## Tests
 
 - Covered by \`./scripts/verify\` (unit/integration/smoke as applicable)
-
-## Verification
-
-\`\`\`text
-${verification || "(see workflow logs)"}
-\`\`\`
-
-## Iterations
-
-${iterations}
+- Independent PR CI must also pass before merge
 
 ## Failed Attempts
 
@@ -65,20 +112,53 @@ ${siblingPrUrl ? `\n## Related PR\n\n${siblingPrUrl}\n` : ""}
 - [ ] Scope matches the issue
 - [ ] No secrets committed
 - [ ] Tests were not deleted/disabled/weakened
-- [ ] CI green
+- [ ] Independent GitHub CI green
 - [ ] Ready to merge (human only — do not auto-merge)
 `;
+}
+
+export function buildIterationDetailsFromState(state, finalIteration, controlled) {
+  const attempts = state?.attempts || [];
+  const details = [];
+  for (const a of attempts) {
+    const n = details.length + 1;
+    if (a.status === "failed") {
+      const reason =
+        controlled && n === 1
+          ? CONTROLLED_FAILURE_STAGE
+          : a.failure || "verify failed";
+      details.push({ iteration: n, status: "FAILED", reason });
+    } else if (a.status === "passed") {
+      details.push({ iteration: n, status: "PASSED" });
+    }
+  }
+  if (
+    details.length === 0 &&
+    finalIteration &&
+    state?.final_status === "passed"
+  ) {
+    details.push({ iteration: finalIteration, status: "PASSED" });
+  }
+  return details;
 }
 
 function ghTokenEnv() {
   // Prefer a PAT: default GITHUB_TOKEN cannot create PRs unless the repo
   // setting "Allow GitHub Actions to create and approve pull requests" is on.
+  // Even when PR create works, default GITHUB_TOKEN does not trigger other workflows.
   const token =
     process.env.AI_LOOP_GH_TOKEN ||
     process.env.GH_TOKEN ||
     process.env.GITHUB_TOKEN;
   if (!token) return process.env;
   return { ...process.env, GH_TOKEN: token, GITHUB_TOKEN: token };
+}
+
+export function usingDefaultActionsToken() {
+  return (
+    process.env.GITHUB_ACTIONS === "true" &&
+    !process.env.AI_LOOP_GH_TOKEN
+  );
 }
 
 export function isPrPermissionError(message) {
@@ -99,6 +179,12 @@ export function createPullRequest({
 }) {
   if (dryRun || process.env.AI_LOOP_SKIP_PR === "1") {
     return { url: null, dryRun: true, body };
+  }
+  if (usingDefaultActionsToken()) {
+    console.warn(
+      "[ai-loop] WARNING: AI_LOOP_GH_TOKEN unset in Actions. " +
+        "PR may be created with default GITHUB_TOKEN; pull_request CI often will NOT start.",
+    );
   }
   const r = spawnSync(
     "gh",
@@ -125,4 +211,17 @@ export function createPullRequest({
   }
   const url = (r.stdout || "").trim().split("\n").filter(Boolean).pop();
   return { url, dryRun: false, body };
+}
+
+export function updatePullRequestBody(prUrlOrNumber, body) {
+  const id = String(prUrlOrNumber || "").includes("/")
+    ? String(prUrlOrNumber).replace(/\/$/, "").split("/").pop()
+    : String(prUrlOrNumber);
+  if (!id) return { ok: false };
+  const r = spawnSync("gh", ["pr", "edit", id, "--body", body], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    env: ghTokenEnv(),
+  });
+  return { ok: r.status === 0, stderr: r.stderr, stdout: r.stdout };
 }
