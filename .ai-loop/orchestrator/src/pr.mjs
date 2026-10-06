@@ -13,6 +13,7 @@ export function buildPrBody({
   breakingChanges = "None",
   agentId,
   siblingPrUrl,
+  loopResult,
 }) {
   return `## Summary
 
@@ -41,6 +42,10 @@ ${iterations}
 ## Failed Attempts
 
 ${failedAttempts || "None"}
+
+## Loop Result
+
+${loopResult || "(see Iterations / Verification above)"}
 
 ## Risks
 
