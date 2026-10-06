@@ -13,7 +13,6 @@ export function buildInitialPrompt({
   issueNumber,
   title,
   body,
-  branch,
   baseBranch,
   repoKind,
   maxIterations,
@@ -23,7 +22,6 @@ export function buildInitialPrompt({
 ## Issue
 - Number: #${issueNumber}
 - Title: ${title}
-- Branch (already created; work ONLY on this branch): ${branch}
 - Base branch: ${baseBranch}
 - Repo kind: ${repoKind}
 
@@ -31,8 +29,8 @@ export function buildInitialPrompt({
 ${body || "(empty)"}
 
 ## Hard rules
-1. Do NOT commit or push to ${baseBranch}/main.
-2. Work only on branch \`${branch}\`. Commit and push your changes to that branch.
+1. Do NOT commit or push to \`${baseBranch}\` / main.
+2. Cursor will create a working branch for you (typically \`cursor/...\`). Commit and push only on that agent branch.
 3. Follow AGENTS.md. Do not delete/disable/weaken tests. Do not commit secrets.
 4. Prefer minimal diffs that satisfy Acceptance Criteria.
 5. After implementing, you may run targeted tests, but the outer orchestrator will run \`./scripts/verify\`.
@@ -43,7 +41,7 @@ ${body || "(empty)"}
 ${readAgentsExcerpt()}
 
 ## Required outcome for this turn
-Implement the issue requirements, commit, and push to \`${branch}\`.
+Implement the issue requirements, commit, and push on the Cursor-created working branch.
 Summarize what you changed at the end.
 `;
 }
@@ -51,6 +49,7 @@ Summarize what you changed at the end.
 export function buildFixPrompt({
   iteration,
   maxIterations,
+  activeBranch,
   failedCommand,
   exitCode,
   failedStage,
@@ -66,6 +65,7 @@ export function buildFixPrompt({
 
 ## Iteration
 ${iteration} / ${maxIterations}
+Working branch: \`${activeBranch || "(unknown)"}\`
 Failure fingerprint: ${fingerprint} (seen ${sameFingerprintCount} time(s))
 
 ## Failed verification
@@ -95,7 +95,7 @@ ${diffPatch || "(none)"}
 ## Required outcome
 1. Identify root cause (not just symptoms).
 2. Apply a different fix than prior attempts if fingerprint repeats.
-3. Commit and push to the same feature branch.
+3. Commit and push to the **same** working branch${activeBranch ? ` (\`${activeBranch}\`)` : ""}.
 4. Do not weaken or delete tests to pass.
 5. Do not touch secrets or main.
 `;

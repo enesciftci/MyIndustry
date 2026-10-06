@@ -3,6 +3,9 @@
  * Autonomous AI Loop orchestrator.
  * Outer loop: Cloud Agent (or mock) → ./scripts/verify → fix → PR
  *
+ * Cloud path: Agent starts from main (workOnCurrentBranch=false);
+ * Cursor creates cursor/... branch; we discover it from result.git.branches.
+ *
  * Never prints CURSOR_API_KEY or other secrets.
  */
 import fs from "node:fs";
@@ -15,11 +18,9 @@ import {
 } from "./config.mjs";
 import { createAgentDriver } from "./agent.mjs";
 import {
-  branchName,
   changedFilesVsBase,
   currentDiffPatch,
   diffStat,
-  ensureBranch,
   syncBranch,
 } from "./git.mjs";
 import {
@@ -58,7 +59,9 @@ async function main() {
   const issueNumber = parseIssueNumber();
   const repoKind = env("REPO_KIND", "backend");
   const baseBranch = env("BASE_BRANCH", "main");
-  const repoUrl = env("REPO_URL") || env("GITHUB_SERVER_URL", "https://github.com") + "/" + env("GITHUB_REPOSITORY");
+  const repoUrl =
+    env("REPO_URL") ||
+    `${env("GITHUB_SERVER_URL", "https://github.com")}/${env("GITHUB_REPOSITORY")}`;
   const mock = env("AI_LOOP_MOCK_AGENT") === "1";
   const dryGit = mock || env("AI_LOOP_DRY_GIT") === "1";
   const skipGhIssue = mock || env("AI_LOOP_SKIP_GH") === "1";
@@ -111,25 +114,25 @@ async function main() {
 
   const taskId = taskIdForIssue(issueNumber);
   initState(taskId, issue.title);
-  const branch = branchName(issueNumber, issue.title);
-  log("branch", branch);
-
-  ensureBranch({ baseBranch, branch, dryRun: dryGit });
 
   const driver = await createAgentDriver({
     apiKey: process.env.CURSOR_API_KEY,
     repoUrl,
-    branch,
+    baseBranch,
+    issueNumber,
     modelId: env("AI_LOOP_MODEL", "composer-2.5"),
   });
 
   patchState(taskId, {
+    issue_number: issueNumber,
     agent_id: driver.agentId,
-    branch,
+    branch: null,
     repo_kind: repoKind,
     scope: scope.mode,
+    status: "in_progress",
   });
 
+  let activeBranch = null;
   const fingerprintCounts = new Map();
   let lastVerify = null;
   let terminal = null;
@@ -153,7 +156,6 @@ async function main() {
               issueNumber,
               title: issue.title,
               body: issue.body,
-              branch,
               baseBranch,
               repoKind,
               maxIterations: cfg.MAX_ITERATIONS,
@@ -161,14 +163,17 @@ async function main() {
           : buildFixPrompt({
               iteration: i,
               maxIterations: cfg.MAX_ITERATIONS,
+              activeBranch,
               failedCommand: lastVerify?.command,
               exitCode: lastVerify?.exitCode,
               failedStage: lastVerify?.failedStage,
               excerpt: excerptOutput(lastVerify?.output || "", 200),
               previousAttempts: JSON.stringify(state?.attempts || [], null, 2),
-              changedFiles: changedFilesVsBase(baseBranch),
-              diffStat: diffStat(baseBranch),
-              diffPatch: currentDiffPatch(baseBranch),
+              changedFiles: activeBranch
+                ? changedFilesVsBase(baseBranch)
+                : [],
+              diffStat: activeBranch ? diffStat(baseBranch) : "",
+              diffPatch: activeBranch ? currentDiffPatch(baseBranch) : "",
               fingerprint: state?.last_fingerprint || "",
               sameFingerprintCount:
                 fingerprintCounts.get(state?.last_fingerprint) || 0,
@@ -192,8 +197,33 @@ async function main() {
         continue;
       }
 
+      if (sendResult.branch) {
+        activeBranch = sendResult.branch;
+        patchState(taskId, {
+          branch: activeBranch,
+          agent_id: driver.agentId,
+          issue_number: issueNumber,
+        });
+        log("discovered branch", activeBranch);
+      }
+
+      if (!activeBranch) {
+        terminal = "HUMAN_INTERVENTION_REQUIRED";
+        recordState(taskId, {
+          status: "aborted",
+          failure:
+            "Unable to determine agent-created branch (result.git.branches empty).",
+          nextAction: "HUMAN_INTERVENTION_REQUIRED",
+        });
+        patchState(taskId, { final_status: terminal });
+        break;
+      }
+
       if (!dryGit) {
-        syncBranch(branch);
+        syncBranch(activeBranch);
+      } else if (mock) {
+        // Mock already checked out the cursor/mock-* branch locally.
+        syncBranch(activeBranch);
       }
 
       const files = changedFilesVsBase(baseBranch);
@@ -208,8 +238,11 @@ async function main() {
         break;
       }
 
-      // Smoke mock: require marker file so iteration-1 can fail and iteration-2 self-correct.
-      const smokeMarker = path.join(REPO_ROOT, "docs", "ai-loop-smoke-marker.md");
+      const smokeMarker = path.join(
+        REPO_ROOT,
+        "docs",
+        "ai-loop-smoke-marker.md",
+      );
       if (mock && !fs.existsSync(smokeMarker)) {
         lastVerify = {
           ok: false,
@@ -228,7 +261,9 @@ async function main() {
 
       const summaryLines = (lastVerify.output || "")
         .split("\n")
-        .filter((l) => /^\[(PASS|FAIL|SKIP)\]/.test(l) || l.startsWith("RESULT:"))
+        .filter(
+          (l) => /^\[(PASS|FAIL|SKIP)\]/.test(l) || l.startsWith("RESULT:"),
+        )
         .join("\n");
 
       if (lastVerify.ok) {
@@ -241,13 +276,15 @@ async function main() {
         patchState(taskId, {
           final_status: "passed",
           verification_summary: summaryLines,
+          branch: activeBranch,
+          iteration: i,
         });
         log("verify PASSED", rec.stdout);
 
         const body = buildPrBody({
           title: issue.title,
           issueNumber,
-          implementation: `Autonomous loop completed in ${i} iteration(s) on \`${branch}\`.`,
+          implementation: `Autonomous loop completed in ${i} iteration(s) on \`${activeBranch}\`.`,
           verification: summaryLines,
           iterations: String(i),
           failedAttempts: JSON.stringify(
@@ -261,7 +298,7 @@ async function main() {
         const pr = createPullRequest({
           title: `[AI] ${issue.title}`,
           body,
-          head: branch,
+          head: activeBranch,
           base: baseBranch,
           dryRun: dryGit || mock,
         });
@@ -278,7 +315,7 @@ async function main() {
               "## AI Loop completed",
               "",
               `- Status: **passed**`,
-              `- Branch: \`${branch}\``,
+              `- Branch: \`${activeBranch}\``,
               `- Iterations: ${i}`,
               `- Agent: \`${driver.agentId || "n/a"}\``,
               pr.url ? `- PR: ${pr.url}` : "- PR: dry-run / skipped",
@@ -317,7 +354,6 @@ async function main() {
         break;
       }
 
-      // FAIL path
       const fp = fingerprintFailure({
         failedStage: lastVerify.failedStage,
         exitCode: lastVerify.exitCode,
@@ -325,12 +361,15 @@ async function main() {
       });
       const count = (fingerprintCounts.get(fp) || 0) + 1;
       fingerprintCounts.set(fp, count);
-      patchState(taskId, { last_fingerprint: fp });
+      patchState(taskId, { last_fingerprint: fp, branch: activeBranch });
 
       const rec = recordState(taskId, {
         status: "failed",
         failure: `${lastVerify.failedStage || "verify"} exit=${lastVerify.exitCode} fp=${fp}`,
-        nextAction: count >= cfg.MAX_RETRIES_PER_TEST ? "HUMAN_INTERVENTION_REQUIRED" : "fix",
+        nextAction:
+          count >= cfg.MAX_RETRIES_PER_TEST
+            ? "HUMAN_INTERVENTION_REQUIRED"
+            : "fix",
         command: "./scripts/verify",
         files: files.join(","),
       });
@@ -356,7 +395,7 @@ async function main() {
 
     if (terminal !== "passed") {
       const status = terminal || "LOOP_FAILED";
-      patchState(taskId, { final_status: status });
+      patchState(taskId, { final_status: status, branch: activeBranch });
       if (!skipGhIssue) {
         commentIssue(
           issueNumber,
@@ -364,11 +403,18 @@ async function main() {
             "## AI Loop stopped",
             "",
             `- Status: **${status}**`,
-            `- Branch: \`${branch}\``,
+            activeBranch
+              ? `- Branch: \`${activeBranch}\``
+              : "- Branch: *(undetermined)*",
             `- Agent: \`${driver.agentId || "n/a"}\``,
+            status === "HUMAN_INTERVENTION_REQUIRED" && !activeBranch
+              ? "\nReason: Unable to determine agent-created branch."
+              : "",
             "",
             "Human intervention required. Inspect `.ai-loop` artifacts in the workflow run.",
-          ].join("\n"),
+          ]
+            .filter(Boolean)
+            .join("\n"),
         );
         replaceLabels(issueNumber, {
           remove: ["ai-task-running"],

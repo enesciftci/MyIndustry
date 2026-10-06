@@ -7,12 +7,15 @@ This document describes the **orchestrated** loop (GitHub Action + Cursor SDK Cl
 ```text
 Issue (+ label ai-task)
   → GitHub Action (.github/workflows/ai-loop.yml)
-  → create branch ai/<n>-<slug>
-  → Cursor Cloud Agent (SDK) implements on that branch
-  → GHA runner runs ./scripts/verify
-  → FAIL → failure context → Agent.send (self-correct) → verify again
-  → PASS → gh pr create (no auto-merge)
+  → Cursor Cloud Agent starts from main (workOnCurrentBranch=false)
+  → Cursor creates its own branch (cursor/...)
+  → Orchestrator reads result.git.branches[] into .ai-loop/state
+  → GHA runner checks out that branch and runs ./scripts/verify
+  → FAIL → same agent + same branch → Agent.send (self-correct) → verify again
+  → PASS → gh pr create head=<cursor-branch> base=main (no auto-merge)
 ```
+
+Do **not** pre-create `ai/<issue>-*` for Cloud Agent (Cursor validates that ref and often fails).
 
 Outer loop code: [`.ai-loop/orchestrator/`](../.ai-loop/orchestrator/).
 
@@ -23,13 +26,13 @@ Outer loop code: [`.ai-loop/orchestrator/`](../.ai-loop/orchestrator/).
 | Trigger on `ai-task` label | `ai-loop.yml` `on: issues: types: [labeled]` |
 | Concurrency per issue | `concurrency.group: ai-loop-<repo>-<issue>` |
 | Label swap to prevent re-entry | `ai-task` → `ai-task-running` → `ai-task-done` / `ai-task-failed` |
-| Branch `ai/<issue>-<slug>` | Orchestrator `git.mjs` + `workOnCurrentBranch: true` |
-| Cloud agent start / multi-turn | `@cursor/sdk` `Agent.create` + `agent.send` |
+| Branch `cursor/...` | Created by Cursor Cloud Agent; discovered via `result.git.branches` |
+| Cloud agent start / multi-turn | `@cursor/sdk` `Agent.create({ startingRef: main, workOnCurrentBranch: false })` + same-agent `send` |
 | Verification | Existing `./scripts/verify` on the GHA runner |
 | Iteration / same-failure limits | `.ai-loop/config.env` + orchestrator fingerprints |
 | State recording | `scripts/ai-loop-init` / `ai-loop-record` |
 | PR creation | `gh pr create` with structured body |
-| CI failure comment on `ai/**` PRs | `ai-loop-ci-feedback.yml` |
+| CI failure comment on AI PRs | `ai-loop-ci-feedback.yml` |
 
 ## MANUAL CONFIGURATION REQUIRED
 
