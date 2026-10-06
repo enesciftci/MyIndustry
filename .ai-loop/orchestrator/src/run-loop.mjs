@@ -30,7 +30,11 @@ import {
   triggerSiblingWorkflow,
 } from "./github.mjs";
 import { buildFixPrompt, buildInitialPrompt } from "./prompt.mjs";
-import { buildPrBody, createPullRequest } from "./pr.mjs";
+import {
+  buildPrBody,
+  createPullRequest,
+  isPrPermissionError,
+} from "./pr.mjs";
 import { resolveScope, shouldRunInThisRepo } from "./scope.mjs";
 import {
   copyStateArtifact,
@@ -295,13 +299,65 @@ async function main() {
           agentId: driver.agentId,
         });
 
-        const pr = createPullRequest({
-          title: `[AI] ${issue.title}`,
-          body,
-          head: activeBranch,
-          base: baseBranch,
-          dryRun: dryGit || mock,
-        });
+        let pr;
+        try {
+          pr = createPullRequest({
+            title: `[AI] ${issue.title}`,
+            body,
+            head: activeBranch,
+            base: baseBranch,
+            dryRun: dryGit || mock,
+          });
+        } catch (prErr) {
+          // Verify already passed — do not discard agent work if GITHUB_TOKEN
+          // cannot open PRs (repo Actions setting / missing PAT).
+          const permission = isPrPermissionError(prErr.message);
+          log(
+            permission
+              ? "PR create blocked by GitHub Actions permissions; leaving branch for human"
+              : `PR create failed: ${prErr.message}`,
+          );
+          patchState(taskId, {
+            pr_url: null,
+            pr_error: String(prErr.message || prErr).slice(0, 500),
+            pr_body_preview: body.slice(0, 500),
+          });
+          if (!skipGhIssue) {
+            commentIssue(
+              issueNumber,
+              [
+                "## AI Loop verify passed — PR not created",
+                "",
+                `- Branch: \`${activeBranch}\``,
+                `- Iterations: ${i}`,
+                `- Agent: \`${driver.agentId || "n/a"}\``,
+                "",
+                permission
+                  ? [
+                      "GitHub Actions is not allowed to create PRs with the default `GITHUB_TOKEN`.",
+                      "",
+                      "**Fix (pick one):**",
+                      "1. Repo **Settings → Actions → General → Workflow permissions** → enable *Allow GitHub Actions to create and approve pull requests*",
+                      "2. Or add secret `AI_LOOP_GH_TOKEN` (PAT with `contents` + `pull_requests`) and re-run / open PR manually",
+                      "",
+                      "Open PR manually:",
+                      "```bash",
+                      `gh pr create --base ${baseBranch} --head ${activeBranch} --title "[AI] ${issue.title}"`,
+                      "```",
+                    ].join("\n")
+                  : `PR error: \`${String(prErr.message || prErr).slice(0, 300)}\``,
+                "",
+                "Human review required before merge to `main`.",
+              ].join("\n"),
+            );
+            replaceLabels(issueNumber, {
+              remove: ["ai-task-running"],
+              add: ["ai-task-done"],
+            });
+          }
+          terminal = "passed";
+          break;
+        }
 
         patchState(taskId, {
           pr_url: pr.url,

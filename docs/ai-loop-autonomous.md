@@ -39,9 +39,10 @@ Outer loop code: [`.ai-loop/orchestrator/`](../.ai-loop/orchestrator/).
 1. Repository secret **`CURSOR_API_KEY`** (Dashboard → Integrations / service account). Never commit it.
 2. Cursor account behind the key must have **GitHub connected** with access to this repo.
 3. Create labels: `ai-task`, `ai-task-running`, `ai-task-done`, `ai-task-failed`, `repo:backend`, `repo:frontend`, `repo:both`.
-4. Optional cross-repo: repo variable `AI_LOOP_UI_REPO` (`owner/MyIndustry.UI`) + secret `AI_LOOP_GH_TOKEN` (fine-grained PAT with Actions/Contents on UI).
-5. Branch protection on `main` (require PR + status checks). **Do not** enable auto-merge for AI PRs.
-6. **Do not** rely on Cursor Automations “Issue label” UI (documented but unreliable as of mid-2026). This workflow uses GitHub Actions instead.
+4. **PR creation from Actions:** either enable **Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests**, or add secret `AI_LOOP_GH_TOKEN` (classic/fine-grained PAT with `contents` + `pull_requests` on this repo). Without one of these, verify can pass but `gh pr create` fails.
+5. Optional cross-repo: repo variable `AI_LOOP_UI_REPO` (`owner/MyIndustry.UI`) + secret `AI_LOOP_GH_TOKEN` (also needs Actions/Contents on UI).
+6. Branch protection on `main` (require PR + status checks). **Do not** enable auto-merge for AI PRs.
+7. **Do not** rely on Cursor Automations “Issue label” UI (documented but unreliable as of mid-2026). This workflow uses GitHub Actions instead.
 
 ## Two-repo
 

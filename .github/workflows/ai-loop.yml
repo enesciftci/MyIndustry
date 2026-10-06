@@ -30,7 +30,10 @@ jobs:
       REPO_KIND: backend
       BASE_BRANCH: main
       CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Prefer PAT when set — default GITHUB_TOKEN cannot create PRs unless
+      # Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests" is enabled.
+      GITHUB_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN || secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN || secrets.GITHUB_TOKEN }}
       AI_LOOP_UI_REPO: ${{ vars.AI_LOOP_UI_REPO }}
       AI_LOOP_GH_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN }}
       ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}

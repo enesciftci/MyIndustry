@@ -70,6 +70,26 @@ ${siblingPrUrl ? `\n## Related PR\n\n${siblingPrUrl}\n` : ""}
 `;
 }
 
+function ghTokenEnv() {
+  // Prefer a PAT: default GITHUB_TOKEN cannot create PRs unless the repo
+  // setting "Allow GitHub Actions to create and approve pull requests" is on.
+  const token =
+    process.env.AI_LOOP_GH_TOKEN ||
+    process.env.GH_TOKEN ||
+    process.env.GITHUB_TOKEN;
+  if (!token) return process.env;
+  return { ...process.env, GH_TOKEN: token, GITHUB_TOKEN: token };
+}
+
+export function isPrPermissionError(message) {
+  const m = String(message || "").toLowerCase();
+  return (
+    m.includes("not permitted to create or approve pull requests") ||
+    m.includes("resource not accessible by integration") ||
+    m.includes("github actions is not permitted")
+  );
+}
+
 export function createPullRequest({
   title,
   body,
@@ -94,10 +114,14 @@ export function createPullRequest({
       "--head",
       head,
     ],
-    { cwd: REPO_ROOT, encoding: "utf8" },
+    { cwd: REPO_ROOT, encoding: "utf8", env: ghTokenEnv() },
   );
   if (r.status !== 0) {
-    throw new Error(`gh pr create failed: ${r.stderr || r.stdout}`);
+    const detail = (r.stderr || r.stdout || "").trim();
+    const err = new Error(`gh pr create failed: ${detail}`);
+    err.code = isPrPermissionError(detail) ? "PR_PERMISSION" : "PR_CREATE";
+    err.detail = detail;
+    throw err;
   }
   const url = (r.stdout || "").trim().split("\n").filter(Boolean).pop();
   return { url, dryRun: false, body };
