@@ -2,6 +2,10 @@ using System.Net;
 
 namespace MyIndustry.Tests.Smoke;
 
+/// <summary>
+/// Shared assertions for controller smoke tests. Accepts common client/error outcomes
+/// but fails on 5xx so regressions surface without requiring full integration setup.
+/// </summary>
 internal static class SmokeAssertions
 {
     private static readonly HashSet<HttpStatusCode> ValidStatuses =
