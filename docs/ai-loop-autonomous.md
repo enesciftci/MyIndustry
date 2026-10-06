@@ -52,6 +52,10 @@ Outer loop code: [`.ai-loop/orchestrator/`](../.ai-loop/orchestrator/).
 | `frontend` / `repo:frontend` | Skipped here; run in UI repo |
 | `both` / `repo:both` | Backend loop first; then dispatch UI `ai-loop.yml` if PAT configured |
 
+## Self-correction harness (issue #7)
+
+Set `AI_LOOP_SELF_CORRECTION_HARNESS=1` (or use the self-correction infrastructure test issue title). On **iteration 1** only, if `docs/ai-loop-smoke-marker.md` is missing, the orchestrator injects `CONTROLLED_SELF_CORRECTION_TEST` instead of running `./scripts/verify`. Later iterations always run real verify on the GHA runner.
+
 ## Local mock (no API key)
 
 ```bash

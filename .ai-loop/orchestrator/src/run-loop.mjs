@@ -57,6 +57,44 @@ function parseIssueNumber() {
   return Number(n);
 }
 
+const SMOKE_MARKER_REL = path.join("docs", "ai-loop-smoke-marker.md");
+const CONTROLLED_SELF_CORRECTION_TEST = "CONTROLLED_SELF_CORRECTION_TEST";
+
+function smokeMarkerPath() {
+  return path.join(REPO_ROOT, SMOKE_MARKER_REL);
+}
+
+function selfCorrectionHarnessEnabled(issue) {
+  if (env("AI_LOOP_SELF_CORRECTION_HARNESS") === "1") return true;
+  const title = issue?.title || "";
+  return /self-correction infrastructure test/i.test(title);
+}
+
+function shouldInjectControlledSelfCorrection({
+  harnessEnabled,
+  mock,
+  iteration,
+  markerExists,
+}) {
+  if (iteration !== 1 || markerExists) return false;
+  return mock || harnessEnabled;
+}
+
+function controlledSelfCorrectionVerifyResult() {
+  return {
+    ok: false,
+    exitCode: 1,
+    command: CONTROLLED_SELF_CORRECTION_TEST,
+    failedStage: "Self-Correction Harness",
+    output: [
+      `[FAIL] Self-Correction Harness (${CONTROLLED_SELF_CORRECTION_TEST})`,
+      `       ${SMOKE_MARKER_REL} missing — iteration 1 injected failure (harness enabled)`,
+      "       Next iteration must run real ./scripts/verify after the fix lands.",
+      "RESULT: FAILED",
+    ].join("\n"),
+  };
+}
+
 async function main() {
   const startedAt = Date.now();
   const cfg = loadConfigEnv();
@@ -69,6 +107,7 @@ async function main() {
   const mock = env("AI_LOOP_MOCK_AGENT") === "1";
   const dryGit = mock || env("AI_LOOP_DRY_GIT") === "1";
   const skipGhIssue = mock || env("AI_LOOP_SKIP_GH") === "1";
+  let harnessEnabled = false;
 
   assertApiKeyPresent();
 
@@ -95,6 +134,11 @@ async function main() {
     };
   } else {
     issue = fetchIssue(issueNumber);
+  }
+
+  harnessEnabled = selfCorrectionHarnessEnabled(issue);
+  if (harnessEnabled) {
+    log("self-correction harness enabled for issue", issueNumber);
   }
 
   const scope = resolveScope({
@@ -242,20 +286,21 @@ async function main() {
         break;
       }
 
-      const smokeMarker = path.join(
-        REPO_ROOT,
-        "docs",
-        "ai-loop-smoke-marker.md",
-      );
-      if (mock && !fs.existsSync(smokeMarker)) {
-        lastVerify = {
-          ok: false,
-          exitCode: 1,
-          command: "smoke-marker-check",
-          failedStage: "Smoke Marker",
-          output:
-            "[FAIL] Smoke Marker\n       docs/ai-loop-smoke-marker.md missing (mock self-correction path)\nRESULT: FAILED",
-        };
+      const markerExists = fs.existsSync(smokeMarkerPath());
+      if (
+        shouldInjectControlledSelfCorrection({
+          harnessEnabled,
+          mock,
+          iteration: i,
+          markerExists,
+        })
+      ) {
+        log(
+          "injecting controlled first-verify failure",
+          CONTROLLED_SELF_CORRECTION_TEST,
+        );
+        lastVerify = controlledSelfCorrectionVerifyResult();
+        patchState(taskId, { controlled_self_correction_injected: true });
       } else {
         log("running ./scripts/verify");
         lastVerify = await runVerify({
@@ -285,6 +330,18 @@ async function main() {
         });
         log("verify PASSED", rec.stdout);
 
+        const stateAfterPass = readState(taskId);
+        const loopResult = [
+          `- **Status:** passed`,
+          `- **Iterations:** ${i}`,
+          `- **Branch:** \`${activeBranch}\``,
+          `- **Agent ID:** \`${driver.agentId || "n/a"}\``,
+          stateAfterPass?.controlled_self_correction_injected
+            ? `- **First verify:** ${CONTROLLED_SELF_CORRECTION_TEST} (harness; real verify skipped on iteration 1)`
+            : "- **First verify:** ./scripts/verify",
+          `- **Final verify:** ./scripts/verify PASS`,
+        ].join("\n");
+
         const body = buildPrBody({
           title: issue.title,
           issueNumber,
@@ -292,11 +349,12 @@ async function main() {
           verification: summaryLines,
           iterations: String(i),
           failedAttempts: JSON.stringify(
-            (readState(taskId)?.failures || []).slice(0, 10),
+            (stateAfterPass?.failures || []).slice(0, 10),
             null,
             2,
           ),
           agentId: driver.agentId,
+          loopResult,
         });
 
         let pr;
@@ -426,7 +484,7 @@ async function main() {
           count >= cfg.MAX_RETRIES_PER_TEST
             ? "HUMAN_INTERVENTION_REQUIRED"
             : "fix",
-        command: "./scripts/verify",
+        command: lastVerify.command || "./scripts/verify",
         files: files.join(","),
       });
 
