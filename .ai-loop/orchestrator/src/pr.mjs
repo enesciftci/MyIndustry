@@ -13,8 +13,21 @@ export function buildPrBody({
   breakingChanges = "None",
   agentId,
   siblingPrUrl,
+  loopResult,
 }) {
-  return `## Summary
+  const loopResultBlock = loopResult
+    ? `## Loop Result
+
+- **Status:** ${loopResult.status || "passed"}
+- **Branch:** \`${loopResult.branch || "n/a"}\`
+- **Iterations:** ${loopResult.iterations ?? iterations ?? "n/a"}
+${loopResult.harness ? `- **Harness:** \`${loopResult.harness}\` (first verify injected; subsequent verify used \`./scripts/verify\`)` : ""}
+${agentId ? `- **Agent ID:** \`${agentId}\`` : ""}
+
+`
+    : "";
+
+  return `${loopResultBlock}## Summary
 
 ${title}
 
