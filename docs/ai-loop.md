@@ -42,6 +42,8 @@ See `docs/ai-agent-guide.md` (Understand → Plan → Implement → Verify → S
 
 ## Verification
 
+The `AiLoopSmokeTests` smoke class asserts that the main API `/health` endpoint returns HTTP 200, giving the loop a fast signal that the host starts correctly after a change.
+
 | Command | Purpose |
 |---------|---------|
 | `./scripts/build` | `dotnet build` |
