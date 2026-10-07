@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -85,6 +86,15 @@ if (!string.IsNullOrWhiteSpace(redisConnectionString))
     var redis = ConnectionMultiplexer.Connect(redisConnectionString);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
     builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
+
+    builder.Services.AddDataProtection()
+        .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys-Api")
+        .SetApplicationName("MyIndustry-Api");
+}
+else if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("MyIndustry-Api");
 }
 
 builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);
