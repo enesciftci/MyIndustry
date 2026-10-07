@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -80,11 +81,21 @@ if (string.IsNullOrWhiteSpace(redisConnectionString))
 if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing")
     && string.IsNullOrWhiteSpace(redisConnectionString))
     throw new InvalidOperationException("ConnectionStrings:Redis must be set in Production for JWT blacklist support.");
-if (!string.IsNullOrWhiteSpace(redisConnectionString))
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("MyIndustry-Api");
+}
+else if (!string.IsNullOrWhiteSpace(redisConnectionString))
 {
     var redis = ConnectionMultiplexer.Connect(redisConnectionString);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
     builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
+
+    // Same Redis key prefix as Identity; key rings are isolated via SetApplicationName.
+    builder.Services.AddDataProtection()
+        .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
+        .SetApplicationName("MyIndustry-Api");
 }
 
 builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);

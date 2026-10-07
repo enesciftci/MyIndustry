@@ -1,5 +1,7 @@
 using System.Net;
 using System.Linq;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
 using MyIndustry.Tests.Fixtures;
 
 namespace MyIndustry.Tests.Smoke;
@@ -33,5 +35,13 @@ public class AiLoopSmokeTests : IClassFixture<ApiWebApplicationFactory>
 
         Assert.True(response.Headers.TryGetValues("X-MyIndustry-Service", out var values));
         Assert.Equal("MyIndustry.Api", values!.Single());
+    }
+
+    [Fact]
+    public void Api_DataProtection_IsRegisteredInTestingWithoutRedis()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dataProtection = scope.ServiceProvider.GetService<IDataProtectionProvider>();
+        Assert.NotNull(dataProtection);
     }
 }
