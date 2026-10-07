@@ -1,0 +1,299 @@
+# Claude Planner / Architect — requirement → implementation-ready Issue → ai-task
+# Does NOT replace ai-loop.yml. Cursor remains the implementer.
+name: Claude Planner
+
+on:
+  workflow_dispatch:
+    inputs:
+      requirement:
+        description: Natural-language product/engineering requirement for the Architect to analyze
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  id-token: write
+
+concurrency:
+  group: claude-planner-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      AI_LOOP_GH_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN }}
+      GH_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.AI_LOOP_GH_TOKEN }}
+      UI_REPO: ${{ vars.AI_LOOP_UI_REPO || format('{0}/MyIndustry.UI', github.repository_owner) }}
+      REQUIREMENT: ${{ inputs.requirement }}
+      CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD: "1"
+
+    steps:
+      - name: Fail if required secrets missing
+        run: |
+          set -euo pipefail
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            echo "ANTHROPIC_API_KEY secret is not configured."
+            echo "Add it in repository Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          echo "ANTHROPIC_API_KEY is set (length=${#ANTHROPIC_API_KEY})"
+          if [ -z "${AI_LOOP_GH_TOKEN:-}" ]; then
+            echo "AI_LOOP_GH_TOKEN secret is required for Claude Planner."
+            echo "Default GITHUB_TOKEN cannot trigger issues.labeled → ai-loop.yml (GitHub recursion guard)."
+            echo "Use the same PAT already recommended for the Cursor AI Loop."
+            exit 1
+          fi
+          echo "AI_LOOP_GH_TOKEN is set (length=${#AI_LOOP_GH_TOKEN})"
+          echo "UI_REPO=${UI_REPO}"
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Checkout frontend sibling
+        id: checkout_ui
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UI_REPO }}
+          token: ${{ secrets.AI_LOOP_GH_TOKEN }}
+          path: MyIndustry.UI
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Fail if frontend context unavailable
+        if: steps.checkout_ui.outcome != 'success'
+        run: |
+          echo "FRONTEND_CONTEXT_UNAVAILABLE"
+          echo "Could not checkout ${UI_REPO} with AI_LOOP_GH_TOKEN."
+          echo "Ensure the PAT can read the UI repository and AI_LOOP_UI_REPO (if set) is correct."
+          exit 1
+
+      - name: Ensure planner labels exist
+        run: |
+          set -euo pipefail
+          ensure_label() {
+            local repo="$1" name="$2" color="$3" desc="$4"
+            gh label create "$name" --repo "$repo" --color "$color" --description "$desc" 2>/dev/null \
+              || gh label edit "$name" --repo "$repo" --color "$color" --description "$desc" 2>/dev/null \
+              || true
+          }
+          for repo in "${{ github.repository }}" "${UI_REPO}"; do
+            ensure_label "$repo" "claude-planner" "5319E7" "Created by Claude Planner (Architect)"
+            ensure_label "$repo" "ai-task" "0E8A16" "Starts Cursor AI Loop"
+            ensure_label "$repo" "repo:backend" "1D76DB" "AI Loop scope: backend"
+            ensure_label "$repo" "repo:frontend" "FBCA04" "AI Loop scope: frontend"
+            ensure_label "$repo" "repo:both" "D93F0B" "AI Loop scope: both repos"
+          done
+
+      - name: Compute fingerprint and check duplicates
+        id: dup
+        run: |
+          set -euo pipefail
+          NORM=$(printf '%s' "$REQUIREMENT" | tr '[:upper:]' '[:lower:]' | tr -s '[:space:]' ' ' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+          FINGERPRINT=$(printf '%s' "$NORM" | sha256sum | awk '{print $1}')
+          echo "fingerprint=$FINGERPRINT" >> "$GITHUB_OUTPUT"
+          echo "FINGERPRINT=$FINGERPRINT" >> "$GITHUB_ENV"
+          echo "Normalized requirement fingerprint=${FINGERPRINT}"
+
+          find_dup() {
+            local repo="$1"
+            gh issue list --repo "$repo" --label claude-planner --state open --limit 100 \
+              --json number,body,title,url,labels \
+              | jq -r --arg fp "$FINGERPRINT" '
+                  .[] | select(.body != null and (.body | contains("claude-planner-fingerprint: " + $fp)))
+                  | "\(.number)\t\(.url)\t\(.title)"
+                ' | head -n 1
+          }
+
+          DUP=$(find_dup "${{ github.repository }}" || true)
+          if [ -z "${DUP}" ]; then
+            DUP=$(find_dup "${UI_REPO}" || true)
+          fi
+
+          if [ -n "${DUP}" ]; then
+            ISSUE_NUM=$(printf '%s' "$DUP" | cut -f1)
+            ISSUE_URL=$(printf '%s' "$DUP" | cut -f2)
+            echo "duplicate=true" >> "$GITHUB_OUTPUT"
+            echo "issue_number=$ISSUE_NUM" >> "$GITHUB_OUTPUT"
+            echo "issue_url=$ISSUE_URL" >> "$GITHUB_OUTPUT"
+            echo "PLANNER_DUPLICATE_SKIPPED #${ISSUE_NUM}"
+            echo "Existing open planner issue: ${ISSUE_URL}"
+          else
+            echo "duplicate=false" >> "$GITHUB_OUTPUT"
+            echo "No open duplicate planner issue for this fingerprint."
+          fi
+
+      - name: Duplicate skip summary
+        if: steps.dup.outputs.duplicate == 'true'
+        run: |
+          cat <<EOF
+          CLAUDE PLANNER
+
+          Requirement:
+          ${REQUIREMENT}
+
+          Affected repositories:
+          (unchanged — duplicate skipped)
+
+          Issue:
+          #${{ steps.dup.outputs.issue_number }}
+          ${{ steps.dup.outputs.issue_url }}
+
+          Labels:
+          (existing issue — ai-task not re-applied)
+
+          Summary:
+          Duplicate fingerprint ${FINGERPRINT}; no new issue created to avoid infinite loops.
+
+          Architecture impact:
+          n/a
+
+          Acceptance criteria:
+          n/a
+
+          Test strategy:
+          n/a
+          EOF
+
+      - name: Run Claude Planner
+        if: steps.dup.outputs.duplicate != 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.AI_LOOP_GH_TOKEN }}
+          prompt: |
+            /create-development-issue
+
+            You are the Software Architect and Planning Agent for MyIndustry.
+
+            REQUIREMENT:
+            ${{ inputs.requirement }}
+
+            FINGERPRINT: ${{ steps.dup.outputs.fingerprint }}
+
+            Workspace:
+            - Backend (cwd): .
+            - Frontend: ./MyIndustry.UI (also passed via --add-dir)
+
+            Analyze both repositories. Do not invent architecture.
+            Do not implement production code. Do not create a PR. Do not modify source files.
+            Produce an implementation-ready GitHub Issue following .claude/rules/issue-contract.md.
+            Include the fingerprint HTML comment exactly:
+            <!-- claude-planner-fingerprint: ${{ steps.dup.outputs.fingerprint }} -->
+
+            After the issue is created:
+            - apply claude-planner and the matching repo:* label
+            - apply ai-task LAST
+
+            Print the PLANNER_* stdout markers required by the skill.
+          claude_args: |
+            --add-dir MyIndustry.UI
+            --max-turns 40
+            --disallowedTools Edit,Write,NotebookEdit
+          settings: |
+            {
+              "env": {
+                "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1",
+                "FINGERPRINT": "${{ steps.dup.outputs.fingerprint }}"
+              }
+            }
+
+      - name: Emit CLAUDE PLANNER summary
+        if: steps.dup.outputs.duplicate != 'true'
+        run: |
+          set -euo pipefail
+          FP="${FINGERPRINT}"
+
+          resolve_issue() {
+            local repo="$1"
+            gh issue list --repo "$repo" --label claude-planner --state open --limit 50 \
+              --json number,body,title,url,labels \
+              | jq -c --arg fp "$FP" '
+                  .[] | select(.body != null and (.body | contains("claude-planner-fingerprint: " + $fp)))
+                ' | head -n 1
+          }
+
+          ISSUE_JSON=$(resolve_issue "${{ github.repository }}" || true)
+          REPO_USED="${{ github.repository }}"
+          if [ -z "${ISSUE_JSON}" ]; then
+            ISSUE_JSON=$(resolve_issue "${UI_REPO}" || true)
+            REPO_USED="${UI_REPO}"
+          fi
+
+          if [ -z "${ISSUE_JSON}" ]; then
+            echo "CLAUDE PLANNER"
+            echo ""
+            echo "Requirement:"
+            echo "${REQUIREMENT}"
+            echo ""
+            echo "ERROR: Claude finished but no open issue with fingerprint ${FP} was found."
+            echo "Check the Claude step logs for PLANNER_* markers or gh failures."
+            exit 1
+          fi
+
+          NUM=$(echo "$ISSUE_JSON" | jq -r '.number')
+          URL=$(echo "$ISSUE_JSON" | jq -r '.url')
+          TITLE=$(echo "$ISSUE_JSON" | jq -r '.title')
+          LABELS=$(echo "$ISSUE_JSON" | jq -r '[.labels[].name] | join(", ")')
+          BODY=$(echo "$ISSUE_JSON" | jq -r '.body // ""')
+
+          SCOPE="unknown"
+          echo "$LABELS" | grep -q 'repo:both' && SCOPE="both"
+          echo "$LABELS" | grep -q 'repo:frontend' && SCOPE="frontend"
+          echo "$LABELS" | grep -q 'repo:backend' && SCOPE="backend"
+          if [ "$SCOPE" = "unknown" ]; then
+            SCOPE=$(printf '%s\n' "$BODY" | sed -n '/### Repository scope/{n;s/^[[:space:]]*//;p;q}' | tr '[:upper:]' '[:lower:]')
+          fi
+
+          if ! echo "$LABELS" | grep -q 'ai-task'; then
+            echo "WARNING: ai-task label missing — applying now with PAT so Cursor ai-loop can start."
+            gh issue edit "$NUM" --repo "$REPO_USED" --add-label "ai-task"
+            LABELS="${LABELS}, ai-task"
+          fi
+
+          GOAL=$(printf '%s\n' "$BODY" | awk '/^# Goal/{flag=1;next}/^# /{flag=0}flag' | head -n 5 | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g')
+          AC=$(printf '%s\n' "$BODY" | awk '/^# Acceptance Criteria/{flag=1;next}/^# /{flag=0}flag' | head -n 8 | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g')
+          TESTS=$(printf '%s\n' "$BODY" | awk '/^# Test Requirements/{flag=1;next}/^# /{flag=0}flag' | head -n 8 | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g')
+          ARCH=$(printf '%s\n' "$BODY" | awk '/^# Existing Architecture/{flag=1;next}/^# /{flag=0}flag' | head -n 5 | tr '\n' ' ' | sed 's/[[:space:]]\+/ /g')
+
+          cat <<EOF
+          CLAUDE PLANNER
+
+          Requirement:
+          ${REQUIREMENT}
+
+          Affected repositories:
+          ${SCOPE}
+
+          Issue:
+          #${NUM} — ${TITLE}
+          ${URL}
+          Repo: ${REPO_USED}
+
+          Labels:
+          ${LABELS}
+
+          Summary:
+          ${GOAL:-see issue body}
+
+          Architecture impact:
+          ${ARCH:-see issue body}
+
+          Acceptance criteria:
+          ${AC:-see issue body}
+
+          Test strategy:
+          ${TESTS:-see issue body}
+
+          Fingerprint:
+          ${FP}
+          EOF

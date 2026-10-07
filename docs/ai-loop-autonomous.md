@@ -99,7 +99,12 @@ AI_LOOP_MOCK_AGENT=1 AI_LOOP_SKIP_GH=1 AI_LOOP_DRY_GIT=1 \
 - Never echo the key; logs may print length only
 - No merge to `main` from the loop
 
+## Upstream: Claude Planner
+
+Optional Architect layer that creates implementation-ready issues (then applies `ai-task`) without changing this loop: [`claude-planner.md`](./claude-planner.md). Workflow: `.github/workflows/claude-planner.yml`.
+
 ## Related
 
 - Protocol / verify: [`ai-loop.md`](./ai-loop.md)
 - Agent phases: [`ai-agent-guide.md`](./ai-agent-guide.md)
+- Claude Planner: [`claude-planner.md`](./claude-planner.md)
