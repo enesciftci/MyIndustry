@@ -27,7 +27,6 @@ public class IdentityWebApplicationFactory : WebApplicationFactory<MyIndustry.Id
             {
                 ["Jwt:SigningKey"] = "DevelopmentSigningKey-Min32CharsLong-ChangeInProduction",
                 ["Jwt:Issuer"] = JwtExtensions.DefaultIssuer,
-                ["IdentityUrl"] = "http://localhost",
                 ["ConnectionStrings:MyIndustryIdentityDb"] = "Testing",
                 ["InternalApi:ApiKey"] = "test-internal-api-key",
                 ["MediatRLogging:Enabled"] = "false",

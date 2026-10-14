@@ -71,7 +71,6 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromMinutes(15); // Email verification code lifespan
 });
 
-var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
 var jwtSigningKey = JwtExtensions.ResolveSigningKey(builder.Configuration, builder.Environment);
 var jwtIssuer = JwtExtensions.ResolveIssuer(builder.Configuration);
 builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Jwt:SigningKey"] = jwtSigningKey });
@@ -86,10 +85,8 @@ builder.Services.AddAuthentication(options =>
     
 }).AddJwtBearer(options =>
 {
-    options.Authority = identityUrl;
     options.Audience = JwtExtensions.DefaultAudience;
     options.SaveToken = true;
-    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing");
     options.TokenValidationParameters = tokenValidationParameters;
     options.Events = new JwtBearerEvents
     {

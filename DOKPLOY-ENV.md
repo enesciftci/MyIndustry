@@ -45,7 +45,7 @@ Optional: `JWT_ISSUER`, `RECAPTCHA_SECRET_KEY`
 |--------|--------|
 | `ConnectionStrings__MyIndustry=Host=...` | Built from `DB_HOST` + `DB_PASSWORD` |
 | `ConnectionStrings__Redis=...` | Built from `REDIS_HOST` + `REDIS_PASSWORD` |
-| `IdentityUrl=...` | Fixed in compose: `http://myindustry-identity:8080` |
+| `IdentityUrl=...` | Fixed in compose: `http://myindustry-identity:8080` (not used for JWT; leftover / future S2S — validation uses `Jwt__SigningKey`) |
 | `ASPNETCORE_ENVIRONMENT`, `ASPNETCORE_URLS` | Set in compose |
 | `Cors__AllowedOrigins__0=...` | Mapped from `CORS_ALLOWED_ORIGIN` |
 | `Jwt__SigningKey=...` | Mapped from `JWT_SIGNING_KEY` |

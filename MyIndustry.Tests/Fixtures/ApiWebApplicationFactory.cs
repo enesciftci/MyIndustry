@@ -29,7 +29,6 @@ public class ApiWebApplicationFactory : WebApplicationFactory<MyIndustry.Api.Pro
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Jwt:SigningKey"] = "DevelopmentSigningKey-Min32CharsLong-ChangeInProduction",
-                ["IdentityUrl"] = "http://localhost",
                 ["ConnectionStrings:MyIndustry"] = "Testing",
                 ["ConnectionStrings:MyIndustryIdentityDb"] = "Testing",
                 ["InternalApi:ApiKey"] = "test-internal-api-key",
