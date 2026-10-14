@@ -1,17 +1,14 @@
-using System.Text;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
 using MyIndustry.Container.Extensions;
 using MyIndustry.Gateway.Handlers;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.ConfigureMyIndustrySerilog("MyIndustry.Gateway");
@@ -29,6 +26,33 @@ builder.Services.AddHealthChecks();
 builder.Services.AddOcelot().AddDelegatingHandler<AuthDelegatingHandler>()
 ;
 builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);
+
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+if (string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    var redisHost = builder.Configuration["REDIS_HOST"];
+    var redisPassword = builder.Configuration["REDIS_PASSWORD"];
+    if (!string.IsNullOrWhiteSpace(redisHost))
+        redisConnectionString = $"{redisHost.Trim()}:6379,password={redisPassword}";
+}
+
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddMyIndustryDataProtectionForTesting("MyIndustry-Gateway");
+}
+else
+{
+    if (!builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(redisConnectionString))
+        throw new InvalidOperationException(
+            "ConnectionStrings:Redis must be set in Production for Data Protection key persistence.");
+
+    if (!string.IsNullOrWhiteSpace(redisConnectionString))
+    {
+        var redis = ConnectionMultiplexer.Connect(redisConnectionString);
+        builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+        builder.Services.AddMyIndustryDataProtection(redis, "MyIndustry-Gateway");
+    }
+}
 
 var authenticationProviderKey = "Bearer";
 

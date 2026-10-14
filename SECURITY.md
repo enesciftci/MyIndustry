@@ -60,7 +60,7 @@ Bu belge kod tabanında yapılan güvenlik odaklı incelemenin bulgularını ve 
   - `SeedAdmin:Password` veya `ADMIN_PASSWORD`: İlk admin hesabı için (sadece seed sırasında).
 - **Şifre sıfırlama linki:** Production’da `PasswordReset:AllowedBaseUrl` veya `FrontendUrl`’i gerçek frontend adresinize ayarlayın.
 
-**Production checklist (deploy öncesi):** `Jwt:SigningKey`, `InternalApiKey`, `Cors:AllowedOrigins`, `SeedAdmin:Password`/`ADMIN_PASSWORD`, `PasswordReset:AllowedBaseUrl`/`FrontendUrl`, Redis connection (blacklist için).
+**Production checklist (deploy öncesi):** `Jwt:SigningKey`, `InternalApiKey`, `Cors:AllowedOrigins`, `SeedAdmin:Password`/`ADMIN_PASSWORD`, `PasswordReset:AllowedBaseUrl`/`FrontendUrl`, Redis connection (Api blacklist + Identity/Api/Gateway Data Protection keys).
 
 ### CORS
 - **Durum:** `Cors:AllowedOrigins` config’e bağlandı. Liste doluysa yalnızca o origin’ler kabul edilir; boşsa `AllowAnyOrigin` (önceki davranış).
@@ -156,7 +156,7 @@ Dokploy app stack env değişkenleri [`env.example`](env.example) dosyasında li
 | `CORS_ALLOWED_ORIGIN` | `Cors__AllowedOrigins__0` | Api, Identity, Gateway |
 | `ALLOWED_HOSTS` | `AllowedHosts` | Api, Identity, Gateway |
 | `INTERNAL_API_KEY` | `InternalApiKey` | Api |
-| `REDIS_HOST`, `REDIS_PASSWORD` | `ConnectionStrings__Redis` (+ passthrough) | Api, Identity |
+| `REDIS_HOST`, `REDIS_PASSWORD` | `ConnectionStrings__Redis` (+ passthrough) | Api, Identity, Gateway |
 | `RECAPTCHA_SECRET_KEY` (opsiyonel) | `Recaptcha__SecretKey` | Api |
 | `ADMIN_EMAIL` | `SeedAdmin__Email` | Identity |
 | `ADMIN_PASSWORD` | `SeedAdmin__Password` | Identity |
@@ -171,7 +171,7 @@ ALLOWED_HOSTS=gateway.myindustry.com;api.myindustry.com
 
 Şablon dosyalar: `MyIndustry.Container/ProductionAllowedHosts.{Api,Identity,Gateway}.json` — ilgili projeye `appsettings.Production.json` olarak kopyalayın ve domain'leri güncelleyin.
 
-**Redis (Production zorunlu):** Api JWT blacklist için Redis gerektirir. Dokploy app stack env'de `REDIS_HOST` ve `REDIS_PASSWORD` tanımlayın (built-in Redis panelinden). Deploy sonrası doğrulama:
+**Redis (Production zorunlu):** Api JWT blacklist ve Identity/Api/Gateway Data Protection key persistence için Redis gerekir. Dokploy app stack env'de `REDIS_HOST` ve `REDIS_PASSWORD` tanımlayın (built-in Redis panelinden). Deploy sonrası doğrulama:
 
 ```bash
 docker exec myindustry-api printenv | grep -iE 'Jwt|Cors|Allowed|REDIS|ConnectionStrings__Redis'

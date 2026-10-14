@@ -93,6 +93,9 @@ services:
       Jwt__Issuer: ${JWT_ISSUER:-MyIndustry.Identity}
       Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGIN}
       AllowedHosts: ${ALLOWED_HOSTS}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      ConnectionStrings__Redis: ${REDIS_HOST}:6379,password=${REDIS_PASSWORD}
       IdentityUrl: http://myindustry-identity:8080
     ports:
       - "5002:8080"
