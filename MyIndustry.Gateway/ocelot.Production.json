@@ -5,8 +5,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/purchases/create",
@@ -26,8 +26,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/list",
@@ -40,8 +40,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/search",
@@ -54,8 +54,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/{id}",
@@ -75,8 +75,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/{id}",
@@ -96,8 +96,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/filter",
@@ -110,8 +110,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/subscriptionPlans/list",
@@ -124,8 +124,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/subscriptionPlans",
@@ -145,8 +145,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/subscriptionPlans/all",
@@ -166,8 +166,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/subscriptionPlans/{id}",
@@ -187,8 +187,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/subscriptionPlans/{id}",
@@ -208,8 +208,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellerSubscriptions",
@@ -229,8 +229,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellerSubscriptions/subscribe",
@@ -250,8 +250,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellerSubscriptions/upgrade",
@@ -271,8 +271,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/list/randomly",
@@ -285,8 +285,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/{id}",
@@ -299,8 +299,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/increase-viewcount/{id}",
@@ -313,8 +313,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services",
@@ -334,8 +334,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellers",
@@ -355,8 +355,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellers/list",
@@ -369,8 +369,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellers/profile",
@@ -390,8 +390,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellers/profile",
@@ -411,8 +411,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/sellers/{id}",
@@ -425,8 +425,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories/list",
@@ -439,8 +439,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories/tree",
@@ -453,8 +453,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories/main",
@@ -467,8 +467,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories/subcategory",
@@ -488,8 +488,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories/{parentId}",
@@ -502,8 +502,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories",
@@ -523,8 +523,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/categories/{id}",
@@ -545,8 +545,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/login",
@@ -559,8 +559,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/logout",
@@ -573,8 +573,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/refresh-token",
@@ -587,8 +587,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/register",
@@ -601,8 +601,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/verify",
@@ -615,8 +615,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/confirm-email",
@@ -629,8 +629,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/confirm-email-by-code",
@@ -643,8 +643,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/resend-verification-email",
@@ -657,8 +657,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/reset-password",
@@ -671,8 +671,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/forgot-password",
@@ -685,8 +685,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/send-phone-verification",
@@ -706,8 +706,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/verify-phone",
@@ -727,8 +727,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/send-email-change-verification",
@@ -748,8 +748,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/verify-email-change",
@@ -769,8 +769,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth/profile",
@@ -790,8 +790,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/auth",
@@ -811,8 +811,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/favorites",
@@ -832,8 +832,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/favorites",
@@ -853,8 +853,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/favorites/{serviceId}",
@@ -874,8 +874,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/favorites/{favoriteId}",
@@ -895,8 +895,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/messages",
@@ -916,8 +916,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/messages/conversations",
@@ -937,8 +937,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/messages/conversation/{serviceId}/{otherUserId}",
@@ -958,8 +958,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/messages/reply",
@@ -979,8 +979,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/messages/read/{serviceId}/{otherUserId}",
@@ -1000,8 +1000,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/messages/unread-count",
@@ -1021,8 +1021,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/stats",
@@ -1042,8 +1042,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/listings",
@@ -1063,8 +1063,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/listings/{id}/approve",
@@ -1084,8 +1084,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/users",
@@ -1105,8 +1105,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/users/{userId}/suspend",
@@ -1126,8 +1126,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-identity-bscdy5-453c99-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-identity-bscdy5",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/users/{userId}/unsuspend",
@@ -1147,8 +1147,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/listings/{id}/suspend",
@@ -1168,8 +1168,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/admin/sellers/{id}/suspend",
@@ -1189,8 +1189,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/locations/cities",
@@ -1203,8 +1203,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/locations/cities/{cityId}/districts",
@@ -1217,8 +1217,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/locations/districts/{districtId}/neighborhoods",
@@ -1231,8 +1231,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/locations/cities/search",
@@ -1245,8 +1245,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/locations/districts/search",
@@ -1259,8 +1259,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/locations/neighborhoods/search",
@@ -1273,8 +1273,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/support-tickets",
@@ -1288,8 +1288,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/support-tickets/{id}",
@@ -1308,8 +1308,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/seo/sitemap.xml",
@@ -1322,8 +1322,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/seo/robots.txt",
@@ -1336,8 +1336,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/legalDocument/public/for-registration",
@@ -1350,8 +1350,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/legalDocument/public/by-type/{documentType}",
@@ -1364,8 +1364,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/legalDocument",
@@ -1386,8 +1386,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "myindustry-api-fbpks0-0af594-84-247-171-84.traefik.me",
-          "Port": 80
+          "Host": "myindustry-api-fbpks0",
+          "Port": 8080
         }
       ],
       "UpstreamPathTemplate": "/api/v1/legalDocument/{id}",
