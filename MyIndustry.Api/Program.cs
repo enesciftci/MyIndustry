@@ -78,11 +78,17 @@ if (string.IsNullOrWhiteSpace(redisConnectionString))
 if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing")
     && string.IsNullOrWhiteSpace(redisConnectionString))
     throw new InvalidOperationException("ConnectionStrings:Redis must be set in Production for JWT blacklist support.");
-if (!string.IsNullOrWhiteSpace(redisConnectionString))
+
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Services.AddMyIndustryDataProtectionForTesting("MyIndustry-Api");
+}
+else if (!string.IsNullOrWhiteSpace(redisConnectionString))
 {
     var redis = ConnectionMultiplexer.Connect(redisConnectionString);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
     builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
+    builder.Services.AddMyIndustryDataProtection(redis, "MyIndustry-Api");
 }
 
 builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);

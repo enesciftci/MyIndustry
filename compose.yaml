@@ -154,13 +154,18 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD:-redis123}
     ports:
       - "${GATEWAY_PORT:-5002}:8080"
     networks:
       - myindustry-network
     depends_on:
-      - myindustry-api
-      - myindustry-identity
+      redis:
+        condition: service_healthy
+      myindustry-api:
+        condition: service_started
+      myindustry-identity:
+        condition: service_started
 
   myindustry-queue:
     build:

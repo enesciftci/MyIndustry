@@ -100,6 +100,8 @@ docker logs myindustry-gateway --tail 30
 
 Expected on Api: `Jwt__SigningKey`, `Cors__AllowedOrigins__0`, `AllowedHosts`, `ConnectionStrings__Redis`, `ConnectionStrings__MyIndustry`, and R2 keys if configured.
 
+Expected on Gateway: `Jwt__SigningKey`, `Cors__AllowedOrigins__0`, `AllowedHosts`, `ConnectionStrings__Redis` (Data Protection keys in Redis).
+
 ---
 
 ## Missing vars vs startup errors
@@ -110,7 +112,7 @@ Expected on Api: `Jwt__SigningKey`, `Cors__AllowedOrigins__0`, `AllowedHosts`, `
 | `CORS_ALLOWED_ORIGIN` | `Cors:AllowedOrigins must be set in Production` |
 | `ALLOWED_HOSTS` | `AllowedHosts must be set to specific domains` |
 | `DB_HOST` / `DB_PASSWORD` | Empty or wrong DB connection string |
-| `REDIS_HOST` / `REDIS_PASSWORD` | `ConnectionStrings:Redis must be set...` |
+| `REDIS_HOST` / `REDIS_PASSWORD` | `ConnectionStrings:Redis must be set...` (Api blacklist; Gateway/Identity Data Protection) |
 | `RABBITMQ_*` | Identity/Queue RabbitMQ connection failures |
 | `ADMIN_*`, `PASSWORD_RESET_ALLOWED_BASE_URL` | Admin seed skipped; broken reset links |
 

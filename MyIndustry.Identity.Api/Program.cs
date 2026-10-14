@@ -1,7 +1,6 @@
 using System.Text;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -123,15 +122,11 @@ if (!builder.Environment.IsEnvironment("Testing"))
     var redis = ConnectionMultiplexer.Connect(redisConfiguration);
     builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
     builder.Services.AddSingleton<IRedisCommunicator, RedisCommunicator.RedisCommunicator>();
-
-    builder.Services.AddDataProtection()
-        .PersistKeysToStackExchangeRedis(redis, "DataProtection-Keys")
-        .SetApplicationName("MyIndustry-Identity");
+    builder.Services.AddMyIndustryDataProtection(redis, "MyIndustry-Identity");
 }
 else
 {
-    builder.Services.AddDataProtection()
-        .SetApplicationName("MyIndustry-Identity");
+    builder.Services.AddMyIndustryDataProtectionForTesting("MyIndustry-Identity");
     // IRedisCommunicator is registered by WebApplicationFactory in tests.
 }
 
