@@ -116,7 +116,7 @@ Güvenlikle ilgili ek soru veya inceleme isterseniz bu belgeyi temel alarak deva
 - Login Redis cache şifresiz token dönüşü kaldırıldı.
 - `ServiceController` ve `SellerSubscriptionController` hassas endpoint'lere `[Authorize]` eklendi.
 - `ExceptionHandlingMiddleware`: `UnauthorizedAccessException` → 401; production 500 generic mesaj.
-- JWT `ValidateIssuer`, `Jwt:Issuer`, `RequireHttpsMetadata` (production).
+- JWT `ValidateIssuer`, `Jwt:Issuer`; validation uses shared symmetric `Jwt:SigningKey` (no OIDC Authority / `RequireHttpsMetadata`).
 - Rate limiting: auth endpoint'leri (Identity API).
 - Production'da Main API Redis zorunlu (JWT blacklist).
 

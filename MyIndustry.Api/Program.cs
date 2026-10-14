@@ -120,7 +120,6 @@ builder.Services.AddSwaggerGen(c =>
     c.SchemaFilter<EnumSchemaFilter>();
 });
 
-var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
 var jwtSigningKey = JwtExtensions.ResolveSigningKey(builder.Configuration, builder.Environment);
 var jwtIssuer = JwtExtensions.ResolveIssuer(builder.Configuration);
 var tokenValidationParameters = JwtExtensions.CreateTokenValidationParameters(jwtSigningKey, jwtIssuer);
@@ -133,8 +132,6 @@ builder.Services.AddAuthentication(options =>
 
 }).AddJwtBearer(options =>
 {
-    options.Authority = identityUrl;
-    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing");
     options.Audience = JwtExtensions.DefaultAudience;
     options.TokenValidationParameters = tokenValidationParameters;
     options.Events = new JwtBearerEvents

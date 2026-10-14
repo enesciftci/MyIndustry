@@ -57,7 +57,6 @@ public static class JwtExtensions
             .AddJwtBearer(options =>
             {
                 options.Audience = DefaultAudience;
-                options.RequireHttpsMetadata = !environment.IsDevelopment() && !environment.IsEnvironment("Testing");
                 options.TokenValidationParameters = validationParameters;
                 configure?.Invoke(options);
             });

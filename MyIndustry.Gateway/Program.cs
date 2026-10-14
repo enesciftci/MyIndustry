@@ -30,7 +30,6 @@ builder.Services.AddOcelot().AddDelegatingHandler<AuthDelegatingHandler>()
 ;
 builder.Services.AddMyIndustryCors(builder.Configuration, builder.Environment);
 
-var identityUrl = builder.Configuration.GetValue<string>("IdentityUrl");
 var authenticationProviderKey = "Bearer";
 
 var jwtSigningKey = JwtExtensions.ResolveSigningKey(builder.Configuration, builder.Environment);
@@ -40,8 +39,6 @@ var tokenValidationParameters = JwtExtensions.CreateTokenValidationParameters(jw
 builder.Services.AddAuthentication()
     .AddJwtBearer(authenticationProviderKey, x =>
     {
-        x.Authority = identityUrl;
-        x.RequireHttpsMetadata = !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing");
         x.Audience = JwtExtensions.DefaultAudience;
         x.TokenValidationParameters = tokenValidationParameters;
     });
