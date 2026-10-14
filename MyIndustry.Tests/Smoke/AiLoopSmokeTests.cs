@@ -1,4 +1,5 @@
 using System.Net;
+using System.Linq;
 using MyIndustry.Tests.Fixtures;
 
 namespace MyIndustry.Tests.Smoke;
@@ -21,5 +22,16 @@ public class AiLoopSmokeTests : IClassFixture<ApiWebApplicationFactory>
         var client = _factory.CreateSeededClient();
         var response = await client.GetAsync("/health");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Api_HealthEndpoint_IncludesServiceIdentificationHeader()
+    {
+        var client = _factory.CreateSeededClient();
+        var response = await client.GetAsync("/health");
+        response.EnsureSuccessStatusCode();
+
+        Assert.True(response.Headers.TryGetValues("X-MyIndustry-Service", out var values));
+        Assert.Equal("MyIndustry.Api", values!.Single());
     }
 }
