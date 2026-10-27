@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -30,11 +31,13 @@ public static class RateLimitingExtensions
             options.OnRejected = async (context, cancellationToken) =>
             {
                 context.HttpContext.Response.ContentType = "application/json";
-                await context.HttpContext.Response.WriteAsJsonAsync(new
+                // Serialize manually: WriteAsJsonAsync needs PipeWriter.UnflushedBytes (breaks TestHost).
+                var body = JsonSerializer.Serialize(new
                 {
                     success = false,
                     message = "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin."
-                }, cancellationToken);
+                });
+                await context.HttpContext.Response.WriteAsync(body, cancellationToken);
             };
 
             options.AddPolicy(AuthPolicy, httpContext =>
