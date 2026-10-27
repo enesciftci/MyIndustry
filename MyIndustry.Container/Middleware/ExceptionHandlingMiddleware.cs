@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using MyIndustry.Container.Logging;
 using MyIndustry.Domain.ExceptionHandling;
 
@@ -37,7 +38,7 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
 
-            await context.Response.WriteAsJsonAsync(new
+            await WriteJsonAsync(context, new
             {
                 success = false,
                 message = "Bu işlem için giriş yapmanız gerekiyor.",
@@ -57,7 +58,7 @@ public class ExceptionHandlingMiddleware
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
 
-            await context.Response.WriteAsJsonAsync(new
+            await WriteJsonAsync(context, new
             {
                 success = false,
                 code = ex.Code ?? "BUSINESS_ERROR",
@@ -84,7 +85,7 @@ public class ExceptionHandlingMiddleware
 
             if (_environment.IsDevelopment())
             {
-                await context.Response.WriteAsJsonAsync(new
+                await WriteJsonAsync(context, new
                 {
                     success = false,
                     error = new
@@ -98,7 +99,7 @@ public class ExceptionHandlingMiddleware
             }
             else
             {
-                await context.Response.WriteAsJsonAsync(new
+                await WriteJsonAsync(context, new
                 {
                     success = false,
                     message = "Beklenmeyen bir hata oluştu.",
@@ -107,6 +108,13 @@ public class ExceptionHandlingMiddleware
             }
         }
     }
+
+    /// <summary>
+    /// Avoid WriteAsJsonAsync: newer System.Text.Json requires PipeWriter.UnflushedBytes,
+    /// which TestHost's ResponseBodyPipeWriter does not implement.
+    /// </summary>
+    private static Task WriteJsonAsync(HttpContext context, object payload) =>
+        context.Response.WriteAsync(JsonSerializer.Serialize(payload));
 
     private static string? GetCorrelationId(HttpContext context) =>
         context.Items.TryGetValue(CorrelationIdConstants.ItemKey, out var value)

@@ -275,6 +275,12 @@
           "Port": 5016
         }
       ],
+      "UpstreamPathTemplate": "/api/v1/services/list/randomly",
+      "UpstreamHttpMethod": [
+        "Get"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/services/slug/{slug}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -284,12 +290,6 @@
         }
       ],
       "UpstreamPathTemplate": "/api/v1/services/slug/{slug}",
-      "UpstreamHttpMethod": [
-        "Get"
-      ]
-    },
-    {
-      "UpstreamPathTemplate": "/api/v1/services/list/randomly",
       "UpstreamHttpMethod": [
         "Get"
       ]
